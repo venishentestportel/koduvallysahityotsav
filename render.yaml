@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: koduvelly-whatsapp-backend
+    env: docker
+    plan: free
+    healthCheckPath: /status
+    autoDeploy: false
+    envVars:
+      - key: PORT
+        value: 3001
+    repo: https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME # Replace with your GitHub repo URL
+    rootDir: backend

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results Selection - Koduvelly Sahitholsav</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pallet-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="pallet-theme results-page">
+
+    <div class="results-container">
+        <div class="results-glass-card">
+            <!-- Sidebar for selection -->
+            <div class="results-sidebar">
+                <h1>Official Results</h1>
+
+                <div class="selector-group">
+                    <label>STRUCTURAL SEGMENT</label>
+                    <div id="cat-display" class="selection-display" onclick="openModal('category')">
+                        <span>Choose Category...</span>
+                        <span style="color: #94a3b8; font-family: sans-serif; font-size: 1.1rem; line-height: 1;">&rsaquo;</span>
+                    </div>
+                </div>
+
+                <div class="selector-group">
+                    <label>EVENT MODEL PARAMETER</label>
+                    <div id="prog-display" class="selection-display" onclick="openModal('program')">
+                        <span>Choose Program...</span>
+                        <span style="color: #94a3b8; font-family: sans-serif; font-size: 1.1rem; line-height: 1;">&rsaquo;</span>
+                    </div>
+                </div>
+
+                <a href="index.html"
+                    style="color: #64748b; text-decoration: none; font-weight: 500; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; margin-top: auto;">
+                    <span>&larr;</span> Return Home Link
+                </a>
+            </div>
+
+            <!-- Content preview area -->
+            <div class="results-preview-area">
+                <div id="results-target" class="poster-frame" style="width: 100%; height: 100%;">
+                    <div class="awaiting-selection-card">
+                        <!-- Custom stacked 3D cubes SVG -->
+                        <svg width="84" height="84" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 0.5rem;">
+                            <!-- Cube 1 (Bottom Left) -->
+                            <polygon points="34,38 50,46 34,54 18,46" fill="#c7d2fe" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <polygon points="18,46 34,54 34,72 18,64" fill="#6366f1" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <polygon points="34,54 50,46 50,64 34,72" fill="#4f46e5" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <!-- Cube 2 (Bottom Right) -->
+                            <polygon points="66,38 82,46 66,54 50,46" fill="#c7d2fe" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <polygon points="50,46 66,54 66,72 50,64" fill="#6366f1" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <polygon points="66,54 82,46 82,64 66,72" fill="#4f46e5" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <!-- Cube 3 (Top Center) -->
+                            <polygon points="50,20 66,28 50,36 34,28" fill="#c7d2fe" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <polygon points="34,28 50,36 50,54 34,46" fill="#6366f1" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                            <polygon points="50,36 66,28 66,46 50,54" fill="#4f46e5" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                        </svg>
+                        <h2>Awaiting Selection</h2>
+                        <p>Provide structural segment criteria tags inside the configuration dock.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selection Modal -->
+    <div id="selection-overlay" class="selection-overlay" onclick="closeModal()">
+        <div class="selection-modal" onclick="event.stopPropagation()">
+            <h2 id="modal-title">Select Option</h2>
+            <input type="text" id="modal-search" class="selection-search" placeholder="Search..." onkeyup="filterModalItems()" style="display: none;">
+            <div id="modal-list" class="selection-list">
+                <!-- Options populated here -->
+            </div>
+            <button class="selection-close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let selectedCategory = null;
+        let selectedProgram = null;
+        let currentModalType = null;
+
+        const CUBE_AWAITING_HTML = `
+            <div class="awaiting-selection-card">
+                <svg width="84" height="84" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 0.5rem;">
+                    <polygon points="34,38 50,46 34,54 18,46" fill="#c7d2fe" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="18,46 34,54 34,72 18,64" fill="#6366f1" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="34,54 50,46 50,64 34,72" fill="#4f46e5" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="66,38 82,46 66,54 50,46" fill="#c7d2fe" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="50,46 66,54 66,72 50,64" fill="#6366f1" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="66,54 82,46 82,64 66,72" fill="#4f46e5" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="50,20 66,28 50,36 34,28" fill="#c7d2fe" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="34,28 50,36 50,54 34,46" fill="#6366f1" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                    <polygon points="50,36 66,28 66,46 50,54" fill="#4f46e5" stroke="#ffffff" stroke-width="0.8" stroke-linejoin="round"/>
+                </svg>
+                <h2>Awaiting Selection</h2>
+                <p>Provide structural segment criteria tags inside the configuration dock.</p>
+            </div>
+        `;
+
+        function openModal(type) {
+            if (type === 'program' && !selectedCategory) {
+                alert("Please select a category first.");
+                return;
+            }
+
+            currentModalType = type;
+            const data = getData();
+
+            // Check if data is fully loaded
+            const isLoaded = (typeof isDataLoaded !== 'undefined') ? isDataLoaded : (data && Object.keys(data.posters || {}).length > 0);
+
+            if (type === 'program' && !isLoaded) {
+                const list = document.getElementById('modal-list');
+                list.innerHTML = `
+                    <div style="padding: 2.5rem; text-align: center; color: #5f5bf6; font-family: 'Outfit', sans-serif;">
+                        <i class="fa fa-circle-notch fa-spin fa-2x" style="margin-bottom: 1rem;"></i>
+                        <p style="margin: 0; color: #64748b; font-weight: 500;">Loading published results...</p>
+                    </div>
+                `;
+                document.getElementById('modal-title').innerText = 'Select Program';
+                document.getElementById('modal-search').style.display = 'none';
+                document.getElementById('selection-overlay').style.display = 'flex';
+
+                // Automatically refresh modal when data loads
+                const onDataLoaded = () => {
+                    window.removeEventListener('dataUpdated', onDataLoaded);
+                    if (currentModalType === 'program' && document.getElementById('selection-overlay').style.display === 'flex') {
+                        openModal('program');
+                    }
+                };
+                window.addEventListener('dataUpdated', onDataLoaded);
+                return;
+            }
+
+            let items = [];
+
+            if (type === 'category') {
+                items = data.categories || ['UP', 'LP', 'HS', 'HSS', 'JR', 'SR', 'GEN'];
+            } else {
+                // Filter programs by selected category
+                const programSet = new Set();
+                
+                // Load from DB category programs
+                if (data.categoryPrograms && data.categoryPrograms[selectedCategory]) {
+                    data.categoryPrograms[selectedCategory].forEach(prog => {
+                        programSet.add(prog.trim());
+                    });
+                }
+
+                // Fallback to posters
+                const posterKeys = Object.keys(data.posters || {});
+                posterKeys.forEach(key => {
+                    const parts = key.split(':::');
+                    if (parts.length === 2) {
+                        const [cat, prog] = parts;
+                        if (cat.trim().toLowerCase() === selectedCategory.trim().toLowerCase()) {
+                            programSet.add(prog.trim());
+                        }
+                    }
+                });
+                items = Array.from(programSet).sort();
+
+                if (items.length === 0) {
+                    const list = document.getElementById('modal-list');
+                    list.innerHTML = `<div style="padding: 2.5rem; color: #64748b; font-family: 'Outfit', sans-serif; font-weight: 500;">No programs published for category "${selectedCategory}" yet.</div>`;
+                    document.getElementById('modal-title').innerText = 'Select Program';
+                    document.getElementById('modal-search').style.display = 'none';
+                    document.getElementById('selection-overlay').style.display = 'flex';
+                    return;
+                }
+            }
+
+            const title = type === 'category' ? 'Select Category' : 'Select Program';
+            document.getElementById('modal-title').innerText = title;
+
+            const searchInput = document.getElementById('modal-search');
+            searchInput.style.display = 'block';
+            searchInput.value = ''; // clear previous search
+
+            const list = document.getElementById('modal-list');
+            list.innerHTML = items.map(item => `
+                <div class="selection-item" onclick="handleSelect('${item}')">${item}</div>
+            `).join('');
+
+            document.getElementById('selection-overlay').style.display = 'flex';
+            setTimeout(() => searchInput.focus(), 100);
+        }
+
+        function filterModalItems() {
+            const query = document.getElementById('modal-search').value.toLowerCase();
+            const items = document.querySelectorAll('.selection-item');
+            items.forEach(item => {
+                if (item.innerText.toLowerCase().includes(query)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('selection-overlay').style.display = 'none';
+        }
+
+        function handleSelect(val) {
+            if (currentModalType === 'category') {
+                if (selectedCategory !== val) {
+                    selectedCategory = val;
+                    document.querySelector('#cat-display span').innerText = val;
+                    document.getElementById('cat-display').classList.add('active');
+
+                    // Reset program selection
+                    selectedProgram = null;
+                    const progSpan = document.querySelector('#prog-display span');
+                    progSpan.innerText = 'Choose Program...';
+                    document.getElementById('prog-display').classList.remove('active');
+
+                    // Reset preview area
+                    document.getElementById('results-target').innerHTML = CUBE_AWAITING_HTML;
+                }
+            } else {
+                selectedProgram = val;
+                document.querySelector('#prog-display span').innerText = val;
+                document.getElementById('prog-display').classList.add('active');
+                showPoster();
+            }
+
+            closeModal();
+        }
+
+        function showPoster() {
+            if (!selectedCategory || !selectedProgram) return;
+
+            const data = getData();
+            let key1 = `${selectedCategory.trim()}:::${selectedProgram.trim()}`.replace(/['"]/g, '');
+            let key2 = `${selectedProgram.trim()}:::${selectedCategory.trim()}`.replace(/['"]/g, '');
+            
+            const posterUrl = data.posters ? (data.posters[key1] || data.posters[key2]) : null;
+            const target = document.getElementById('results-target');
+
+
+            if (posterUrl) {
+                target.innerHTML = `
+                    <div id="results-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: #4f46e5;">
+                        <i class="fa fa-circle-notch fa-spin fa-3x" style="margin-bottom: 1rem;"></i>
+                        <h3 style="margin:0; font-family: 'Outfit', sans-serif; color: #4a5568;">Fetching Poster...</h3>
+                    </div>
+                    <div id="poster-container" style="position: relative; display: none; width: 100%; text-align: center;">
+                        <img src="${posterUrl}" class="fade-in" 
+                            onload="document.getElementById('results-loader').style.display='none'; document.getElementById('poster-container').style.display='inline-block';"
+                            onerror="document.getElementById('results-loader').style.display='none'; document.getElementById('results-target').innerHTML = '<div class=&quot;empty-results&quot;><i class=&quot;fa fa-exclamation-triangle&quot; style=&quot;color:#e74c3c; font-size:3rem; margin-bottom:1rem;&quot;></i><h2>Failed to Load</h2><p style=&quot;color:#64748b;&quot;>The image failed to load. Please verify your connection or try again.</p><button class=&quot;selection-close-btn&quot; onclick=&quot;showPoster()&quot; style=&quot;margin-top:1rem; max-width:200px;&quot;><i class=&quot;fa fa-refresh&quot;></i> Retry</button></div>';">
+                        <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 0.5rem; z-index: 10;">
+                            <button onclick="downloadImage('${posterUrl}', 'Sahitholsav_${selectedCategory}_${selectedProgram}.jpg')" style="background: rgba(255,255,255,0.9); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: #4f46e5; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Download Poster"><i class="fa fa-download"></i></button>
+                            <button onclick="shareImage('${posterUrl}', 'Sahitholsav - ${selectedProgram}')" style="background: rgba(255,255,255,0.9); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: #4f46e5; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Share Poster"><i class="fa fa-share-alt"></i></button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                target.innerHTML = `
+                    <div class="empty-results">
+                        <i class="fa fa-image" style="opacity: 0.1;"></i>
+                        <h2>Poster Not Found</h2>
+                        <p style="color: #636e72;">The result for <strong>${selectedCategory} - ${selectedProgram}</strong> hasn't been published yet.</p>
+                        <button class="selection-close-btn" onclick="location.reload()" style="margin-top: 1rem; max-width: 200px;">
+                            <i class="fa fa-refresh"></i> Refresh Page
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function downloadImage(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+            } catch (err) {
+                alert("Failed to download image. " + err.message);
+            }
+        }
+
+        async function shareImage(url, title) {
+            if (navigator.share) {
+                try {
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    const file = new File([blob], 'poster.jpg', { type: blob.type });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: title,
+                            text: 'Check out this result from Koduvelly Sahitholsav!',
+                            files: [file]
+                        });
+                    } else {
+                        await navigator.share({
+                            title: title,
+                            text: 'Check out this result from Koduvelly Sahitholsav!',
+                            url: url
+                        });
+                    }
+                } catch (err) {
+                    console.log('Error sharing:', err);
+                }
+            } else {
+                alert("Native sharing is not supported on this device/browser.");
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pallet-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap');
+
+        body {
+            background: radial-gradient(circle at center, #f1f5f9 0%, #e2e8f0 100%) !important;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        /* Tab Switcher Styles */
+        .tab-switcher {
+            display: inline-flex;
+            background: #e2ebf5;
+            border-radius: 9999px;
+            padding: 5px;
+            gap: 4px;
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 480px;
+            box-sizing: border-box;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            outline: none;
+        }
+
+        .tab-btn:hover {
+            color: #1e293b;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: #5856d6;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        /* Container Card Styles */
+        .reg-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+            padding: 3rem 2.5rem;
+            box-sizing: border-box;
+            margin: 0 auto;
+        }
+
+        .reg-header {
+            text-align: center;
+            margin-bottom: 2.2rem;
+        }
+
+        .badge-circle {
+            width: 72px;
+            height: 72px;
+            background: #eef2ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            transition: transform 0.3s ease;
+        }
+
+        .badge-circle i {
+            color: #6366f1;
+            font-size: 1.8rem;
+        }
+
+        .reg-header h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            color: #0f172a;
+            margin: 0 0 0.5rem 0;
+            font-size: 2.1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .reg-header p {
+            font-family: 'Outfit', sans-serif;
+            color: #64748b;
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 1.8rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1e293b;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            background: #ffffff;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1.2rem center;
+            background-size: 1.25rem;
+            padding-right: 3rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .form-control:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Buttons styling */
+        .btn-register {
+            width: 100%;
+            background: #1e293b;
+            color: #ffffff;
+            padding: 1.1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 12px rgba(30, 41, 59, 0.08);
+        }
+
+        .btn-register:hover {
+            background: #0f172a;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(30, 41, 59, 0.12);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        .btn-register:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* View Queue Outline Button style */
+        .btn-outline {
+            background: #ffffff;
+            color: #5856d6;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+            margin-top: 1rem;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            color: #4f46e5;
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            transform: translateY(-1px);
+        }
+
+        /* Success Popup Styles */
+        .success-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .success-modal {
+            background: white;
+            padding: 3rem;
+            border-radius: 24px;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 440px;
+            box-sizing: border-box;
+        }
+
+        .success-overlay.active {
+            opacity: 1;
+        }
+
+        .success-overlay.active .success-modal {
+            transform: scale(1);
+        }
+
+        .check-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .check-circle i {
+            color: white;
+            font-size: 2.5rem;
+        }
+
+        @keyframes popIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .button-container {
+            display: flex;
+            width: 100%;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+            .reg-container {
+                padding: 2rem 1.5rem;
+                border-radius: 20px;
+            }
+            .btn-register {
+                padding: 0.9rem;
+                font-size: 0.95rem;
+            }
+            .success-modal {
+                padding: 2rem 1.5rem;
+                width: 90%;
+            }
+            .reg-header h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="pallet-theme">
+    <!-- Beautiful ID Verification UI -->
+    <div id="id-verification-ui" style="display: none; background: white; width: 100%; max-width: 400px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; text-align: center; position: relative; margin: auto;">
+        <div style="background: linear-gradient(135deg, #3182ce, #2b6cb0); padding: 3rem 2rem 5rem 2rem; color: white;">
+            <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; backdrop-filter: blur(5px);">
+                <i class="fa fa-id-badge" style="font-size: 2.5rem; color: white;"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 1.2rem; font-weight: 500; opacity: 0.9;">Sahithyolsav 2026</h2>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">Participant Verification</p>
+        </div>
+        
+        <div style="background: white; padding: 2rem; border-radius: 20px 20px 0 0; margin-top: -2rem; position: relative; box-shadow: 0 -10px 20px rgba(0,0,0,0.05);">
+            <div style="margin-bottom: 1.5rem;">
+                <p style="color: #718096; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; margin: 0 0 0.2rem 0; letter-spacing: 1px;">Student Name</p>
+                <h1 id="verify-name" style="color: #2d3748; margin: 0; font-size: 2rem; word-break: break-word;">Loading...</h1>
+            </div>
+            <div style="background: #ebf8ff; padding: 1rem; border-radius: 12px; border: 1px solid #bee3f8; display: inline-block;">
+                <p style="color: #3182ce; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; margin: 0 0 0.2rem 0;">Sector</p>
+                <h2 id="verify-sector" style="color: #2b6cb0; margin: 0; font-size: 1.5rem;">Loading...</h2>
+            </div>
+            <div style="margin-top: 2.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #48bb78; font-weight: bold;">
+                <i class="fa fa-check-circle" style="font-size: 1.5rem;"></i>
+                <span>Verified Participant</span>
+            </div>
+            
+            <div id="verify-progs-container" style="display: none; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem; text-align: left;">
+                <p style="color: #4a5568; font-size: 0.9rem; font-weight: bold; margin: 0 0 0.5rem 0;">Registered Programs:</p>
+                <ul id="verify-progs-list" style="margin: 0; padding-left: 1.2rem; color: #718096; font-size: 0.95rem; line-height: 1.5;">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Login Overlay -->
+    <div id="password-overlay" class="reg-container" style="display: none; max-width: 420px; text-align: center;">
+        <div class="reg-header">
+            <div class="badge-circle" style="background: #f1f5f9;">
+                <i class="fa fa-lock" style="color: #475569; font-size: 1.5rem;"></i>
+            </div>
+            <h1 style="font-size: 1.8rem;">Admin Portal</h1>
+            <p>Verify password to access the portal</p>
+        </div>
+        <div>
+            <div class="form-group">
+                <label>Assigned Stage</label>
+                <select class="form-control" id="login-stage-select">
+                    <option value="">Loading stages...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div style="position: relative;">
+                    <input type="password" id="admin-password" placeholder="Enter Password" onkeypress="if(event.key === 'Enter') checkAdminPassword()" class="form-control" style="padding-right: 3rem;">
+                    <i class="fa fa-eye" id="toggle-password" onclick="togglePasswordVisibility()" style="position: absolute; right: 1.2rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; font-size: 1.2rem;"></i>
+                </div>
+            </div>
+            <button onclick="checkAdminPassword()" class="btn-register" style="margin-top: 1rem; width: 100%;">Login</button>
+            <p id="password-error" style="color: #ef4444; display: none; margin-top: 1.2rem; font-weight: 600; font-size: 0.9rem;">Incorrect password.</p>
+        </div>
+    </div>
+
+    <!-- Admin Wrapper (Registration & Conductor) -->
+    <div id="admin-wrapper" style="display: none; width: 100%; max-width: 480px; margin: auto;">
+        
+        <!-- Tab Navigation -->
+        <div style="display: flex; justify-content: center; width: 100%;">
+            <div class="tab-switcher">
+                <button id="tab-reg" onclick="switchAdminTab('reg-container')" class="tab-btn active">Registration</button>
+                <button id="tab-conductor" onclick="switchAdminTab('conductor-container')" class="tab-btn">Conductor</button>
+            </div>
+        </div>
+
+        <div class="reg-container" id="reg-container" style="display: block;">
+            <div class="reg-header">
+                <div class="badge-circle">
+                    <i class="fa fa-user-plus"></i>
+                </div>
+                <h1>Student Registration</h1>
+                <p>Verify allocations and scan student credentials</p>
+            </div>
+
+            <div class="form-group">
+                <label>Current Stage Target</label>
+                <select class="form-control" id="stage-select">
+                    <option value="">Loading stages...</option>
+                </select>
+            </div>
+
+            <button class="btn-register" onclick="startScanner()" style="margin-bottom: 1rem;">
+                <i class="fa-solid fa-table-cells-large"></i> Launch ID Scanner
+            </button>
+
+            <div class="button-container">
+                <button class="btn-register btn-outline" id="view-list-btn" onclick="viewList()">
+                    <i class="fa-solid fa-list-ul"></i> View Queue ( <span id="list-count">0</span> )
+                </button>
+            </div>
+        </div>
+
+        <!-- Conductor Dashboard -->
+        <div class="reg-container" id="conductor-container" style="display: none;">
+            <div class="reg-header">
+                <div class="badge-circle" style="background: #faf5ff;">
+                    <i class="fa fa-microphone" style="color: #805ad5;"></i>
+                </div>
+                <h1>Conductor Dashboard</h1>
+                <p>View registered participants for your stage</p>
+            </div>
+            
+            <div style="background: #f8fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <span style="color: #64748b; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Assigned Stage</span>
+                    <div id="conductor-stage-display" style="color: #0f172a; font-size: 1.2rem; font-weight: bold;">Loading...</div>
+                </div>
+                <button class="btn-register" onclick="loadConductorParticipants()" style="width: auto; background: #6366f1; padding: 0.6rem 1.2rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; border-radius: 8px;">
+                    <i class="fa fa-sync"></i> Refresh List
+                </button>
+            </div>
+
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0; color: #1e3a8a; font-size: 1rem; margin-bottom: 0.8rem; font-family: 'Outfit', sans-serif;"><i class="fa fa-sliders-h"></i> Stage Controls</h3>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.8rem;">
+                    <select id="conductor-cat" class="form-control" onchange="loadConductorPrograms()" style="flex: 1; padding: 0.6rem 2rem 0.6rem 0.8rem; border-radius: 8px; font-size: 0.85rem; background-position: right 0.6rem center; background-size: 1rem;">
+                        <option value="">-- Category --</option>
+                        <option value="LP">LP</option>
+                        <option value="UP">UP</option>
+                        <option value="HS">HS</option>
+                        <option value="HSS">HSS</option>
+                        <option value="junior">JR</option>
+                        <option value="senior">SR</option>
+                        <option value="general">GEN</option>
+                    </select>
+                    <select id="conductor-prog" class="form-control" style="flex: 1; padding: 0.6rem 2rem 0.6rem 0.8rem; border-radius: 8px; font-size: 0.85rem; background-position: right 0.6rem center; background-size: 1rem;">
+                        <option value="">-- Program --</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <button class="btn-register" style="background: #3b82f6; padding: 0.6rem; font-size: 0.85rem; margin: 0; border-radius: 8px;" onclick="triggerConductorSituation('Start Registration')"><i class="fa fa-play-circle"></i> Start Registration</button>
+                    <button class="btn-register" style="background: #ef4444; padding: 0.6rem; font-size: 0.85rem; margin: 0; border-radius: 8px;" onclick="triggerConductorSituation('End Registration')"><i class="fa fa-stop-circle"></i> End Registration</button>
+                    <button class="btn-register" style="background: #10b981; padding: 0.6rem; font-size: 0.85rem; margin: 0; border-radius: 8px;" onclick="triggerConductorSituation('Start Program')"><i class="fa fa-music"></i> Start Program</button>
+                    <button class="btn-register" style="background: #f59e0b; padding: 0.6rem; font-size: 0.85rem; margin: 0; border-radius: 8px;" onclick="triggerConductorSituation('End Program')"><i class="fa fa-flag-checkered"></i> End Program</button>
+                </div>
+            </div>
+
+            <div id="conductor-participants-list" style="background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; min-height: 200px; max-height: 50vh; overflow-y: auto;">
+                <div style="text-align: center; color: #94a3b8; padding: 2rem;">Select a stage to view participants.</div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Success Animation Popup -->
+    <div class="success-overlay" id="success-popup">
+        <div class="success-modal">
+            <div class="check-circle">
+                <i class="fa fa-check"></i>
+            </div>
+            <h2 style="color: #2d3748; margin: 0 0 0.5rem 0;">Registration Completed!</h2>
+            <p id="success-student-name" style="color: #718096; margin: 0 0 2rem 0; font-size: 1.1rem;"></p>
+            <button class="btn-register" style="background: #48bb78; display: inline-block; width: auto; padding: 0.8rem 2.5rem; margin: 0 auto;" onclick="closeSuccessPopup()">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <!-- View List Modal -->
+    <div class="success-overlay" id="list-modal" style="z-index: 1001;">
+        <div class="success-modal" style="width: 90%; max-width: 600px; padding: 2rem; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="color: #2d3748; margin: 0;"><i class="fa fa-users" style="color: #3182ce;"></i> Pending Students</h2>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button onclick="selectAllStudents()" style="background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 6px; padding: 0.4rem 0.8rem; color: #4a5568; font-weight: bold; cursor: pointer; font-size: 0.85rem;"><i class="fa fa-check-double"></i> Select All</button>
+                    <button onclick="closeList()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #a0aec0;"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
+            <div id="pending-students-list" style="text-align: left; margin-bottom: 1.5rem; overflow-y: auto; flex-grow: 1; min-height: 200px;">
+                <!-- List items here -->
+            </div>
+            <button class="btn-register" id="final-register-btn" style="background: #3182ce; margin-top: auto;" onclick="registerSelectedStudents()">
+                <i class="fa fa-cloud-upload-alt"></i> Register Selected (0)
+            </button>
+        </div>
+    </div>
+
+    <!-- Scanner Modal -->
+    <div class="success-overlay" id="scanner-modal" style="z-index: 1002;">
+        <div class="success-modal" style="width: 90%; max-width: 500px; padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: #2d3748;">Scan Student ID</h3>
+            <p style="font-size: 0.85rem; color: #718096; margin-bottom: 1rem;">Point your camera at the QR code on the physical ID card to automatically fill their Name and Unit.</p>
+            <div id="reader" style="width: 100%; min-height: 300px; border-radius: 12px; overflow: hidden; border: 2px solid #e2e8f0;"></div>
+            <button class="btn-register" style="background: #e53e3e; margin-top: 1rem;" onclick="stopScanner()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        if (!window.WA_BACKEND_URL) {
+            const hn = window.location.hostname;
+            const isLocal = hn === 'localhost' || 
+                            hn === '127.0.0.1' || 
+                            hn === '[::1]' ||
+                            hn.startsWith('192.168.') || 
+                            hn.startsWith('10.') || 
+                            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+                            hn.endsWith('.local') ||
+                            window.location.protocol === 'file:';
+            
+            if (isLocal) {
+                const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
+                window.WA_BACKEND_URL = `http://${host}:3001`;
+            } else {
+                window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
+            }
+        }
+
+        const SUPABASE_URL = 'https://lxbvadjjboavxwidxsnl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Ubv4Ofl0uR9o6ct9PvI1uA_C9hglPNT';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function getStageDisplayName(stageName) {
+            if (!stageName) return '';
+            const name = stageName.toLowerCase().trim();
+            if (name === 'stage 1') return 'Stage 1: Al Farabi';
+            if (name === 'stage 2') return 'Stage 2: Al Ghazali';
+            if (name === 'stage 3') return 'Stage 3: Ibn Sina';
+            if (name === 'stage 4') return 'Stage 4: Al Khwarizmi';
+            if (name === 'stage 5') return 'Stage 5: Al Kindi';
+            if (name === 'stage 6') return 'Stage 6: Al Razi';
+            if (name === 'stage 7') return 'Stage 7: Ibn Rushd';
+            if (name === 'stage 8') return 'Stage 8: Ibn Khaldun';
+            return stageName.replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        async function loadStagesFromSupabase() {
+            let stages = ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4', 'Stage 5', 'Stage 6', 'Stage 7', 'Stage 8', 'Main Stage'];
+            
+            try {
+                // Try fetching from shediul table
+                const { data: shediulData, error: shediulErr } = await supabaseClient
+                    .from('shediul')
+                    .select('stage')
+                    .order('id');
+                
+                if (!shediulErr && shediulData && shediulData.length > 0) {
+                    stages = stages.concat(shediulData.map(r => r.stage).filter(Boolean));
+                }
+            } catch (e) {
+                console.warn("Failed to load stages from shediul table:", e);
+            }
+
+            try {
+                const { data: schedData, error: schedErr } = await supabaseClient
+                    .from('Schedule Manager')
+                    .select('Stage Name')
+                    .order('id');
+                
+                if (!schedErr && schedData && schedData.length > 0) {
+                    const uniqueStages = schedData.map(r => r['Stage Name']).filter(Boolean);
+                    stages = stages.concat(uniqueStages);
+                }
+            } catch (e) {
+                console.warn("Failed to load stages from Schedule Manager table:", e);
+            }
+
+            // Sanitize stage names: trim and remove duplicates (case-insensitive deduplication, keeping first seen case)
+            const seen = new Set();
+            const sanitizedStages = [];
+            stages.forEach(s => {
+                const trimmed = s.trim();
+                const lower = trimmed.toLowerCase();
+                if (trimmed && !seen.has(lower)) {
+                    seen.add(lower);
+                    sanitizedStages.push(trimmed);
+                }
+            });
+
+            // Populate the dropdowns
+            const loginSelect = document.getElementById('login-stage-select');
+            const stageSelect = document.getElementById('stage-select');
+
+            const optionsHtml = '<option value="">-- Select Stage --</option>' +
+                sanitizedStages.map(s => `<option value="${s}">${getStageDisplayName(s)}</option>`).join('');
+
+            if (loginSelect) loginSelect.innerHTML = optionsHtml;
+            if (stageSelect) stageSelect.innerHTML = optionsHtml;
+            
+            return sanitizedStages;
+        }
+
+        // Load units on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // First load stages dynamically from Supabase
+            await loadStagesFromSupabase();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const verifiedName = urlParams.get('name');
+            const verifiedSector = urlParams.get('sector');
+            const verifiedProgs = urlParams.get('progs');
+            const verifiedGenProgs = urlParams.get('genprogs');
+            const isAdmin = urlParams.get('admin') === 'true';
+            const adminStage = urlParams.get('stage');
+
+            if (verifiedName !== null) {
+                // Show Verification UI
+                document.getElementById('password-overlay').style.display = 'none';
+                document.getElementById('admin-wrapper').style.display = 'none';
+                document.getElementById('id-verification-ui').style.display = 'block';
+                document.getElementById('verify-name').innerText = verifiedName || 'Unknown Student';
+                document.getElementById('verify-sector').innerText = verifiedSector || 'N/A';
+                
+                const progsContainer = document.getElementById('verify-progs-container');
+                const progsList = document.getElementById('verify-progs-list');
+                
+                let allProgs = [];
+                if (verifiedProgs) {
+                    allProgs = allProgs.concat(verifiedProgs.split('|'));
+                }
+                if (verifiedGenProgs) {
+                    allProgs = allProgs.concat(verifiedGenProgs.split('|').map(p => `GEN: ${p}`));
+                }
+
+                if (allProgs.length > 0) {
+                    progsContainer.style.display = 'block';
+                    
+                    if (isAdmin && adminStage) {
+                        // Admin Mode: Inject Interactive Registration Buttons
+                        progsContainer.innerHTML = `<p style="color: #4a5568; font-size: 0.9rem; font-weight: bold; margin: 0 0 0.5rem 0;">Select Program to Register for <strong>${adminStage}</strong>:</p>`;
+                        
+                        const btnContainer = document.createElement('div');
+                        btnContainer.style = 'display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;';
+                        
+                        allProgs.forEach(p => {
+                            const parts = p.split(':');
+                            const cat = parts[0] ? parts[0].trim() : 'Unknown';
+                            const progName = parts.slice(1).join(':').trim() || p;
+                            
+                            const btn = document.createElement('button');
+                            btn.className = 'prog-btn-admin';
+                            btn.style = 'padding: 0.8rem; border: 2px solid #cbd5e0; border-radius: 8px; background: #e2e8f0; color: #4a5568; font-weight: bold; cursor: pointer; text-align: left; width: 100%; transition: all 0.2s;';
+                            btn.innerHTML = `<span style="font-size:0.8rem; color:#718096; display:block;">${cat}</span> ${progName}`;
+                            
+                            btn.onclick = () => {
+                                document.querySelectorAll('.prog-btn-admin').forEach(b => {
+                                    b.style.background = '#e2e8f0'; b.style.color = '#4a5568'; b.style.borderColor = '#cbd5e0';
+                                });
+                                btn.style.background = '#ebf8ff'; btn.style.color = '#2b6cb0'; btn.style.borderColor = '#63b3ed';
+                                
+                                const regBtn = document.getElementById('admin-register-btn');
+                                regBtn.style.display = 'block';
+                                regBtn.onclick = () => registerFromIdPage(verifiedName, verifiedSector, cat, progName, adminStage);
+                            };
+                            btnContainer.appendChild(btn);
+                        });
+                        
+                        progsContainer.appendChild(btnContainer);
+                        
+                        const regBtn = document.createElement('button');
+                        regBtn.id = 'admin-register-btn';
+                        regBtn.className = 'btn-register';
+                        regBtn.style = 'display: none; background: #48bb78; color: white; width: 100%; margin-top: 0.5rem;';
+                        regBtn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm Registration';
+                        progsContainer.appendChild(regBtn);
+                        
+                        const cancelBtn = document.createElement('button');
+                        cancelBtn.className = 'btn-register';
+                        cancelBtn.style = 'background: #e2e8f0; color: #4a5568; width: 100%; margin-top: 0.5rem;';
+                        cancelBtn.innerHTML = 'Cancel';
+                        cancelBtn.onclick = () => window.location.href = window.location.pathname;
+                        progsContainer.appendChild(cancelBtn);
+
+                    } else {
+                        // Normal User Mode: Read-Only List
+                        progsContainer.innerHTML = `<p style="color: #4a5568; font-size: 0.9rem; font-weight: bold; margin: 0 0 0.5rem 0;">Registered Programs:</p>
+                        <ul style="margin: 0; padding-left: 1.2rem; color: #718096; font-size: 0.95rem; line-height: 1.5;">
+                            ${allProgs.map(p => `<li style="margin-bottom: 0.3rem;">${p}</li>`).join('')}
+                        </ul>`;
+                    }
+                }
+            } else {
+                // Show Admin Portal
+                document.getElementById('id-verification-ui').style.display = 'none';
+                if (sessionStorage.getItem('admin_logged_in') === 'true') {
+                    document.getElementById('password-overlay').style.display = 'none';
+                    document.getElementById('admin-wrapper').style.display = 'block';
+                    
+                    const savedStage = sessionStorage.getItem('admin_stage');
+                    if (savedStage) {
+                        document.getElementById('stage-select').value = savedStage;
+                        const display = document.getElementById('conductor-stage-display');
+                        if (display) display.innerText = savedStage;
+                    }
+                } else {
+                    document.getElementById('password-overlay').style.display = 'block';
+                }
+            }
+        });
+
+        // ================= ADMIN PORTAL LOGIC =================
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('admin-password');
+            const icon = document.getElementById('toggle-password');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                icon.className = 'fa fa-eye-slash';
+            } else {
+                passInput.type = 'password';
+                icon.className = 'fa fa-eye';
+            }
+        }
+
+        async function checkAdminPassword() {
+            const passInput = document.getElementById('admin-password').value.trim();
+            const stage = document.getElementById('login-stage-select').value;
+            const err = document.getElementById('password-error');
+            const btn = document.querySelector('#password-overlay button.btn-register');
+            
+            if (!stage) {
+                err.innerText = "Please select your stage first.";
+                err.style.display = 'block';
+                return;
+            }
+
+            if (!passInput) {
+                err.innerText = "Please enter a password.";
+                err.style.display = 'block';
+                return;
+            }
+
+            // Master fallback password in case of emergencies
+            if (passInput === 'admin2026') {
+                loginSuccess(stage);
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Checking...';
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            try {
+                const tableName = stage.toLowerCase().trim();
+                
+                // Fetch the latest password set for this stage from Supabase
+                const { data, error } = await supabaseClient
+                    .from(tableName)
+                    .select('pass')
+                    .not('pass', 'is', null)
+                    .order('time', { ascending: false })
+                    .limit(1);
+
+                let actualPass = 'admin'; // Default password if never set
+                
+                if (data && data.length > 0 && data[0].pass) {
+                    actualPass = data[0].pass;
+                }
+
+                if (passInput === actualPass || (error && passInput === 'admin')) {
+                    loginSuccess(stage);
+                } else {
+                    err.innerText = "Incorrect password.";
+                    err.style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+                if (passInput === 'admin') {
+                    loginSuccess(stage);
+                } else {
+                    err.innerText = "Incorrect password or database error.";
+                    err.style.display = 'block';
+                }
+            } finally {
+                btn.innerHTML = 'Login';
+                btn.disabled = false;
+            }
+        }
+
+        function loginSuccess(stage) {
+            document.getElementById('password-overlay').style.display = 'none';
+            document.getElementById('admin-wrapper').style.display = 'block';
+            
+            sessionStorage.setItem('admin_logged_in', 'true');
+            sessionStorage.setItem('admin_stage', stage);
+            
+            // Pre-fill the stage selectors
+            const stageSelect = document.getElementById('stage-select');
+            if(stageSelect) stageSelect.value = stage;
+            
+            const display = document.getElementById('conductor-stage-display');
+            if(display) display.innerText = stage;
+        }
+
+        async function loadConductorPrograms() {
+            const cat = document.getElementById('conductor-cat').value;
+            const progSelect = document.getElementById('conductor-prog');
+            
+            if (!cat) {
+                progSelect.innerHTML = '<option value="">-- Program --</option>';
+                return;
+            }
+
+            progSelect.innerHTML = '<option value="">Loading...</option>';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from(cat)
+                    .select('Programs')
+                    .not('Programs', 'is', null);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    progSelect.innerHTML = '<option value="">No Programs Found</option>';
+                    return;
+                }
+
+                // Filter out duplicates and sort alphabetically
+                const uniqueProgs = [...new Set(data.map(d => d.Programs))].sort();
+
+                progSelect.innerHTML = '<option value="">-- Program --</option>' + 
+                    uniqueProgs.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            } catch (err) {
+                console.error("Failed to load programs:", err);
+                progSelect.innerHTML = '<option value="">Error loading</option>';
+            }
+        }
+
+        function switchAdminTab(tabId) {
+            document.getElementById('reg-container').style.display = 'none';
+            document.getElementById('conductor-container').style.display = 'none';
+            document.getElementById(tabId).style.display = 'block';
+
+            const regTab = document.getElementById('tab-reg');
+            const condTab = document.getElementById('tab-conductor');
+            if (tabId === 'reg-container') {
+                regTab.classList.add('active');
+                condTab.classList.remove('active');
+            } else {
+                regTab.classList.remove('active');
+                condTab.classList.add('active');
+            }
+        }
+
+        async function triggerConductorSituation(situation) {
+            const stage = sessionStorage.getItem('admin_stage');
+            if (!stage) {
+                alert("Critical Error: No stage assigned. Please log in again.");
+                return;
+            }
+            const cat = document.getElementById('conductor-cat').value.trim();
+            const prog = document.getElementById('conductor-prog').value.trim();
+
+            if (!confirm(`Are you sure you want to trigger "${situation}" for ${stage}?`)) return;
+
+            const tableName = stage.toLowerCase().trim();
+            try {
+                const { error } = await supabaseClient.from(tableName).insert([{
+                    situation: situation,
+                    time: new Date().toISOString(),
+                    Categories: cat,
+                    Programs: prog
+                }]);
+                
+                if (error) throw error;
+
+                // Fire broadcast so other clients update
+                supabaseClient.channel('custom-all-channel').send({
+                    type: 'broadcast',
+                    event: 'stage_update',
+                    payload: { stage: stage, situation: situation, category: cat, program: prog }
+                });
+
+                // --- WHATSAPP NOTIFICATION LOGIC ---
+                const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
+                let targetIds = [];
+                try {
+                    const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-targets?clientId=${clientId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success) targetIds = data.targets;
+                    }
+                } catch(e) {}
+                
+                if (targetIds && targetIds.length > 0) {
+                    const message = `${stage}\nCategorie : ${cat || 'None'}\nProgram : ${prog || 'None'}\naction : ${situation}`;
+                    
+                    targetIds.forEach(async (chatId) => {
+                        try {
+                            await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ clientId: clientId, chatId: chatId, message: message })
+                            });
+                        } catch (e) {
+                            console.error('Failed to send WhatsApp message to', chatId, e);
+                        }
+                    });
+                }
+
+                alert(`Successfully triggered: ${situation}`);
+            } catch (err) {
+                console.error(err);
+                alert("Error triggering situation: " + err.message);
+            }
+        }
+
+        async function loadConductorParticipants() {
+            const stage = sessionStorage.getItem('admin_stage');
+            const listDiv = document.getElementById('conductor-participants-list');
+            
+            if (!stage) {
+                listDiv.innerHTML = '<div style="text-align: center; color: #e53e3e; padding: 2rem;">Critical Error: No stage assigned. Please log in again.</div>';
+                return;
+            }
+
+            listDiv.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Loading participants...</div>';
+
+            try {
+                let activeProg = document.getElementById('conductor-prog').value.trim();
+                
+                if (!activeProg) {
+                    // Try to fetch from Schedule Manager
+                    const { data: schedData, error: schedErr } = await supabaseClient
+                        .from('Schedule Manager')
+                        .select('*');
+                    if (!schedErr && schedData) {
+                        const row = schedData.find(r => r['Stage Name'] && r['Stage Name'].toLowerCase().trim() === stage.toLowerCase().trim());
+                        if (row && row['Current Program']) {
+                            activeProg = row['Current Program'].replace(/^[- \s]+/, '').trim();
+                        }
+                    }
+                }
+
+                const tableName = stage.toLowerCase().trim();
+                const { data, error } = await supabaseClient
+                    .from(tableName)
+                    .select('*')
+                    .eq('situation', 'Check-in');
+
+                if (error) throw error;
+
+                // Normalize helper for comparing programs
+                const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
+                const normalizedActiveProg = normalize(activeProg);
+
+                const filteredData = data.filter(s => {
+                    if (!normalizedActiveProg) return true;
+                    const sProg = normalize(s.Programs);
+                    return sProg === normalizedActiveProg || sProg.includes(normalizedActiveProg) || normalizedActiveProg.includes(sProg);
+                });
+
+                if (!filteredData || filteredData.length === 0) {
+                    listDiv.innerHTML = `<div style="text-align: center; color: #718096; padding: 2rem;">No participants checked in for ${stage}${activeProg ? ' (' + activeProg + ')' : ''} yet.</div>`;
+                    return;
+                }
+
+                listDiv.innerHTML = filteredData.map((s, idx) => `
+                    <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <div>
+                            <div style="font-weight: bold; color: #2d3748; font-size: 1.1rem; margin-bottom: 0.2rem;">${idx + 1}. ${s.Categories}</div>
+                            <div style="font-size: 0.85rem; color: #718096;">
+                                <i class="fa fa-music" style="margin-right: 0.2rem; color: #805ad5;"></i> ${s.Programs} (${s.cat || 'N/A'})
+                            </div>
+                            <div style="font-size: 0.8rem; color: #a0aec0; margin-top: 0.2rem;">
+                                <i class="fa fa-map-marker-alt" style="margin-right: 0.2rem;"></i> ${s.prog || 'N/A'}
+                            </div>
+                        </div>
+                        <div style="color: #48bb78; font-weight: bold; font-size: 0.8rem;">
+                            <i class="fa fa-check-circle"></i> Checked-in
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                listDiv.innerHTML = `<div style="text-align: center; color: #e53e3e; padding: 2rem;">Error loading data: ${err.message}</div>`;
+            }
+        }
+
+        async function registerFromIdPage(name, unit, cat, prog, stage) {
+            const btn = document.getElementById('admin-register-btn');
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Registering...';
+            btn.disabled = true;
+
+            try {
+                // 1. Try to log check-in to stage table (if it exists)
+                if (stage) {
+                    const tableName = stage.toLowerCase().trim();
+                    try {
+                        const { error } = await supabaseClient
+                            .from(tableName)
+                            .insert([{
+                                situation: 'Check-in',
+                                Categories: name,
+                                Programs: prog,
+                                cat: cat,
+                                prog: unit || 'Unknown',
+                                time: new Date().toISOString()
+                            }]);
+
+                        if (error) throw error;
+                    } catch (stageErr) {
+                        console.warn(`Could not save check-in to stage table "${tableName}":`, stageErr);
+                    }
+                }
+
+                // 2. Reconstruct card URL and save detail log to 'regist' table
+                const isGeneral = cat === 'GEN';
+                const urlParams = new URLSearchParams(window.location.search);
+                const pParam = urlParams.get('progs') || '';
+                const gpParam = urlParams.get('genprogs') || '';
+                const progsParam = pParam ? `&progs=${encodeURIComponent(pParam)}` : '';
+                const genProgsParam = gpParam ? `&genprogs=${encodeURIComponent(gpParam)}` : '';
+                const cardUrl = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(name)}&sector=${encodeURIComponent(unit || '')}${progsParam}${genProgsParam}`;
+
+                const { error: registError } = await supabaseClient
+                    .from('regist')
+                    .insert([{
+                        name: name,
+                        sector: unit || 'Unknown',
+                        program: isGeneral ? null : `${cat ? cat + ': ' : ''}${prog}`,
+                        general: isGeneral ? prog : null,
+                        url: cardUrl,
+                        stage: stage || 'Unknown'
+                    }]);
+
+                if (registError) throw registError;
+                
+                // Dispatch sector notification
+                const progText = cat === 'GEN' ? prog : (cat ? cat + ': ' : '') + prog;
+                sendSectorNotification(name, unit, progText);
+                
+                document.getElementById('id-verification-ui').innerHTML = `
+                    <div style="padding: 3rem 2rem; text-align: center; background: white; border-radius: 20px;">
+                        <i class="fa fa-check-circle" style="font-size: 4rem; color: #48bb78; margin-bottom: 1rem;"></i>
+                        <h2 style="color: #2d3748; margin: 0 0 1rem 0;">Successfully Registered!</h2>
+                        <p style="color: #718096; margin-bottom: 2rem;"><strong>${name}</strong> has been registered for <strong>${prog}</strong> at <strong>${stage}</strong>.</p>
+                        <button class="btn-register" style="background: #3182ce;" onclick="window.location.href = window.location.pathname">Scan Next Student</button>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+                alert("Error registering student: " + err.message);
+                btn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm Registration';
+                btn.disabled = false;
+            }
+        }
+
+        function updateListCount() {
+            const countEl = document.getElementById('list-count');
+            if (countEl) {
+                countEl.innerText = pendingStudents.length;
+            }
+        }
+
+        let pendingStudents = JSON.parse(localStorage.getItem('pending_registrations') || '[]');
+        updateListCount();
+
+        function viewList() {
+            const listDiv = document.getElementById('pending-students-list');
+            const modal = document.getElementById('list-modal');
+            const registerBtn = document.getElementById('final-register-btn');
+
+            if (pendingStudents.length === 0) {
+                listDiv.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 2rem;">No students in the list yet.</div>';
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<i class="fa fa-cloud-upload-alt"></i> Register Selected (0)';
+            } else {
+                const selectedCount = pendingStudents.filter(s => s.selected).length;
+                listDiv.innerHTML = pendingStudents.map((s, index) => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: ${s.selected ? '#ebf8ff' : '#f7fafc'}; padding: 1rem; border-radius: 8px; border: 1px solid ${s.selected ? '#63b3ed' : '#e2e8f0'}; margin-bottom: 0.5rem; transition: all 0.2s;">
+                        <div style="display: flex; align-items: center; cursor: pointer; flex-grow: 1;" onclick="toggleSelect(${index})">
+                            <input type="checkbox" ${s.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect(${index})" style="transform: scale(1.3); margin-right: 1rem; cursor: pointer; accent-color: #3182ce;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748; margin-bottom: 0.2rem;">${s.name}</div>
+                                <div style="font-size: 0.85rem; color: #718096;">
+                                    <i class="fa fa-folder-open" style="margin-right: 0.2rem;"></i> ${s.Category} - ${s.Program} <br>
+                                    <i class="fa fa-map-marker-alt" style="margin-right: 0.2rem; margin-top: 0.3rem;"></i> ${s.unit} | <i class="fa fa-microphone" style="margin-left: 0.2rem;"></i> ${s.Stage || 'No Stage'}
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="removeFromList(${index})" style="background: #fed7d7; color: #c53030; border: none; border-radius: 6px; padding: 0.5rem; cursor: pointer; transition: background 0.2s; margin-left: 1rem;">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+                registerBtn.disabled = selectedCount === 0;
+                registerBtn.innerHTML = `<i class="fa fa-cloud-upload-alt"></i> Register Selected (${selectedCount})`;
+            }
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        function toggleSelect(index) {
+            pendingStudents[index].selected = !pendingStudents[index].selected;
+            localStorage.setItem('pending_registrations', JSON.stringify(pendingStudents));
+            viewList(); // Re-render to update checkbox and button state
+        }
+
+        function selectAllStudents() {
+            const allSelected = pendingStudents.every(s => s.selected);
+            pendingStudents.forEach(s => s.selected = !allSelected); // Toggle logic
+            localStorage.setItem('pending_registrations', JSON.stringify(pendingStudents));
+            viewList();
+        }
+
+        function closeList() {
+            const modal = document.getElementById('list-modal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function removeFromList(index) {
+            pendingStudents.splice(index, 1);
+            localStorage.setItem('pending_registrations', JSON.stringify(pendingStudents));
+            updateListCount();
+            viewList(); // Re-render
+        }
+
+        async function registerSelectedStudents() {
+            const selectedToRegister = pendingStudents.filter(s => s.selected);
+            if (selectedToRegister.length === 0) return;
+
+            const btn = document.getElementById('final-register-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading to Database...';
+            btn.disabled = true;
+
+            try {
+                // Remove the UI 'selected' flag before sending to Supabase
+                const uploadData = selectedToRegister.map(s => {
+                    const { selected, ...dbData } = s;
+                    return dbData;
+                });
+
+                // Supabase insert accepts an array of objects
+                const { error } = await supabaseClient
+                    .from('registred')
+                    .insert(uploadData);
+
+                if (error) throw error;
+
+                // Dispatch sector notifications for all registered students
+                try {
+                    uploadData.forEach(s => {
+                        const progs = [];
+                        if (s.Program) {
+                            const catStr = s.Category || s.category || '';
+                            progs.push((catStr ? catStr + ': ' : '') + s.Program);
+                        }
+                        if (s['program 1']) progs.push((s.category ? s.category + ': ' : '') + s['program 1']);
+                        if (s['program 2']) progs.push((s.category ? s.category + ': ' : '') + s['program 2']);
+                        if (s['program 3']) progs.push((s.category ? s.category + ': ' : '') + s['program 3']);
+                        if (s['program 4']) progs.push((s.category ? s.category + ': ' : '') + s['program 4']);
+                        if (s.generals) {
+                            s.generals.split(',').forEach(g => progs.push(`GEN: ${g.trim()}`));
+                        }
+                        const programsListText = progs.length > 0 ? progs.join(', ') : 'None';
+                        const studentSector = s.sector || s.unit || s.prog || '';
+                        sendSectorNotification(s.name, studentSector, programsListText);
+                    });
+                } catch (notiErr) {
+                    console.error("Error dispatching queued sector notifications:", notiErr);
+                }
+
+                // On success, filter out the ones we just uploaded
+                pendingStudents = pendingStudents.filter(s => !s.selected);
+                localStorage.setItem('pending_registrations', JSON.stringify(pendingStudents));
+                updateListCount();
+
+                closeList();
+                
+                // Show Success Popup Animation
+                document.getElementById('success-student-name').innerText = `Successfully registered ${uploadData.length} student(s) to the database.`;
+                const popup = document.getElementById('success-popup');
+                popup.style.display = 'flex';
+                setTimeout(() => {
+                    popup.classList.add('active');
+                }, 10);
+                
+                // Clear the form
+                const studentNameInput = document.getElementById('student-name');
+                if (studentNameInput) studentNameInput.value = '';
+                // Keep the stage/unit selected for faster batch entry
+            } catch (err) {
+                console.error(err);
+                alert("Error registering students: " + err.message);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        function closeSuccessPopup() {
+            const popup = document.getElementById('success-popup');
+            popup.classList.remove('active');
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+
+        // ================= QR SCANNER LOGIC =================
+        let html5QrcodeScanner = null;
+
+        function startScanner() {
+            const modal = document.getElementById('scanner-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { 
+                fps: 20,
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
+            };
+            
+            html5QrcodeScanner.start({ facingMode: "environment" }, config, (decodedText) => {
+                try {
+                    const url = new URL(decodedText);
+                    const name = url.searchParams.get('name');
+                    const sector = url.searchParams.get('sector');
+                    
+                    if (name) {
+                        const stage = document.getElementById('stage-select').value;
+                        if (!stage) {
+                            alert("Please select a stage before scanning.");
+                            stopScanner();
+                            return;
+                        }
+                        
+                        // Play a brief success sound
+                        try {
+                            const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
+                            audio.play().catch(e=>{});
+                        } catch(e){}
+
+                        stopScanner();
+                        
+                        // Stay on current host/pathname to avoid redirecting to live site during local testing
+                        const currentUrl = new URL(window.location.href);
+                        currentUrl.search = url.search; // copy student query params (name, sector, progs, genprogs)
+                        currentUrl.searchParams.set('admin', 'true');
+                        currentUrl.searchParams.set('stage', stage);
+                        window.location.href = currentUrl.toString();
+                    }
+                } catch (e) {
+                    // Ignore, maybe not a valid URL
+                }
+            }, (error) => {
+                // Ignore scanning errors
+            }).catch(err => {
+                alert("Camera permission denied or not supported.");
+                stopScanner();
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                }).catch(e => console.log(e));
+                html5QrcodeScanner = null;
+            }
+            const modal = document.getElementById('scanner-modal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        async function sendSectorNotification(studentName, sector, programsListText) {
+            try {
+                const sectorVal = (sector || '').trim().toLowerCase();
+                if (!sectorVal) return;
+
+                // Load routing from backend with localStorage fallback
+                const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
+                let routing = {};
+                try {
+                    const routingRes = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-routing?clientId=${clientId}`);
+                    if (routingRes.ok) {
+                        const routingData = await routingRes.json();
+                        if (routingData.success && routingData.routing) {
+                            routing = routingData.routing;
+                            localStorage.setItem('whatsapp_sector_routing', JSON.stringify(routing));
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Failed to fetch whatsapp_sector_routing from backend, falling back to local storage", e);
+                    try {
+                        routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
+                    } catch (err) {
+                        console.error("Error parsing whatsapp_sector_routing from local storage", err);
+                    }
+                }
+
+                const message = `*Student Registration Alert*\n*Name:* ${studentName}\n*Sector:* ${sector}\n*Program:* ${programsListText}`;
+
+                const cleanSectorName = (str) => {
+                    if (!str) return '';
+                    return str.replace(/\s*\(group\)\s*/i, '')
+                              .toLowerCase()
+                              .replace(/[\p{P}\p{Z}\p{S}\?]/gu, '')
+                              .trim();
+                };
+
+                const cleanStudentSector = cleanSectorName(sector);
+
+                Object.keys(routing).forEach(async (chatId) => {
+                    if (chatId.startsWith('offline_')) return;
+                    let targetSector = (routing[chatId].sector || '').trim();
+                    if (!targetSector) {
+                        targetSector = (routing[chatId].name || '').trim();
+                    }
+                    
+                    const cleanTargetSector = cleanSectorName(targetSector);
+                    if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
+                        try {
+                            await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ clientId: clientId, chatId: chatId, message: message })
+                            });
+                        } catch (err) {
+                            console.error(`Failed to send sector WhatsApp message to ${chatId}:`, err);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Error sending sector notification:", e);
+            }
+        }
+    </script>
+</body>
+
+</html>

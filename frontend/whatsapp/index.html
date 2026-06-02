@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web Integration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Connecting / QR Screen -->
+        <div id="connection-screen" class="connection-screen">
+            <div class="connection-box">
+                <i class="fab fa-whatsapp whatsapp-icon"></i>
+                <h1 id="connection-title">Connecting...</h1>
+                <p id="connection-subtitle">Starting WhatsApp client</p>
+                
+                <div id="qr-container" class="qr-container hidden">
+                    <img id="qr-image" src="" alt="WhatsApp QR Code">
+                    <p>Open WhatsApp on your phone<br>Tap Menu or Settings and select Linked Devices<br>Point your phone to this screen to capture the code</p>
+                </div>
+                
+                <div id="loading-spinner" class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Screen -->
+        <div id="dashboard-screen" class="dashboard-screen hidden">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="profile-section">
+                        <img src="https://ui-avatars.com/api/?name=User&background=random" alt="Profile" class="avatar">
+                        <span id="user-info" class="user-info">WhatsApp Web</span>
+                    </div>
+                    <div class="header-actions">
+                        <button class="icon-btn" title="Status" id="status-btn">
+                            <span class="status-indicator online"></span>
+                        </button>
+                        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button class="icon-btn" onclick="logout()" title="Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-bar">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Search or start new chat">
+                    </div>
+                </div>
+                
+                <div class="chat-list" id="chat-list">
+                    <!-- Chats will be loaded here dynamically -->
+                    <div class="chat-item skeleton-loader"></div>
+                    <div class="chat-item skeleton-loader"></div>
+                    <div class="chat-item skeleton-loader"></div>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area" id="chat-area">
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state">
+                    <i class="fab fa-whatsapp empty-icon"></i>
+                    <h2>WhatsApp Web Integrated</h2>
+                    <p>Send and receive messages without keeping your phone online.</p>
+                    <p class="encryption-note"><i class="fas fa-lock"></i> End-to-end encrypted</p>
+                </div>
+
+                <!-- Active Chat -->
+                <div id="active-chat" class="active-chat hidden">
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <img id="active-chat-avatar" src="https://ui-avatars.com/api/?name=Chat&background=random" alt="Chat Avatar" class="avatar">
+                            <div class="chat-title-group">
+                                <h3 id="active-chat-name">Chat Name</h3>
+                                <span id="active-chat-status" class="typing-indicator hidden">typing...</span>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-btn"><i class="fas fa-search"></i></button>
+                            <button class="icon-btn"><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="messages-container" id="messages-container">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    
+                    <div class="message-input-area">
+                        <button class="icon-btn"><i class="far fa-smile"></i></button>
+                        <button class="icon-btn"><i class="fas fa-paperclip"></i></button>
+                        <div class="input-wrapper">
+                            <input type="text" id="message-input" placeholder="Type a message">
+                        </div>
+                        <button class="icon-btn send-btn" id="send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add socket.io client script -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

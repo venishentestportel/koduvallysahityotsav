@@ -1,0 +1,3 @@
+# Ignore backend server code from static web deployment
+backend/
+node_modules/

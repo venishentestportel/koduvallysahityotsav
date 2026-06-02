@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valuation Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin-theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Shared layout styles from admin.html */
+        body {
+            background: #f7fafc;
+            min-height: 100vh;
+            display: flex;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .admin-layout {
+            display: flex;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-link {
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #4a5568;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-link:hover {
+            background: #f7fafc;
+            color: #3182ce;
+        }
+
+        .sidebar-link.active {
+            background: #ebf8ff;
+            color: #3182ce;
+            border-left-color: #3182ce;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .admin-section-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .admin-section-content.active {
+            display: block;
+        }
+
+        .admin-section {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.35rem;
+            color: #4a5568;
+            font-size: 0.8rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.35rem 0.5rem !important;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px !important;
+            background: white;
+            font-size: 0.8rem !important;
+            height: 30px !important;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            border-color: #3182ce;
+            outline: none;
+        }
+
+        /* Overrides to make all buttons and text boxes smaller */
+        .main-content input[type="text"],
+        .main-content input[type="number"],
+        .main-content select,
+        .main-content .form-control {
+            padding: 0.35rem 0.5rem !important;
+            font-size: 0.8rem !important;
+            height: 30px !important;
+            border-radius: 4px !important;
+        }
+
+        /* Adjust search input search icon positioning to match smaller height */
+        .main-content .fa-search {
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            left: 12px !important;
+            font-size: 0.8rem !important;
+        }
+        #student-search-input,
+        #registration-search-input {
+            padding-left: 32px !important;
+        }
+
+        /* Make buttons smaller */
+        .main-content .btn,
+        .main-content button {
+            padding: 0.35rem 0.75rem !important;
+            font-size: 0.8rem !important;
+            border-radius: 4px !important;
+            height: 30px !important;
+            font-weight: 600 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Specific override for full-width calculate button so it looks consistent */
+        .main-content button[onclick="calculateRanks()"] {
+            width: 100% !important;
+            height: 34px !important;
+            font-size: 0.85rem !important;
+            margin-top: 0.75rem !important;
+        }
+
+        .student-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border-left: 5px solid #3182ce;
+        }
+        
+        .student-info h3 {
+            margin: 0 0 0.25rem 0;
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+        
+        .student-info p {
+            margin: 0;
+            color: #718096;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" style="display: flex; flex-direction: column;">
+            <div class="sidebar-header" style="display: flex; align-items: center; gap: 16px; padding: 24px 32px; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px;">
+                <div style="background: #4f46e5; color: white; width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);">V</div>
+                <h2 style="margin: 0; font-size: 1.25rem; color: #111; font-weight: 800; letter-spacing: -0.5px;">Valuation Admin</h2>
+            </div>
+            <nav class="sidebar-nav" style="flex-grow: 1; overflow-y: auto; padding: 0 16px;">
+                <div class="sidebar-link active" onclick="switchTab('view-registrations', this)">
+                    <i class="fa fa-users"></i> See Registrations
+                </div>
+                <div class="sidebar-link" onclick="switchTab('valuation-manager', this)">
+                    <i class="fa fa-star"></i> Valuation Manager
+                </div>
+                <div class="sidebar-link" onclick="switchTab('student-marks', this)">
+                    <i class="fa fa-user-graduate"></i> See Students Mark
+                </div>
+                <div class="sidebar-link" onclick="switchTab('unit-marks', this)">
+                    <i class="fa fa-map-marked-alt"></i> See Unit Mark
+                </div>
+            </nav>
+            <div style="padding: 1rem; margin-top: auto;">
+                <button style="width: 100%; background: #fef2f2 !important; color: #ef4444 !important; border-radius: 8px !important; padding: 0.7rem !important; font-size: 0.85rem !important; font-weight: bold !important; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: none !important; border: none !important; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer;" onclick="window.location.href='index.html'">
+                    <i class="fa fa-home"></i> Back to Home
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="admin-top-bar" style="margin-bottom: 2.5rem;">
+                <h1 id="tab-title" style="margin: 0; font-size: 1.8rem; color: #2d3748;">View Registrations</h1>
+                <p id="tab-subtitle" style="color: #718096; margin-top: 0.5rem;">Filter and view students registered for specific programs.</p>
+            </div>
+
+            <!-- Section: View Registrations -->
+            <div id="section-view-registrations" class="admin-section-content active">
+                <div class="admin-section" style="background: #f7fafc; border: 1px solid #e2e8f0; padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Search Registrations</label>
+                        <div style="position: relative;">
+                            <i class="fa fa-search" style="position: absolute; left: 15px; top: 11px; color: #a0aec0;"></i>
+                            <input type="text" id="registration-search-input" class="form-control" style="padding-left: 40px;" placeholder="Search student name, sector, or program..." oninput="filterRegistrations()">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="registrations-list">
+                    <div style="text-align: center; color: #3182ce; padding: 4rem; background: white; border-radius: 15px;">
+                        <i class="fa fa-spinner fa-spin fa-3x" style="margin-bottom: 1rem;"></i>
+                        <p style="margin: 0; font-size: 1.1rem;">Loading all registered students...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Valuation Manager -->
+            <div id="section-valuation-manager" class="admin-section-content">
+                <div class="admin-section" style="background: #f7fafc; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 250px;">
+                            <label>Category</label>
+                            <select class="form-control" id="val-cat-select" onchange="fetchValPrograms()">
+                                <option value="">-- Select Category --</option>
+                                <option value="LP">LP</option>
+                                <option value="UP">UP</option>
+                                <option value="HS">HS</option>
+                                <option value="HSS">HSS</option>
+                                <option value="junior">Junior</option>
+                                <option value="senior">Senior</option>
+                                <option value="general">General</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 250px;">
+                            <label>Program</label>
+                            <select class="form-control" id="val-prog-select" disabled onchange="loadValuationStudents()">
+                                <option value="">-- Select Category First --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="valuation-list">
+                    <div style="text-align: center; color: #a0aec0; padding: 4rem; background: white; border-radius: 15px; border: 2px dashed #e2e8f0;">
+                        <i class="fa fa-list-ol fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 1.1rem;">Select a Category and Program to enter marks.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: See Students Mark -->
+            <div id="section-student-marks" class="admin-section-content">
+                <div class="admin-section" style="background: #f7fafc; border: 1px solid #e2e8f0;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Search Student</label>
+                        <div style="position: relative;">
+                            <i class="fa fa-search" style="position: absolute; left: 15px; top: 15px; color: #a0aec0;"></i>
+                            <input type="text" id="student-search-input" class="form-control" style="padding-left: 40px;" placeholder="Enter student name to view marks..." oninput="searchStudents()">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="student-search-results">
+                    <div style="text-align: center; color: #a0aec0; padding: 4rem; background: white; border-radius: 15px; border: 2px dashed #e2e8f0;">
+                        <i class="fa fa-search fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 1.1rem;">Search for a student to see all their marks and positions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: See Unit Mark -->
+            <div id="section-unit-marks" class="admin-section-content">
+                <div id="unit-marks-container">
+                    <div style="text-align: center; color: #a0aec0; padding: 4rem; background: white; border-radius: 15px; border: 2px dashed #e2e8f0;">
+                        <i class="fa fa-spinner fa-spin fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 1.1rem;">Calculating Unit Scores...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        if (!window.WA_BACKEND_URL) {
+            const hn = window.location.hostname;
+            const isLocal = hn === 'localhost' || 
+                            hn === '127.0.0.1' || 
+                            hn === '[::1]' ||
+                            hn.startsWith('192.168.') || 
+                            hn.startsWith('10.') || 
+                            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+                            hn.endsWith('.local') ||
+                            window.location.protocol === 'file:';
+            
+            if (isLocal) {
+                const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
+                window.WA_BACKEND_URL = `http://${host}:3001`;
+            } else {
+                window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
+            }
+        }
+
+        const SUPABASE_URL = 'https://lxbvadjjboavxwidxsnl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Ubv4Ofl0uR9o6ct9PvI1uA_C9hglPNT';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function switchTab(tab, el) {
+            document.querySelectorAll('.sidebar-link').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-section-content').forEach(s => s.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById(`section-${tab}`).classList.add('active');
+            
+            const titleEl = document.getElementById('tab-title');
+            const subtitleEl = document.getElementById('tab-subtitle');
+            if (tab === 'view-registrations') {
+                titleEl.innerText = 'View Registrations';
+                subtitleEl.innerText = 'Filter and view students registered for specific programs.';
+                loadRegistrations();
+            } else if (tab === 'valuation-manager') {
+                titleEl.innerText = 'Valuation Manager';
+                subtitleEl.innerText = 'Enter marks for students and calculate final results/ranks.';
+            } else if (tab === 'student-marks') {
+                titleEl.innerText = 'Student Marks';
+                subtitleEl.innerText = 'Search for a student to view all their marks and rankings across programs.';
+                searchStudents();
+            } else if (tab === 'unit-marks') {
+                titleEl.innerText = 'Unit Leaderboard';
+                subtitleEl.innerText = 'View overall aggregated scores and rankings for each participating unit.';
+                loadUnitMarks();
+            }
+        }
+
+        function getDbCategory(cat) {
+            if (!cat) return '';
+            const mapping = {
+                'junior': 'JR',
+                'senior': 'SR',
+                'general': 'GEN'
+            };
+            return mapping[cat] || cat;
+        }
+
+        async function fetchPrograms() {
+            const category = document.getElementById('cat-select').value;
+            const programSelect = document.getElementById('prog-select');
+            const listDiv = document.getElementById('registrations-list');
+
+            if (!category) {
+                programSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+                programSelect.disabled = true;
+                listDiv.innerHTML = `
+                    <div style="text-align: center; color: #a0aec0; padding: 4rem; background: white; border-radius: 15px; border: 2px dashed #e2e8f0;">
+                        <i class="fa fa-filter fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 1.1rem;">Select a Category and Program above to view registered students.</p>
+                    </div>`;
+                return;
+            }
+
+            programSelect.innerHTML = '<option value="">Loading programs...</option>';
+            programSelect.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from(getDbCategory(category))
+                    .select('Programs')
+                    .not('Programs', 'is', null);
+
+                if (error) throw error;
+
+                const uniquePrograms = [...new Set(data.map(r => r.Programs.trim()).filter(Boolean))];
+
+                if (uniquePrograms.length === 0) {
+                    programSelect.innerHTML = '<option value="">No programs found</option>';
+                } else {
+                    programSelect.innerHTML = '<option value="">-- Select a Program --</option>' + 
+                        uniquePrograms.map(p => `<option value="${p}">${p}</option>`).join('');
+                    programSelect.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                programSelect.innerHTML = '<option value="">Error loading programs</option>';
+            }
+        }
+
+        function getChestNumber(index) {
+            let letter = '';
+            while (index >= 0) {
+                letter = String.fromCharCode((index % 26) + 65) + letter;
+                index = Math.floor(index / 26) - 1;
+            }
+            return letter;
+        }
+
+        window.allRegistrations = [];
+
+        async function loadRegistrations(silent = false) {
+            const listDiv = document.getElementById('registrations-list');
+            if (!listDiv) return;
+
+            if (!silent) {
+                listDiv.innerHTML = '<div style="text-align: center; padding: 4rem; color: #3182ce;"><i class="fa fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Loading all registered students...</p></div>';
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('regist')
+                    .select('*')
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+
+                window.allRegistrations = data || [];
+                renderRegistrations(window.allRegistrations);
+            } catch (err) {
+                console.error(err);
+                if (!silent) {
+                    listDiv.innerHTML = `
+                        <div style="text-align: center; color: #e53e3e; padding: 3rem; background: #fff5f5; border-radius: 15px; border: 1px solid #fed7d7;">
+                            <i class="fa fa-exclamation-triangle fa-3x" style="margin-bottom: 1rem;"></i>
+                            <p style="margin: 0;">Error fetching registrations: ${err.message}</p>
+                        </div>`;
+                }
+            }
+        }
+
+        function renderRegistrations(data) {
+            const listDiv = document.getElementById('registrations-list');
+            if (!listDiv) return;
+
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = `
+                    <div style="text-align: center; color: #a0aec0; padding: 4rem; background: white; border-radius: 15px; border: 2px dashed #e2e8f0;">
+                        <i class="fa fa-folder-open fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 1.1rem;">No registered students found.</p>
+                    </div>`;
+                return;
+            }
+
+            listDiv.innerHTML = `
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: #2d3748; font-size: 0.95rem;">Total Registered: <span style="background: #3182ce; color: white; padding: 0.1rem 0.6rem; border-radius: 12px; font-size: 0.85rem;">${data.length}</span></h3>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;">
+                    ${data.map((student) => `
+                        <div class="student-card" style="background: white; border-radius: 6px; border: 1px solid #edf2f7; box-shadow: 0 1px 3px rgba(0,0,0,0.01); padding: 0.2rem 0.5rem; display: flex; align-items: center; justify-content: space-between; border-left: 3px solid #3182ce; margin-bottom: 0;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; overflow: hidden; flex: 1; margin-right: 0.5rem;">
+                                <div style="background: #ebf8ff; color: #3182ce; width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; border: 1px solid #e2e8f0;">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                                <div style="display: flex; flex-direction: column; overflow: hidden; gap: 0.05rem; line-height: 1.1;">
+                                    <button onclick="showRegistrationDetails(${student.id})" style="background: none; border: none; padding: 0; text-align: left; font-weight: 700; color: #2b6cb0; cursor: pointer; font-size: 0.8rem; font-family: inherit; transition: color 0.15s; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;" onmouseover="this.style.color='#1d4ed8'; this.style.textDecoration='underline'" onmouseout="this.style.color='#2b6cb0'; this.style.textDecoration='none'" title="${student.name || 'Unknown'}">
+                                        ${student.name || 'Unknown'}
+                                    </button>
+                                    <span style="font-size: 0.65rem; color: #64748b; font-weight: 500; display: inline-flex; align-items: center; gap: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${student.sector || 'Unknown'}">
+                                        <i class="fa fa-map-marker-alt" style="color: #ef4444; font-size: 0.6rem;"></i> ${student.sector || 'Unknown'}
+                                    </span>
+                                </div>
+                            </div>
+                            <button class="btn" onclick="showRegistrationDetails(${student.id})" style="margin: 0; padding: 0.1rem 0.4rem !important; font-size: 0.65rem !important; background: #edf2f7; color: #4a5568; border-radius: 4px !important; height: 20px !important; min-height: 20px !important; line-height: 1;">
+                                <i class="fa fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function filterRegistrations() {
+            const query = document.getElementById('registration-search-input').value.toLowerCase().trim();
+            if (!query) {
+                renderRegistrations(window.allRegistrations);
+                return;
+            }
+
+            const filtered = window.allRegistrations.filter(student => {
+                const name = (student.name || '').toLowerCase();
+                const sector = (student.sector || '').toLowerCase();
+                const program = (student.program || '').toLowerCase();
+                const general = (student.general || '').toLowerCase();
+                return name.includes(query) || sector.includes(query) || program.includes(query) || general.includes(query);
+            });
+
+            renderRegistrations(filtered);
+        }
+
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = btn.querySelector('i');
+                const originalClass = icon ? icon.className : '';
+                const originalText = btn.innerHTML;
+                
+                if (icon) {
+                    icon.className = 'fa fa-check';
+                    btn.style.color = '#10b981';
+                    setTimeout(() => {
+                        icon.className = originalClass;
+                        btn.style.color = '#64748b';
+                    }, 1500);
+                } else {
+                    btn.innerHTML = '<i class="fa fa-check"></i> Copied!';
+                    btn.style.color = '#10b981';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.style.color = '#64748b';
+                    }, 1500);
+                }
+            }).catch(err => {
+                console.error("Failed to copy link: ", err);
+            });
+        }
+
+        // Registration details modal logic
+        function showRegistrationDetails(id) {
+            const student = window.allRegistrations.find(s => s.id === id);
+            if (!student) return;
+
+            document.getElementById('modal-reg-name').innerText = student.name || 'Unknown';
+            document.getElementById('modal-reg-sector').innerText = student.sector || 'Unknown';
+            
+            const programName = student.program || student.general || 'N/A';
+            const isGeneral = !!student.general;
+            const badgeBg = isGeneral ? '#f3e8ff' : '#e0f2fe';
+            const badgeColor = isGeneral ? '#6b21a8' : '#0369a1';
+            const badgeBorder = isGeneral ? '#e9d5ff' : '#bae6fd';
+            const badgeLabel = isGeneral ? 'General Program' : 'Regular Program';
+
+            document.getElementById('modal-reg-program-container').innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid #edf2f7; width: 100%;">
+                    <div style="font-size: 0.95rem; color: #1e293b; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa fa-trophy" style="color: #ecc94b;"></i>
+                        <span>${programName}</span>
+                    </div>
+                    <span style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">${badgeLabel}</span>
+                </div>
+            `;
+
+            document.getElementById('modal-reg-stage').innerHTML = `<i class="fa fa-building" style="color: #3182ce;"></i> ${student.stage || 'N/A'}`;
+            
+            const timeStr = student.created_at || student.time;
+            const formattedTime = timeStr ? new Date(timeStr).toLocaleString() : 'N/A';
+            document.getElementById('modal-reg-time').innerHTML = `<i class="fa fa-clock" style="color: #64748b;"></i> ${formattedTime}`;
+
+            const urlContainer = document.getElementById('modal-reg-url-container');
+            const urlLink = document.getElementById('modal-reg-url');
+            if (student.url) {
+                const correctedUrl = student.url.replace('registringpage.html', 'registration.html');
+                urlLink.href = correctedUrl;
+                urlLink.innerText = correctedUrl;
+                urlContainer.style.display = 'flex';
+            } else {
+                urlContainer.style.display = 'none';
+            }
+
+            // Show Modal
+            const modal = document.getElementById('registration-details-modal');
+            modal.style.display = 'flex';
+        }
+
+        function closeRegistrationDetailsModal() {
+            document.getElementById('registration-details-modal').style.display = 'none';
+        }
+
+        function copyModalRegistrationUrl() {
+            const urlLink = document.getElementById('modal-reg-url');
+            const copyBtn = document.getElementById('modal-reg-copy-btn');
+            if (!urlLink || !copyBtn) return;
+            
+            copyToClipboard(urlLink.innerText, copyBtn);
+        }
+
+        let currentValuationStudents = [];
+
+        async function fetchValPrograms() {
+            const category = document.getElementById('val-cat-select').value;
+            const programSelect = document.getElementById('val-prog-select');
+            const listDiv = document.getElementById('valuation-list');
+
+            if (!category) {
+                programSelect.innerHTML = '<option value="">-- Select Category First --</option>';
+                programSelect.disabled = true;
+                listDiv.innerHTML = `
+                    <div style="text-align: center; color: #a0aec0; padding: 4rem; background: white; border-radius: 15px; border: 2px dashed #e2e8f0;">
+                        <i class="fa fa-list-ol fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 1.1rem;">Select a Category and Program to enter marks.</p>
+                    </div>`;
+                return;
+            }
+
+            programSelect.innerHTML = '<option value="">Loading programs...</option>';
+            programSelect.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient.from(getDbCategory(category)).select('Programs').not('Programs', 'is', null);
+                if (error) throw error;
+                const uniquePrograms = [...new Set(data.map(r => r.Programs.trim()).filter(Boolean))];
+
+                if (uniquePrograms.length === 0) {
+                    programSelect.innerHTML = '<option value="">No programs found</option>';
+                } else {
+                    programSelect.innerHTML = '<option value="">-- Select a Program --</option>' + 
+                        uniquePrograms.map(p => `<option value="${p}">${p}</option>`).join('');
+                    programSelect.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                programSelect.innerHTML = '<option value="">Error loading programs</option>';
+            }
+        }
+
+        async function loadValuationStudents() {
+            const category = document.getElementById('val-cat-select').value;
+            const program = document.getElementById('val-prog-select').value;
+            const listDiv = document.getElementById('valuation-list');
+
+            if (!category || !program) return;
+
+            listDiv.innerHTML = '<div style="text-align: center; padding: 4rem; color: #ecc94b;"><i class="fa fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Loading students for valuation...</p></div>';
+
+            try {
+                const dbCat = getDbCategory(category);
+                let query = supabaseClient.from('registred').select('*');
+                if (dbCat === 'GEN') {
+                    query = query.ilike('generals', `%${program}%`);
+                } else {
+                    query = query.eq('category', dbCat)
+                                 .or(`"program 1".eq."${program}","program 2".eq."${program}","program 3".eq."${program}","program 4".eq."${program}"`);
+                }
+
+                const { data: rawData, error } = await query.order('time', { ascending: true });
+
+                if (error) throw error;
+
+                if (!rawData || rawData.length === 0) {
+                    listDiv.innerHTML = `
+                        <div style="text-align: center; color: #e53e3e; padding: 3rem; background: #fff5f5; border-radius: 15px; border: 1px solid #fed7d7;">
+                            <p style="margin: 0;">No students registered for this program.</p>
+                        </div>`;
+                    return;
+                }
+
+                const data = rawData.map(student => ({
+                    ...student,
+                    unit: student.sector || 'N/A',
+                    Program: program,
+                    Category: dbCat
+                }));
+
+                currentValuationStudents = data.map((s, idx) => ({...s, chestNumber: getChestNumber(idx), mark: ''}));
+                renderValuationForm();
+
+            } catch (err) {
+                console.error(err);
+                listDiv.innerHTML = `<div style="text-align: center; color: #e53e3e; padding: 3rem;">Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderValuationForm() {
+            const listDiv = document.getElementById('valuation-list');
+            listDiv.innerHTML = `
+                <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: #2d3748;">Enter Marks (Spreadsheet View)</h3>
+                </div>
+                <div style="overflow-x: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+                        <thead style="background: #edf2f7; border-bottom: 2px solid #cbd5e0;">
+                            <tr>
+                                <th style="padding: 1rem; color: #4a5568; font-weight: bold; width: 80px;">Chest No.</th>
+                                <th style="padding: 1rem; color: #4a5568; font-weight: bold;">Name</th>
+                                <th style="padding: 1rem; color: #4a5568; font-weight: bold;">Unit</th>
+                                <th style="padding: 1rem; color: #4a5568; font-weight: bold; width: 120px; text-align: center;">Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${currentValuationStudents.map((student, index) => `
+                                <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+                                    <td style="padding: 0.75rem 1rem; font-weight: bold; color: #744210;">
+                                        <span style="background: #ecc94b; padding: 0.2rem 0.5rem; border-radius: 4px;">${student.chestNumber}</span>
+                                    </td>
+                                    <td style="padding: 0.75rem 1rem; font-weight: 600; color: #2d3748;">${student.name}</td>
+                                    <td style="padding: 0.75rem 1rem; color: #718096; font-size: 0.85rem;">${student.unit}</td>
+                                    <td style="padding: 0.75rem 1rem; text-align: center;">
+                                        <input type="number" id="mark-${index}" class="form-control" style="width: 80px; text-align: center; font-size: 1rem; border: 2px solid #ecc94b; font-weight: bold; height: 36px !important; padding: 0.2rem 0.5rem !important; border-radius: 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);" placeholder="0" value="${student.mark}">
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <button onclick="calculateRanks()" style="width: 100%; padding: 0.75rem 1rem; background: #ecc94b; color: #744210; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 1.5rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; transition: background 0.2s; box-shadow: 0 4px 6px rgba(236,201,75,0.2);">
+                    <i class="fa fa-calculator"></i> Calculate Results
+                </button>
+            `;
+        }
+
+        async function calculateRanks() {
+            const btn = document.querySelector('button[onclick="calculateRanks()"]');
+            let origHtml = '';
+            if (btn) {
+                origHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving Results...';
+                btn.disabled = true;
+            }
+
+            // Save entered marks
+            currentValuationStudents.forEach((student, index) => {
+                const markInput = document.getElementById(`mark-${index}`).value;
+                student.mark = parseFloat(markInput) || 0;
+            });
+
+            // Sort by mark descending
+            const sortedStudents = [...currentValuationStudents].sort((a, b) => b.mark - a.mark);
+
+            // Save to localStorage for individual student views
+            let savedResults = JSON.parse(localStorage.getItem('student_results') || '[]');
+            
+            sortedStudents.forEach((student, index) => {
+                // Remove existing entry for this student + program to prevent duplicates
+                savedResults = savedResults.filter(r => !(r.name === student.name && r.category === student.Category && r.program === student.Program));
+                
+                savedResults.push({
+                    name: student.name,
+                    unit: student.unit,
+                    category: student.Category,
+                    program: student.Program,
+                    mark: student.mark,
+                    position: index + 1,
+                    timestamp: new Date().toISOString()
+                });
+            });
+            
+            localStorage.setItem('student_results', JSON.stringify(savedResults));
+
+            // --- SUPABASE TOP 3 SYNC ---
+            try {
+                const p1 = sortedStudents.length > 0 ? sortedStudents[0] : null;
+                const p2 = sortedStudents.length > 1 ? sortedStudents[1] : null;
+                const p3 = sortedStudents.length > 2 ? sortedStudents[2] : null;
+
+                const category = p1 ? p1.Category : 'Unknown';
+                const program = p1 ? p1.Program : 'Unknown';
+                const risultNo = `${category}_${program}_${Date.now()}`;
+
+                const resultPayload = {
+                    "risult no.": risultNo,
+                    "1 price": p1 ? p1.name : '',
+                    "1 place": p1 ? p1.unit : '',
+                    "1 score": p1 ? p1.mark : 0,
+                    "2 price": p2 ? p2.name : '',
+                    "2 place": p2 ? p2.unit : '',
+                    "2 score": p2 ? p2.mark : 0,
+                    "3 price": p3 ? p3.name : '',
+                    "3 place": p3 ? p3.unit : '',
+                    "3 score": p3 ? p3.mark : 0
+                };
+
+                const { error: supaErr } = await supabaseClient.from('valueatedresult').insert([resultPayload]);
+                if (supaErr) {
+                    console.error("Supabase Save Error:", supaErr);
+                    alert("Warning: Saved locally, but failed to sync to Supabase result database.");
+                }
+            } catch (err) {
+                console.error("Sync Error:", err);
+            }
+            // ---------------------------
+
+            if (btn) {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+
+            const listDiv = document.getElementById('valuation-list');
+            listDiv.innerHTML = `
+                <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: #2d3748;"><i class="fa fa-trophy" style="color: #ecc94b;"></i> Final Results</h3>
+                    <button onclick="renderValuationForm()" style="background: #e2e8f0; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; color: #4a5568; transition: background 0.2s;"><i class="fa fa-edit"></i> Edit Scores</button>
+                </div>
+                ${sortedStudents.map((student, index) => {
+                    let rankBadge = '';
+                    if (index === 0) rankBadge = '<div style="background: #ecc94b; color: #744210; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-left: auto;">1st Place <i class="fa fa-medal"></i></div>';
+                    else if (index === 1) rankBadge = '<div style="background: #e2e8f0; color: #4a5568; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-left: auto;">2nd Place <i class="fa fa-medal"></i></div>';
+                    else if (index === 2) rankBadge = '<div style="background: #ed8936; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-left: auto;">3rd Place <i class="fa fa-medal"></i></div>';
+                    else rankBadge = `<div style="color: #a0aec0; font-weight: bold; margin-left: auto; font-size: 1.1rem;">#${index + 1}</div>`;
+
+                    return `
+                    <div class="student-card" style="box-shadow: 0 4px 6px rgba(0,0,0,0.05); ${index === 0 ? 'border-left-color: #ecc94b; border-left-width: 8px;' : index === 1 ? 'border-left-color: #e2e8f0; border-left-width: 8px;' : index === 2 ? 'border-left-color: #ed8936; border-left-width: 8px;' : 'border-left-color: #cbd5e0;'}">
+                        <div class="student-info" style="flex: 1; display: flex; align-items: center;">
+                            <div style="background: #2d3748; color: white; font-weight: bold; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1.2rem; margin-right: 1.2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                ${student.chestNumber}
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.2rem;">${student.name}</h3>
+                                <div style="font-size: 0.9rem; color: #718096; margin-top: 0.2rem;"><i class="fa fa-map-marker-alt" style="color: #e53e3e; margin-right: 0.3rem;"></i>${student.unit}</div>
+                            </div>
+                            ${rankBadge}
+                        </div>
+                        <div style="margin-left: 2rem; text-align: right; background: #f7fafc; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 0.8rem; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 0.2rem;">Score</div>
+                            <div style="font-size: 1.8rem; font-weight: 900; color: #2d3748; line-height: 1;">${student.mark}</div>
+                        </div>
+                    </div>
+                `}).join('')}
+            `;
+        }
+
+        function searchStudents() {
+            const query = document.getElementById('student-search-input').value.toLowerCase().trim();
+            const resultsDiv = document.getElementById('student-search-results');
+            const savedResults = JSON.parse(localStorage.getItem('student_results') || '[]');
+            
+            // Group by student name
+            const grouped = {};
+            savedResults.forEach(r => {
+                if (query.length === 0 || r.name.toLowerCase().includes(query)) {
+                    if (!grouped[r.name]) grouped[r.name] = [];
+                    grouped[r.name].push(r);
+                }
+            });
+
+            const uniqueNames = Object.keys(grouped);
+
+            if (uniqueNames.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div style="text-align: center; color: #e53e3e; padding: 3rem; background: #fff5f5; border-radius: 15px; border: 1px solid #fed7d7;">
+                        <i class="fa fa-user-slash fa-3x" style="margin-bottom: 1rem; opacity: 0.8;"></i>
+                        <p style="margin: 0;">No students found matching "${query}".</p>
+                    </div>`;
+                return;
+            }
+
+            resultsDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                    ${uniqueNames.map(name => {
+                        const records = grouped[name];
+                        return `
+                            <div class="student-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';" onclick="showStudentExcel('${name.replace(/'/g, "\\'")}')">
+                                <div class="student-info" style="flex: 1; display: flex; align-items: center;">
+                                    <div style="background: #e2e8f0; color: #4a5568; font-weight: bold; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1.2rem; margin-right: 1rem;">
+                                        <i class="fa fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style="margin: 0; font-size: 1.1rem; color: #2d3748;">${name}</h3>
+                                        <div style="font-size: 0.85rem; color: #718096; margin-top: 0.3rem;"><i class="fa fa-map-marker-alt" style="color: #e53e3e; margin-right: 0.3rem;"></i>${records[0].unit}</div>
+                                    </div>
+                                    <div style="margin-left: auto; color: #3182ce;">
+                                        <i class="fa fa-chevron-right"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function showStudentExcel(name) {
+            const resultsDiv = document.getElementById('student-search-results');
+            const savedResults = JSON.parse(localStorage.getItem('student_results') || '[]');
+            
+            const studentRecords = savedResults.filter(r => r.name === name);
+            if (studentRecords.length === 0) return;
+
+            const unit = studentRecords[0].unit;
+            
+            // Calculate total marks across all programs
+            const totalScore = studentRecords.reduce((sum, r) => sum + (parseFloat(r.mark) || 0), 0);
+
+            resultsDiv.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <button class="btn" style="background: #e2e8f0; color: #4a5568; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: none; font-weight: bold;" onclick="searchStudents()">
+                        <i class="fa fa-arrow-left"></i> Back to Student List
+                    </button>
+                </div>
+                <div class="admin-section" style="padding: 2rem;">
+                    <h2 style="margin: 0 0 0.5rem 0; color: #2d3748;"><i class="fa fa-user-graduate" style="color: #3182ce; margin-right: 0.5rem;"></i> ${name}</h2>
+                    <p style="margin: 0 0 2rem 0; color: #718096;"><i class="fa fa-map-marker-alt" style="color: #e53e3e; margin-right: 0.5rem;"></i> ${unit}</p>
+
+                    <div style="overflow-x: auto; border: 1px solid #cbd5e0; border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; background: white;">
+                            <thead>
+                                <tr style="background: #edf2f7; color: #4a5568; border-bottom: 2px solid #cbd5e0;">
+                                    <th style="padding: 1rem; font-weight: bold; border-right: 1px solid #e2e8f0;">Category</th>
+                                    <th style="padding: 1rem; font-weight: bold; border-right: 1px solid #e2e8f0;">Program</th>
+                                    <th style="padding: 1rem; font-weight: bold; border-right: 1px solid #e2e8f0;">Score</th>
+                                    <th style="padding: 1rem; font-weight: bold;">Rank / Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${studentRecords.map((r, i) => {
+                                    let badge = '';
+                                    if (r.position === 1) badge = '<i class="fa fa-medal" style="color: #ecc94b; margin-left: 0.5rem;" title="1st Place"></i>';
+                                    else if (r.position === 2) badge = '<i class="fa fa-medal" style="color: #a0aec0; margin-left: 0.5rem;" title="2nd Place"></i>';
+                                    else if (r.position === 3) badge = '<i class="fa fa-medal" style="color: #ed8936; margin-left: 0.5rem;" title="3rd Place"></i>';
+
+                                    const rowBg = i % 2 === 0 ? 'white' : '#f7fafc';
+                                    return `
+                                    <tr style="background: ${rowBg}; border-bottom: 1px solid #e2e8f0;">
+                                        <td style="padding: 1rem; color: #4a5568; border-right: 1px solid #e2e8f0;">${r.category}</td>
+                                        <td style="padding: 1rem; color: #2d3748; font-weight: 500; border-right: 1px solid #e2e8f0;">${r.program}</td>
+                                        <td style="padding: 1rem; color: #2d3748; font-weight: bold; border-right: 1px solid #e2e8f0;">${r.mark}</td>
+                                        <td style="padding: 1rem; color: #3182ce; font-weight: bold;">#${r.position} ${badge}</td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #ebf8ff; border-top: 2px solid #3182ce;">
+                                    <td colspan="2" style="padding: 1rem; color: #2b6cb0; font-weight: 900; text-align: right; text-transform: uppercase; letter-spacing: 1px; border-right: 1px solid #bee3f8;">Total Calculated Mark:</td>
+                                    <td colspan="2" style="padding: 1rem; color: #2b6cb0; font-weight: 900; font-size: 1.2rem;">${totalScore}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadUnitMarks() {
+            const container = document.getElementById('unit-marks-container');
+            const savedResults = JSON.parse(localStorage.getItem('student_results') || '[]');
+
+            if (savedResults.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #e53e3e; padding: 3rem; background: #fff5f5; border-radius: 15px; border: 1px solid #fed7d7;">
+                        <i class="fa fa-folder-open fa-3x" style="margin-bottom: 1rem; opacity: 0.8;"></i>
+                        <p style="margin: 0;">No marks have been recorded yet. Complete some valuations first.</p>
+                    </div>`;
+                return;
+            }
+
+            // Group by unit and calculate totals
+            const unitTotals = {};
+            savedResults.forEach(r => {
+                if (!unitTotals[r.unit]) {
+                    unitTotals[r.unit] = 0;
+                }
+                unitTotals[r.unit] += (parseFloat(r.mark) || 0);
+            });
+
+            // Convert to array and sort
+            const rankedUnits = Object.keys(unitTotals).map(unit => {
+                return { unit: unit, totalScore: unitTotals[unit] };
+            }).sort((a, b) => b.totalScore - a.totalScore);
+
+            container.innerHTML = `
+                <div class="admin-section" style="padding: 2rem;">
+                    <h2 style="margin: 0 0 1.5rem 0; color: #2d3748;"><i class="fa fa-trophy" style="color: #ecc94b; margin-right: 0.5rem;"></i> Unit Leaderboard</h2>
+                    <div style="overflow-x: auto; border: 1px solid #cbd5e0; border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; background: white;">
+                            <thead>
+                                <tr style="background: #edf2f7; color: #4a5568; border-bottom: 2px solid #cbd5e0;">
+                                    <th style="padding: 1rem; font-weight: bold; border-right: 1px solid #e2e8f0; width: 80px;">Rank</th>
+                                    <th style="padding: 1rem; font-weight: bold; border-right: 1px solid #e2e8f0;">Unit / Place Name</th>
+                                    <th style="padding: 1rem; font-weight: bold; width: 150px; text-align: right;">Total Score</th>
+                                    <th style="padding: 1rem; width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rankedUnits.map((u, i) => {
+                                    let badge = '';
+                                    if (i === 0) badge = '<i class="fa fa-medal" style="color: #ecc94b; margin-left: 0.5rem;" title="1st Place"></i>';
+                                    else if (i === 1) badge = '<i class="fa fa-medal" style="color: #a0aec0; margin-left: 0.5rem;" title="2nd Place"></i>';
+                                    else if (i === 2) badge = '<i class="fa fa-medal" style="color: #ed8936; margin-left: 0.5rem;" title="3rd Place"></i>';
+
+                                    const rowBg = i % 2 === 0 ? 'white' : '#f7fafc';
+                                    return `
+                                    <tr style="background: ${rowBg}; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#ebf8ff';" onmouseout="this.style.background='${rowBg}';" onclick="showUnitDetails('${u.unit.replace(/'/g, "\\'")}')">
+                                        <td style="padding: 1rem; color: #3182ce; font-weight: bold; border-right: 1px solid #e2e8f0; font-size: 1.2rem;">#${i + 1} ${badge}</td>
+                                        <td style="padding: 1rem; color: #2d3748; font-weight: bold; border-right: 1px solid #e2e8f0; font-size: 1.1rem;">${u.unit}</td>
+                                        <td style="padding: 1rem; color: #2d3748; font-weight: 900; text-align: right; font-size: 1.2rem;">${u.totalScore}</td>
+                                        <td style="padding: 1rem; text-align: center; color: #a0aec0;"><i class="fa fa-chevron-right"></i></td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showUnitDetails(unitName) {
+            const container = document.getElementById('unit-marks-container');
+            const savedResults = JSON.parse(localStorage.getItem('student_results') || '[]');
+            
+            // Filter all scores belonging to this unit
+            const unitRecords = savedResults.filter(r => r.unit === unitName);
+            
+            // Calculate total for confirmation display
+            const totalScore = unitRecords.reduce((sum, r) => sum + (parseFloat(r.mark) || 0), 0);
+
+            // Sort by program
+            unitRecords.sort((a, b) => a.program.localeCompare(b.program));
+
+            container.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <button class="btn" style="background: #e2e8f0; color: #4a5568; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: none; font-weight: bold;" onclick="loadUnitMarks()">
+                        <i class="fa fa-arrow-left"></i> Back to Leaderboard
+                    </button>
+                </div>
+                <div class="admin-section" style="padding: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem;">
+                        <h2 style="margin: 0; color: #2d3748;"><i class="fa fa-map-marker-alt" style="color: #e53e3e; margin-right: 0.5rem;"></i> ${unitName} - Score Breakdown</h2>
+                        <div style="background: #ebf8ff; padding: 0.5rem 1.5rem; border-radius: 8px; border: 1px solid #bee3f8; color: #2b6cb0; font-weight: 900; font-size: 1.2rem;">
+                            Total: ${totalScore}
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto; border: 1px solid #cbd5e0; border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; background: white;">
+                            <thead>
+                                <tr style="background: #edf2f7; color: #4a5568; border-bottom: 2px solid #cbd5e0;">
+                                    <th style="padding: 1rem; font-weight: bold; border-right: 1px solid #e2e8f0;">Student Name</th>
+                                    <th style="padding: 1rem; font-weight: bold; border-right: 1px solid #e2e8f0;">Category & Program</th>
+                                    <th style="padding: 1rem; font-weight: bold; text-align: right;">Contributed Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${unitRecords.map((r, i) => {
+                                    const rowBg = i % 2 === 0 ? 'white' : '#f7fafc';
+                                    return `
+                                    <tr style="background: ${rowBg}; border-bottom: 1px solid #e2e8f0;">
+                                        <td style="padding: 1rem; color: #2d3748; font-weight: bold; border-right: 1px solid #e2e8f0;">${r.name}</td>
+                                        <td style="padding: 1rem; color: #4a5568; border-right: 1px solid #e2e8f0;"><span style="color: #718096; font-size: 0.8rem; text-transform: uppercase; margin-right: 0.5rem;">${r.category}</span> ${r.program}</td>
+                                        <td style="padding: 1rem; color: #38a169; font-weight: 900; text-align: right;">+${r.mark}</td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleNewRealtimeRegistration(newReg) {
+            try {
+                const name = newReg.name || 'Unknown';
+                const sector = newReg.sector || 'Unknown';
+                const sectorVal = sector.trim().toLowerCase();
+                if (!sectorVal) return;
+
+                const program = newReg.program || '';
+                const general = newReg.general || '';
+                const progText = program || general || 'None';
+
+                // Load routing from backend with localStorage fallback
+                const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
+                let routing = {};
+                try {
+                    const routingRes = await fetch(`${window.WA_BACKEND_URL || 'http://localhost:3001'}/whatsapp-routing?clientId=${clientId}`);
+                    if (routingRes.ok) {
+                        const routingData = await routingRes.json();
+                        if (routingData.success && routingData.routing) {
+                            routing = routingData.routing;
+                            localStorage.setItem('whatsapp_sector_routing', JSON.stringify(routing));
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Failed to fetch whatsapp_sector_routing from backend, falling back to local storage", e);
+                    try {
+                        routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
+                    } catch (err) {
+                        console.error("Error parsing whatsapp_sector_routing from local storage", err);
+                    }
+                }
+
+                const message = `*Student Registration Alert*\n*Name:* ${name}\n*Sector:* ${sector}\n*Program:* ${progText}`;
+
+                const cleanSectorName = (str) => {
+                    if (!str) return '';
+                    return str.replace(/\s*\(group\)\s*/i, '')
+                              .toLowerCase()
+                              .replace(/[\p{P}\p{Z}\p{S}\?]/gu, '')
+                              .trim();
+                };
+
+                const cleanStudentSector = cleanSectorName(sector);
+
+                Object.keys(routing).forEach(async (chatId) => {
+                    if (chatId.startsWith('offline_')) return;
+                    let targetSector = (routing[chatId].sector || '').trim();
+                    if (!targetSector) {
+                        targetSector = (routing[chatId].name || '').trim();
+                    }
+                    
+                    const cleanTargetSector = cleanSectorName(targetSector);
+                    if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
+                        try {
+                            await fetch(`${window.WA_BACKEND_URL || 'http://localhost:3001'}/send-message`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ clientId: clientId, chatId: chatId, message: message })
+                            });
+                            console.log(`Realtime sector notification sent successfully to ${chatId} for ${name}`);
+                        } catch (err) {
+                            console.error(`Failed to send sector WhatsApp message to ${chatId}:`, err);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Error in realtime registration notification:", e);
+            }
+        }
+
+        let lastKnownMaxId = 0;
+
+        async function startRegistrationPolling() {
+            try {
+                // Fetch the current highest ID on startup
+                const { data, error } = await supabaseClient
+                    .from('regist')
+                    .select('id')
+                    .order('id', { ascending: false })
+                    .limit(1);
+
+                if (!error && data && data.length > 0) {
+                    lastKnownMaxId = data[0].id;
+                    console.log("Initialized registration polling. Current max ID:", lastKnownMaxId);
+                }
+            } catch (err) {
+                console.warn("Failed to initialize polling max ID:", err);
+            }
+
+            // Start polling every 3 seconds
+            setInterval(pollRegistrations, 3000);
+        }
+
+        async function pollRegistrations() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('regist')
+                    .select('*')
+                    .gt('id', lastKnownMaxId)
+                    .order('id', { ascending: true });
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    console.log('New registrations polled:', data);
+                    // Update max ID
+                    lastKnownMaxId = data[data.length - 1].id;
+                    
+                    // Refresh registrations list silently
+                    loadRegistrations(true);
+                    
+                    // Trigger WhatsApp alert for each new registration
+                    for (const reg of data) {
+                        await handleNewRealtimeRegistration(reg);
+                    }
+                }
+            } catch (err) {
+                console.warn("Error during polling registrations:", err);
+            }
+        }
+
+        // Initialize registrations on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRegistrations();
+            startRegistrationPolling();
+        });
+    </script>
+
+    <!-- Registration Details Modal -->
+    <div id="registration-details-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(8px);"
+        onclick="closeRegistrationDetailsModal()">
+        <div style="background: white; width: 95%; max-width: 500px; max-height: 90vh; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
+            onclick="event.stopPropagation()">
+            <div
+                style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa fa-info-circle" style="color: #3182ce;"></i> Registration Details
+                </h2>
+                <button onclick="closeRegistrationDetailsModal()"
+                    style="border: none; background: transparent; font-size: 1.5rem; color: #94a3b8; cursor: pointer; padding: 0.25rem; line-height: 1; transition: color 0.2s;"
+                    onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
+            </div>
+
+            <div style="padding: 1.5rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; background: #ffffff;">
+                <!-- Main Header Details -->
+                <div style="display: flex; gap: 1rem; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 1.25rem;">
+                    <div style="background: #eff6ff; color: #3182ce; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; border: 1px solid #dbeafe;">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <h1 id="modal-reg-name" style="margin: 0; font-size: 1.4rem; color: #0f172a; font-weight: 700; word-break: break-word;">Student Name</h1>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.4rem; font-size: 0.85rem; color: #64748b;">
+                            <span style="display: flex; align-items: center; gap: 0.25rem;">
+                                <i class="fa fa-map-marker-alt" style="color: #ef4444;"></i> <strong id="modal-reg-sector" style="color: #334155;">Sector</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Program Detail -->
+                <div>
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Registered Program</h3>
+                    <div id="modal-reg-program-container">
+                        <!-- Badge loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Registration Stage & Time -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Stage Location</h4>
+                        <p id="modal-reg-stage" style="margin: 0; font-size: 0.9rem; color: #334155; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa fa-building" style="color: #3182ce;"></i> Loading...
+                        </p>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Registration Time</h4>
+                        <p id="modal-reg-time" style="margin: 0; font-size: 0.9rem; color: #334155; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa fa-clock" style="color: #64748b;"></i> Loading...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Student Card URL -->
+                <div id="modal-reg-url-container" style="background: #f8fafc; padding: 0.85rem; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 0.4rem;">
+                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Student Card Verification URL</span>
+                        <button id="modal-reg-copy-btn" style="background: none; border: none; color: #3182ce; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; padding: 0;" onclick="copyModalRegistrationUrl()">
+                            <i class="fa fa-copy"></i> Copy Link
+                        </button>
+                    </div>
+                    <a id="modal-reg-url" href="#" target="_blank" style="color: #1e40af; text-decoration: none; word-break: break-all; font-family: monospace; font-size: 0.8rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#1e40af'">https://url.com</a>
+                </div>
+            </div>
+
+            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end;">
+                <button onclick="closeRegistrationDetailsModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

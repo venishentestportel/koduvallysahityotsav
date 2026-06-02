@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Gallery - Koduvelly Sahitholsav</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pallet-style.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Gallery Page Specific Styles */
+        .gallery-container {
+            padding: 120px 5% 60px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-nav {
+            position: fixed;
+            top: 30px;
+            left: 5%;
+            z-index: 100;
+        }
+
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .gallery-header h1 {
+            font-size: 3.5rem;
+            color: #1a921a;
+            margin-bottom: 1rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            background: linear-gradient(45deg, #1a921a, #00b894);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.03) translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .blurred-thumb {
+            filter: blur(10px);
+            transform: scale(1.1);
+            transition: 0.3s;
+        }
+
+        /* Lightbox Styles */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .lightbox.active .lightbox-content {
+            transform: scale(1);
+        }
+
+        .close-lightbox {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .close-lightbox:hover {
+            transform: rotate(90deg) scale(1.2);
+            color: #00b894;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-header h1 {
+                font-size: 2.5rem;
+            }
+
+            #gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+            z-index: 2001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: #1a921a;
+        }
+
+        .lightbox-prev { left: 5%; }
+        .lightbox-next { right: 5%; }
+        
+        @media (max-width: 768px) {
+            .lightbox-prev { left: 2%; width: 45px; height: 45px; font-size: 1.5rem; }
+            .lightbox-next { right: 2%; width: 45px; height: 45px; font-size: 1.5rem; }
+        }
+    </style>
+</head>
+
+<body class="pallet-theme">
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <nav class="back-nav">
+        <a href="index.html" class="cta-button"
+            style="background: rgba(255,255,255,0.9); color: #1a921a; padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; margin-top: 0;">
+            <i class="fa fa-arrow-left"></i> Back to Home
+        </a>
+    </nav>
+
+    <main class="gallery-container">
+        <header class="gallery-header" data-aos="fade-down">
+            <h1>Our Event Gallery</h1>
+            <p style="color: #636e72; font-size: 1.1rem;">Capturing the vibrant spirit of Koduvelly Sahitholsav</p>
+        </header>
+
+        <div id="gallery-grid" data-aos="fade-up">
+            <!-- Dynamic images from script.js -->
+        </div>
+    </main>
+
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <span class="close-lightbox" onclick="closeLightbox(event)">&times;</span>
+        <div class="lightbox-actions" style="position: absolute; top: 30px; left: 30px; z-index: 2002; display: flex; gap: 1rem;">
+            <button onclick="downloadLightboxImage(event)" style="background: rgba(255,255,255,0.9); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: #1a921a; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Download Image"><i class="fa fa-download"></i></button>
+            <button onclick="shareLightboxImage(event)" style="background: rgba(255,255,255,0.9); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: #1a921a; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Share Image"><i class="fa fa-share-alt"></i></button>
+        </div>
+        <button class="lightbox-nav lightbox-prev" onclick="changeLightboxImage(-1, event)"><i class="fa fa-chevron-left"></i></button>
+        <img id="lightbox-img" class="lightbox-content" src="" alt="Full Resolution" onclick="event.stopPropagation()">
+        <button class="lightbox-nav lightbox-next" onclick="changeLightboxImage(1, event)"><i class="fa fa-chevron-right"></i></button>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="script.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        let currentLightboxIndex = 0;
+
+        function openLightbox(index, event) {
+            if (event) event.stopPropagation();
+            currentLightboxIndex = index;
+            updateLightboxImage();
+            
+            const lightbox = document.getElementById('lightbox');
+            lightbox.style.display = 'flex';
+            setTimeout(() => lightbox.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+            
+            document.addEventListener('keydown', handleLightboxKey);
+        }
+
+        function updateLightboxImage() {
+            const data = getData();
+            if (!data.gallery || data.gallery.length === 0) return;
+            const img = document.getElementById('lightbox-img');
+            img.src = data.gallery[currentLightboxIndex].original;
+        }
+
+        function changeLightboxImage(direction, event) {
+            if (event) event.stopPropagation();
+            const data = getData();
+            if (!data.gallery || data.gallery.length === 0) return;
+            
+            currentLightboxIndex += direction;
+            if (currentLightboxIndex < 0) currentLightboxIndex = data.gallery.length - 1;
+            if (currentLightboxIndex >= data.gallery.length) currentLightboxIndex = 0;
+            
+            updateLightboxImage();
+        }
+
+        function closeLightbox(event) {
+            if (event && event.target.id === 'lightbox-img') return;
+            
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            setTimeout(() => {
+                lightbox.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }, 300);
+            
+            document.removeEventListener('keydown', handleLightboxKey);
+        }
+        
+        function handleLightboxKey(e) {
+            if (e.key === 'ArrowLeft') changeLightboxImage(-1);
+            if (e.key === 'ArrowRight') changeLightboxImage(1);
+            if (e.key === 'Escape') closeLightbox();
+        }
+
+        async function downloadLightboxImage(event) {
+            if(event) event.stopPropagation();
+            const img = document.getElementById('lightbox-img');
+            const url = img.src;
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = 'sahitholsav_gallery_' + Date.now() + '.jpg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (err) {
+                alert("Failed to download: " + err.message);
+            }
+        }
+
+        async function shareLightboxImage(event) {
+            if(event) event.stopPropagation();
+            const img = document.getElementById('lightbox-img');
+            const url = img.src;
+            if (navigator.share) {
+                try {
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    const file = new File([blob], 'gallery_image.jpg', { type: blob.type });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: 'Koduvelly Sahitholsav Gallery',
+                            files: [file]
+                        });
+                    } else {
+                        await navigator.share({
+                            title: 'Koduvelly Sahitholsav Gallery',
+                            url: url
+                        });
+                    }
+                } catch (err) {
+                    console.log('Error sharing:', err);
+                }
+            } else {
+                alert("Native sharing not supported on this device/browser.");
+            }
+        }
+    </script>
+</body>
+
+</html>

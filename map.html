@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Map - Koduvelly Sahitholsav</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pallet-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/font-awesome.min.css">
+    <style>
+        body {
+            background: #fdfbfb;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .map-header {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .map-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            padding: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid #edf2f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .map-image {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .empty-map {
+            padding: 3rem;
+            text-align: center;
+            color: #a0aec0;
+            display: none;
+        }
+
+        h1 {
+            color: #1a921a;
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="pallet-theme">
+
+    <div class="map-header">
+        <a href="index.html" class="back-btn">
+            <i class="fa fa-arrow-left"></i> Back to Home
+        </a>
+        <h1>Venue Map</h1>
+    </div>
+
+    <div class="map-container">
+        <img id="venue-map-img" class="map-image" alt="Festival Venue Map" onload="this.style.display='block'; document.getElementById('empty-map-msg').style.display='none';" onerror="this.style.display='none'; document.getElementById('empty-map-msg').style.display='block';">
+        <div id="empty-map-msg" class="empty-map">
+            <i class="fa fa-map-marked-alt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p>The venue map is currently unavailable. Please check back later.</p>
+        </div>
+    </div>
+
+    <script>
+        // Load the map with a cache-busting timestamp immediately when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapImg = document.getElementById('venue-map-img');
+            const timestamp = new Date().getTime();
+            const baseUrl = "https://lxbvadjjboavxwidxsnl.supabase.co/storage/v1/object/public/contect%20image/map_image.jpg";
+            mapImg.src = baseUrl + "?t=" + timestamp;
+        });
+    </script>
+
+</body>
+</html>

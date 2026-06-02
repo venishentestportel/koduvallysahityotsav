@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahitholsav | Platform</title>
+    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="pallet-style.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="pallet-theme">
+    <!-- Instant Notification Banner -->
+    <div id="notif-permission-banner" class="pallet-banner" style="display: none;">
+        <span class="banner-text">Get live updates on your masterpieces.</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button id="btn-allow-notif" class="pallet-btn-small">Accept</button>
+            <button id="btn-dismiss-notif" class="pallet-btn-close">&times;</button>
+        </div>
+    </div>
+
+    <script>
+        if ("Notification" in window && Notification.permission === "default" && sessionStorage.getItem('notif_dismissed') !== 'true') {
+            document.getElementById('notif-permission-banner').style.display = 'flex';
+        }
+        document.getElementById('btn-allow-notif').onclick = () => {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted' && window.checkAndSendNotification) {
+                    window.checkAndSendNotification("Welcome", "Live updates enabled.");
+                }
+            });
+            document.getElementById('notif-permission-banner').style.display = 'none';
+        };
+        document.getElementById('btn-dismiss-notif').onclick = () => {
+            document.getElementById('notif-permission-banner').style.display = 'none';
+            sessionStorage.setItem('notif_dismissed', 'true');
+        };
+    </script>
+
+    <!-- Main Header -->
+    <header class="pallet-header">
+        <a href="#" class="header-left">
+            <div class="logo-container">
+                <img src="menu%20loog.png" alt="Logo" class="logo-img">
+            </div>
+            <div class="logo-text-group">
+                <span class="logo-title">Sahitholsav</span>
+                <span class="logo-subtitle">ARTS FESTIVAL</span>
+            </div>
+        </a>
+        <nav class="desktop-nav pallet-nav">
+            <a href="#" onclick="openScheduleModal(); event.preventDefault();" class="nav-link">Live Schedule</a>
+            <a href="#gallery" class="nav-link">Gallery</a>
+            <a href="#mark-list" class="nav-link">Scores</a>
+            <a href="results.html" class="nav-link">Results</a>
+        </nav>
+        <div class="header-right desktop-nav">
+            <a href="#" class="icon-btn"><i class="fa fa-user"></i></a>
+            <a href="#" class="icon-btn"><i class="fa fa-cog"></i></a>
+        </div>
+        <div class="hamburger-menu" onclick="toggleMobileMenu()" style="cursor:pointer; display:none;">
+            <i class="fa fa-bars" style="font-size: 1.5rem; color: var(--pallet-text);"></i>
+        </div>
+    </header>
+
+    <style>
+        @media (max-width: 900px) {
+            .desktop-nav {
+                display: none !important;
+            }
+
+            .hamburger-menu {
+                display: block !important;
+            }
+        }
+    </style>
+
+    <!-- Mobile Nav -->
+    <div id="mobile-nav-panel" class="mobile-nav-panel pallet-modal-overlay" onclick="toggleMobileMenu()"
+        style="position:fixed; top:-100vh; left:0; width:100%; height:100vh; z-index:10000; transition:top 0.5s;">
+        <div class="mobile-nav-content pallet-modal" onclick="event.stopPropagation()"
+            style="display:flex; flex-direction:column; height:100%; border-radius:0 !important;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <div class="logo-container" style="width: 38px; height: 38px; border-radius: 10px; padding: 2px;">
+                        <img src="menu%20loog.png" alt="Logo" class="logo-img"
+                            style="height: auto; width: 100%; max-height: 100%;">
+                    </div>
+                    <div class="logo-text-group" style="line-height: 1.2;">
+                        <span class="logo-title" style="font-size: 1.15rem;">Sahitholsav</span>
+                        <span class="logo-subtitle"
+                            style="font-size: 0.55rem; letter-spacing: 0.12em; margin-top: 1px;">ARTS FESTIVAL</span>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="toggleMobileMenu()">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; padding: 2rem; gap: 1.5rem;">
+                <a href="#" onclick="toggleMobileMenu(); openScheduleModal(); event.preventDefault();"
+                    style="text-decoration:none; color:var(--pallet-text); font-weight:600; font-size:1.5rem;">Live
+                    Schedule</a>
+                <a href="#gallery" onclick="toggleMobileMenu()"
+                    style="text-decoration:none; color:var(--pallet-text); font-weight:600; font-size:1.5rem;">Gallery</a>
+                <a href="#mark-list" onclick="toggleMobileMenu()"
+                    style="text-decoration:none; color:var(--pallet-text); font-weight:600; font-size:1.5rem;">Live
+                    Scores</a>
+                <a href="results.html" onclick="toggleMobileMenu()"
+                    style="text-decoration:none; color:var(--pallet-text); font-weight:600; font-size:1.5rem;">Full
+                    Results</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="pallet-hero">
+        <h1 class="hero-title" data-aos="fade-up">
+            <img src="menu%20loog.png" alt="Sahitholsav" style="width: 90%; max-width: 650px; height: auto;">
+        </h1>
+
+        <div class="hero-cards-container" data-aos="zoom-in" data-aos-delay="200" id="hero-cards-container">
+            <div class="floating-badge badge-blue">@arts</div>
+            <div class="floating-badge badge-green">@culture</div>
+
+            <div class="hero-card hc-1"><img src="https://picsum.photos/400/500?random=1" alt="Art 1"></div>
+            <div class="hero-card hc-2"><img src="https://picsum.photos/400/500?random=2" alt="Art 2"></div>
+            <div class="hero-card hc-3"><img src="https://picsum.photos/400/500?random=3" alt="Art 3"></div>
+            <div class="hero-card hc-4"><img src="https://picsum.photos/400/500?random=4" alt="Art 4"></div>
+            <div class="hero-card hc-5"><img src="https://picsum.photos/400/500?random=5" alt="Art 5"></div>
+        </div>
+
+        <script>
+            // Populate the hero cards with actual gallery masterpieces once data loads
+            window.addEventListener('dataUpdated', () => {
+                if (typeof getData === 'function') {
+                    const data = getData();
+                    if (data && data.gallery && data.gallery.length > 0) {
+                        const container = document.getElementById('hero-cards-container');
+                        if (container) {
+                            const imgs = data.gallery.slice(0, 5).map(g => g.original);
+                            container.innerHTML = `
+                                <div class="floating-badge badge-blue">@arts</div>
+                                <div class="floating-badge badge-green">@culture</div>
+                                <div class="hero-card hc-1"><img src="${imgs[0] || 'https://picsum.photos/400/500?random=1'}" alt="Masterpiece 1"></div>
+                                <div class="hero-card hc-2"><img src="${imgs[1] || 'https://picsum.photos/400/500?random=2'}" alt="Masterpiece 2"></div>
+                                <div class="hero-card hc-3"><img src="${imgs[2] || 'https://picsum.photos/400/500?random=3'}" alt="Masterpiece 3"></div>
+                                <div class="hero-card hc-4"><img src="${imgs[3] || 'https://picsum.photos/400/500?random=4'}" alt="Masterpiece 4"></div>
+                                <div class="hero-card hc-5"><img src="${imgs[4] || 'https://picsum.photos/400/500?random=5'}" alt="Masterpiece 5"></div>
+                            `;
+                        }
+                    }
+                }
+            });
+        </script>
+
+        <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="400">
+            Artists can display their masterpieces, and viewers can discover works that resonate with them.
+        </p>
+
+        <div class="hero-actions" data-aos="fade-up" data-aos-delay="500">
+            <button class="pallet-btn primary" onclick="openScheduleModal()">
+                View Schedule
+            </button>
+            <button class="pallet-btn secondary" onclick="openMapModal()">
+                View Map
+            </button>
+        </div>
+    </section>
+
+    <!-- Stage Status Section -->
+    <section class="stages-section" id="stages">
+        <span class="stages-subtitle" data-aos="fade-right">LIVE UPDATES</span>
+        <h2 class="stages-title" data-aos="fade-right" data-aos-delay="100">Active Festival Stages</h2>
+        <p class="stages-desc" data-aos="fade-right" data-aos-delay="150">Real-time indicators showing ongoing
+            presentations across venues.</p>
+
+        <div class="stages-card" data-aos="fade-left" data-aos-delay="200">
+            <table class="stages-table">
+                <thead>
+                    <tr>
+                        <th style="width: 32%;">STAGE</th>
+                        <th style="width: 43%;">SESSION NOW</th>
+                        <th style="width: 15%;">STATUS</th>
+                        <th style="width: 10%; text-align: right; padding-right: 0.5rem;">QUEUE</th>
+                    </tr>
+                </thead>
+                <tbody id="hero-stages-table-body">
+                    <tr>
+                        <td colspan="4">
+                            <div class="pallet-loader" style="padding: 3rem 0;">
+                                <div class="loader-spinner"></div>
+                                <p>Loading active stages...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+
+
+    <!-- Mark List Section -->
+    <section class="leaderboard-section" id="mark-list">
+        <div class="leaderboard-header">
+            <div class="header-left-group" data-aos="fade-right">
+                <span class="live-subtitle">LIVE STATISTICS</span>
+                <h2 class="leaderboard-title">Festival Leaderboard</h2>
+                <p class="leaderboard-desc">Current dynamic score tallies among standard regional clubs.</p>
+            </div>
+            <div class="header-right-group" data-aos="fade-left">
+                <div class="metrics-badge">
+                    <span class="status-dot"></span>
+                    <span>Auto-refreshing metrics</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="leaderboard-content">
+            <!-- Left Side: Top Ranks Cards -->
+            <div class="top-ranks-col" id="top-ranks-container" data-aos="fade-right" data-aos-delay="200">
+                <div class="pallet-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Loading leaderboard...</p>
+                </div>
+            </div>
+
+            <!-- Right Side: Remaining Ranks List Card -->
+            <div class="remaining-ranks-card" id="remaining-ranks-container" data-aos="fade-left" data-aos-delay="200">
+                <div class="pallet-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Loading scores...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Full Results Button -->
+        <div class="leaderboard-actions" data-aos="fade-up" data-aos-delay="300"
+            style="display: flex; justify-content: center; margin-top: 2.5rem; width: 100%;">
+            <a href="results.html" class="pallet-btn primary"
+                style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem 2rem;">
+                <i class="fa fa-poll"></i> View Full Results
+            </a>
+        </div>
+    </section>
+
+
+    <!-- Modals -->
+    <div id="schedule-modal" class="selection-overlay pallet-modal-overlay" onclick="closeScheduleModal()"
+        style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center; padding: 1rem;">
+        <div class="selection-modal pallet-modal" onclick="event.stopPropagation()"
+            style="width: 100%; max-width: 600px;">
+            <div class="modal-header">
+                <h2>Program Schedule</h2>
+                <button class="close-btn" onclick="closeScheduleModal()"><i class="fa fa-times"></i></button>
+            </div>
+            <div id="schedule-display-list" class="modal-body">
+                <div class="pallet-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Loading schedule...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="map-modal" class="selection-overlay pallet-modal-overlay" onclick="closeMapModal()"
+        style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center; padding: 1rem;">
+        <div class="selection-modal pallet-modal large" onclick="event.stopPropagation()"
+            style="width: 100%; max-width: 800px;">
+            <div class="modal-header">
+                <h2>Venue Map</h2>
+                <button class="close-btn" onclick="closeMapModal()"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div id="map-loader" class="pallet-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Loading map...</p>
+                </div>
+                <img id="modal-map-img" src="" alt="Venue Map"
+                    style="max-width:100%; height:auto; border-radius:12px; display:none;"
+                    onload="this.style.display='block'; document.getElementById('map-loader').style.display='none'; document.getElementById('modal-map-msg').style.display='none';"
+                    onerror="this.style.display='none'; document.getElementById('map-loader').style.display='none'; document.getElementById('modal-map-msg').style.display='block';">
+                <div id="modal-map-msg" style="display: none; padding: 2rem; color: var(--pallet-text-light);">
+                    <i class="fa fa-map-marked-alt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>Map currently unavailable.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage Timeline Modal -->
+    <div id="timeline-modal" class="selection-overlay pallet-modal-overlay" onclick="closeTimelineModal()"
+        style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center; padding: 1rem;">
+        <div class="selection-modal pallet-modal" onclick="event.stopPropagation()"
+            style="width: 100%; max-width: 550px; text-align: left; padding: 2rem 2.5rem;">
+            <div class="modal-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 id="timeline-title"
+                    style="margin: 0; font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: #111111;">
+                    Stage Timeline</h2>
+                <button class="close-btn" onclick="closeTimelineModal()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; padding: 0; display: flex; align-items: center; justify-content: center; width: auto; height: auto;">&times;</button>
+            </div>
+            <div id="timeline-modal-content" class="timeline-modal-body">
+                <div class="pallet-loader" style="padding: 2rem 0;">
+                    <div class="loader-spinner"></div>
+                    <p>Loading timeline...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="script.js?v=7"></script>
+    <script>
+        AOS.init({
+            once: false,
+            duration: 800,
+            easing: 'ease-out-back'
+        });
+
+        // Global Helper to get stage display name matching mockup
+        window.getStageDisplayName = function (stageName) {
+            if (!stageName) return '';
+            const name = stageName.toLowerCase().trim();
+            if (name === 'stage 1') return 'Stage 1: Al Farabi';
+            if (name === 'stage 2') return 'Stage 2: Al Ghazali';
+            if (name === 'stage 3') return 'Stage 3: Ibn Sina';
+            if (name === 'stage 4') return 'Stage 4: Al Khwarizmi';
+            if (name === 'stage 5') return 'Stage 5: Al Kindi';
+            if (name === 'stage 6') return 'Stage 6: Al Razi';
+            if (name === 'stage 7') return 'Stage 7: Ibn Rushd';
+            if (name === 'stage 8') return 'Stage 8: Ibn Khaldun';
+            return stageName.replace(/\b\w/g, c => c.toUpperCase());
+        };
+
+        function openTimelineModal(stageName) {
+            const displayTitle = getStageDisplayName(stageName);
+            document.getElementById('timeline-title').textContent = displayTitle;
+
+            const contentDiv = document.getElementById('timeline-modal-content');
+            if (!contentDiv) return;
+
+            const data = getData();
+            const historyList = (data.stageHistory && data.stageHistory[stageName]) || [];
+
+            if (historyList.length === 0) {
+                contentDiv.innerHTML = `<p style="text-align:center; padding: 2rem 0; color:var(--pallet-text-light);">No activity history logged for this stage.</p>`;
+            } else {
+                contentDiv.innerHTML = `
+                    <div class="timeline-container">
+                        ${historyList.map((item, idx) => {
+                    const timeStr = item.time ? new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    const catProgStr = [item.Categories, item.Programs].filter(Boolean).join(' - ');
+
+                    let displaySituation = item.situation;
+                    if (item.situation === 'Start Registration') displaySituation = 'Registration Started';
+                    if (item.situation === 'End Registration') displaySituation = 'Registration Ended';
+                    if (item.situation === 'Start Program') displaySituation = 'Program Started';
+                    if (item.situation === 'End Program') displaySituation = 'Program Ended';
+
+                    const isActive = idx === 0 && !item.situation.toLowerCase().includes('end');
+
+                    return `
+                                <div class="timeline-item ${isActive ? 'active' : ''}">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-header">
+                                            <span class="timeline-situation" style="font-weight: 700; color: #111111;">${displaySituation}</span>
+                                            <span class="timeline-time">${timeStr}</span>
+                                        </div>
+                                        ${catProgStr ? `<div class="timeline-details">${catProgStr}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                }).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('timeline-modal').style.display = 'flex';
+        }
+
+        function closeTimelineModal() {
+            document.getElementById('timeline-modal').style.display = 'none';
+        }
+
+        function openScheduleModal() {
+            renderScheduleList();
+            document.getElementById('schedule-modal').style.display = 'flex';
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('schedule-modal').style.display = 'none';
+        }
+
+        function openMapModal() {
+            const mapImg = document.getElementById('modal-map-img');
+            if (!mapImg.src || mapImg.src === window.location.href) {
+                mapImg.src = "https://lxbvadjjboavxwidxsnl.supabase.co/storage/v1/object/public/contect%20image/map_image.jpg?t=" + new Date().getTime();
+            }
+            document.getElementById('map-modal').style.display = 'flex';
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').style.display = 'none';
+        }
+
+        function renderScheduleList() {
+            const data = getData();
+            const list = document.getElementById('schedule-display-list');
+            if (!list || !data.schedule) return;
+
+            if (data.schedule.length === 0) {
+                list.innerHTML = `<p style="text-align:center; color:var(--pallet-text-light);">No programs scheduled at this time.</p>`;
+                return;
+            }
+
+            list.innerHTML = data.schedule.map(item => {
+                const upcomingList = item.upcoming ? item.upcoming.split(',').map(s => s.trim()).filter(s => s) : [];
+                let upcomingHtml = upcomingList.length > 0
+                    ? upcomingList.map((prog, idx) => `
+                        <div class="pallet-list-item">
+                            <span class="badge ${idx === 0 ? 'badge-primary' : 'badge-secondary'}">${idx === 0 ? 'NEXT' : 'LATER'}</span>
+                            <span class="item-text">${prog}</span>
+                        </div>
+                    `).join('')
+                    : `<div class="pallet-list-item"><span class="badge badge-secondary">LATER</span><span class="item-text">None</span></div>`;
+
+                return `
+                <div class="pallet-program-card">
+                    <h3 class="program-title">${item.stage}</h3>
+                    <div class="program-details">
+                        <div class="pallet-list-item">
+                            <span class="badge badge-live">NOW</span>
+                            <span class="item-text" style="font-weight:700;">${item.current}</span>
+                        </div>
+                        ${upcomingHtml}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function toggleMobileMenu() {
+            const panel = document.getElementById('mobile-nav-panel');
+            if (panel.style.top === '0px') {
+                panel.style.top = '-100vh';
+                document.body.style.overflow = '';
+            } else {
+                panel.style.top = '0px';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+    </script>
+</body>
+
+</html>

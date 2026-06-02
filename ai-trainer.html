@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI PDF Trainer - Koduvally Sahithyolsavam</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f7fafc;
+            color: #2d3748;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #2b6cb0;
+            color: white;
+        }
+        .sidebar-header h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sidebar-header a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+        .sidebar-header a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        .regions-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .region-item {
+            background: #fdfdfd;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: border-color 0.2s;
+        }
+        .region-item:hover {
+            border-color: #3182ce;
+        }
+        .region-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .region-label {
+            font-weight: bold;
+            color: #2b6cb0;
+            font-size: 0.9rem;
+        }
+        .region-coords {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+        .delete-btn {
+            background: #fff5f5;
+            color: #e53e3e;
+            border: 1px solid #feb2b2;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover {
+            background: #e53e3e;
+            color: white;
+        }
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2b6cb0;
+        }
+        .btn-success {
+            background: #38a169;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #2f855a;
+        }
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #edf2f7;
+        }
+        .toolbar {
+            padding: 1rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .canvas-container {
+            flex: 1;
+            overflow: auto;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .canvas-wrapper {
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: white;
+        }
+        canvas {
+            display: block;
+        }
+        #overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+        }
+        .modal input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .modal input:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49,130,206,0.2);
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        .modal-buttons button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        .btn-cancel:hover {
+            background: #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1><i class="fa fa-robot"></i> AI Trainer</h1>
+            <a href="admin.html"><i class="fa fa-arrow-left"></i> Back to Admin Panel</a>
+        </div>
+        <div class="regions-list" id="regions-list" style="flex: 1; border-bottom: 1px solid #e2e8f0; max-height: 50%;">
+            <div style="color: #a0aec0; text-align: center; margin-top: 2rem; font-size: 0.9rem;">
+                No regions mapped yet.<br>Upload a PDF and drag to select areas.
+            </div>
+        </div>
+        <div class="saved-templates-section" style="flex: 1; display: flex; flex-direction: column; max-height: 50%;">
+            <div style="background: #f8fafc; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: bold; color: #4a5568; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+                <span><i class="fa fa-cloud"></i> Saved Cloud Templates</span>
+                <button onclick="fetchSavedTemplates()" style="background: none; border: none; color: #3182ce; cursor: pointer;" title="Refresh List"><i class="fa fa-sync-alt"></i></button>
+            </div>
+            <div id="saved-templates-list" style="flex: 1; overflow-y: auto; padding: 1rem; box-sizing: border-box;">
+                <!-- templates load here -->
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 0.75rem; text-align: center; font-weight: bold; background: #edf2f7; padding: 4px; border-radius: 4px;" id="active-template-title">
+                New Template Mode
+            </div>
+            <button class="btn btn-success" onclick="exportTemplate()">
+                <i class="fa fa-download"></i> Export Template JSON
+            </button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="btn btn-primary" onclick="saveToSupabase()" style="flex: 1; background: #805ad5; font-size: 0.85rem; padding: 0.5rem 0.25rem;">
+                    <i class="fa fa-cloud-upload-alt"></i> Save As New
+                </button>
+                <button id="resave-btn" class="btn btn-success" onclick="resaveToSupabase()" style="flex: 1; background: #3182ce; display: none; font-size: 0.85rem; padding: 0.5rem 0.25rem;">
+                    <i class="fa fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-area">
+        <div class="toolbar">
+            <div style="color: #4a5568; font-size: 0.95rem;">
+                <i class="fa fa-info-circle text-blue-500"></i> Step 1: Upload Example PDF. Step 2: Drag over text. Step 3: Label it.
+            </div>
+            <div>
+                <label class="btn btn-primary" style="display: inline-block; width: auto; margin: 0;">
+                    <i class="fa fa-file-pdf"></i> Upload Example PDF
+                    <input type="file" id="pdf-upload" accept=".pdf" style="display: none;" onchange="handlePdfUpload(event)">
+                </label>
+            </div>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-wrapper" id="canvas-wrapper" style="display: none;">
+                <canvas id="pdf-canvas"></canvas>
+                <canvas id="overlay-canvas"></canvas>
+            </div>
+            <div id="no-pdf-msg" style="color: #a0aec0; margin-top: 5rem; font-size: 1.2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                <i class="fa fa-file-pdf fa-4x"></i>
+                Please upload a PDF to begin training.
+            </div>
+        </div>
+    </div>
+
+    <!-- Label Prompt Modal -->
+    <div id="label-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-top: 0; color: #2d3748;"><i class="fa fa-tag" style="color: #3182ce;"></i> Name this Region</h2>
+            <p style="color: #718096; font-size: 0.9rem; margin-bottom: 0;">What piece of data is in this box? (e.g., "Category", "Result No.", "First Place Name")</p>
+            <input type="text" id="region-label-input" placeholder="Enter label name..." autocomplete="off">
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeLabelModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveRegionLabel()">Save Region</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://lxbvadjjboavxwidxsnl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Ubv4Ofl0uR9o6ct9PvI1uA_C9hglPNT';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        const pdfCanvas = document.getElementById('pdf-canvas');
+        const pdfCtx = pdfCanvas.getContext('2d');
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        const overlayCtx = overlayCanvas.getContext('2d');
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        const noPdfMsg = document.getElementById('no-pdf-msg');
+        const regionsListEl = document.getElementById('regions-list');
+        
+        const labelModal = document.getElementById('label-modal');
+        const labelInput = document.getElementById('region-label-input');
+
+        let regions = [];
+        let currentPdf = null;
+        let currentPdfFile = null;
+        
+        // Drawing state
+        let isDrawing = false;
+        let startX = 0;
+        let startY = 0;
+        let currentBox = null;
+
+        async function handlePdfUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            currentPdfFile = file;
+
+            const arrayBuffer = await file.arrayBuffer();
+            const typedarray = new Uint8Array(arrayBuffer);
+            
+            try {
+                currentPdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                renderPage(1);
+            } catch (error) {
+                console.error("Error loading PDF:", error);
+                alert("Failed to load PDF.");
+            }
+        }
+
+        async function renderPage(pageNum) {
+            const page = await currentPdf.getPage(pageNum);
+            
+            // Adjust scale based on desired resolution
+            const viewport = page.getViewport({ scale: 1.5 });
+            
+            pdfCanvas.width = viewport.width;
+            pdfCanvas.height = viewport.height;
+            overlayCanvas.width = viewport.width;
+            overlayCanvas.height = viewport.height;
+            
+            canvasWrapper.style.width = viewport.width + 'px';
+            canvasWrapper.style.height = viewport.height + 'px';
+            
+            canvasWrapper.style.display = 'block';
+            noPdfMsg.style.display = 'none';
+
+            const renderContext = {
+                canvasContext: pdfCtx,
+                viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+            
+            if (pendingTemplateToLoad) {
+                reconstructRegionsFromTemplate(pendingTemplateToLoad);
+                pendingTemplateToLoad = null;
+            } else {
+                recalculateRegionsAbsoluteCoords();
+            }
+            updateRegionsList();
+            drawOverlay();
+        }
+
+        // Overlay Mouse Events
+        overlayCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const rect = overlayCanvas.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            currentBox = { x: startX, y: startY, w: 0, h: 0 };
+        });
+
+        overlayCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const rect = overlayCanvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            currentBox.w = currentX - startX;
+            currentBox.h = currentY - startY;
+            
+            drawOverlay();
+        });
+
+        overlayCanvas.addEventListener('mouseup', (e) => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            // Normalize box (handle dragging in negative direction)
+            let x = currentBox.w < 0 ? startX + currentBox.w : startX;
+            let y = currentBox.h < 0 ? startY + currentBox.h : startY;
+            let w = Math.abs(currentBox.w);
+            let h = Math.abs(currentBox.h);
+            
+            currentBox = { x, y, w, h };
+            
+            // Ignore tiny accidental clicks
+            if (w < 10 || h < 10) {
+                currentBox = null;
+                drawOverlay();
+                return;
+            }
+            
+            openLabelModal();
+        });
+
+        function drawOverlay() {
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            
+            // Draw saved regions
+            regions.forEach(region => {
+                overlayCtx.fillStyle = 'rgba(49, 130, 206, 0.2)';
+                overlayCtx.fillRect(region.x, region.y, region.w, region.h);
+                
+                overlayCtx.strokeStyle = '#3182ce';
+                overlayCtx.lineWidth = 2;
+                overlayCtx.strokeRect(region.x, region.y, region.w, region.h);
+                
+                // Draw label text
+                overlayCtx.fillStyle = '#2b6cb0';
+                overlayCtx.font = 'bold 14px Arial';
+                overlayCtx.fillText(region.label, region.x, region.y - 5 > 14 ? region.y - 5 : region.y + 15);
+            });
+            
+            // Draw current dragging box
+            if (isDrawing && currentBox) {
+                overlayCtx.fillStyle = 'rgba(237, 137, 54, 0.2)';
+                overlayCtx.fillRect(currentBox.x, currentBox.y, currentBox.w, currentBox.h);
+                
+                overlayCtx.strokeStyle = '#ed8936';
+                overlayCtx.lineWidth = 2;
+                overlayCtx.strokeRect(currentBox.x, currentBox.y, currentBox.w, currentBox.h);
+            }
+        }
+
+        function openLabelModal() {
+            labelInput.value = '';
+            labelModal.style.display = 'flex';
+            setTimeout(() => labelInput.focus(), 100);
+        }
+
+        function closeLabelModal() {
+            labelModal.style.display = 'none';
+            currentBox = null;
+            drawOverlay();
+        }
+
+        function saveRegionLabel() {
+            const label = labelInput.value.trim();
+            if (!label) {
+                alert('Please enter a label name.');
+                return;
+            }
+            
+            // Save coordinates as percentages to be resolution independent
+            const pctX = (currentBox.x / overlayCanvas.width).toFixed(4);
+            const pctY = (currentBox.y / overlayCanvas.height).toFixed(4);
+            const pctW = (currentBox.w / overlayCanvas.width).toFixed(4);
+            const pctH = (currentBox.h / overlayCanvas.height).toFixed(4);
+
+            regions.push({
+                id: Date.now().toString(),
+                label: label,
+                x: currentBox.x,
+                y: currentBox.y,
+                w: currentBox.w,
+                h: currentBox.h,
+                relativeCoords: { x: pctX, y: pctY, w: pctW, h: pctH }
+            });
+            
+            closeLabelModal();
+            updateRegionsList();
+            drawOverlay();
+            if (typeof saveDraft === 'function') saveDraft();
+        }
+
+        // Allow pressing Enter to save in modal
+        labelInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveRegionLabel();
+            }
+        });
+
+        function deleteRegion(id) {
+            regions = regions.filter(r => r.id !== id);
+            updateRegionsList();
+            drawOverlay();
+            if (typeof saveDraft === 'function') saveDraft();
+        }
+
+        function updateRegionsList() {
+            if (regions.length === 0) {
+                regionsListEl.innerHTML = `
+                    <div style="color: #a0aec0; text-align: center; margin-top: 2rem; font-size: 0.9rem;">
+                        No regions mapped yet.<br>Upload a PDF and drag to select areas.
+                    </div>
+                `;
+                return;
+            }
+            
+            regionsListEl.innerHTML = regions.map(r => `
+                <div class="region-item">
+                    <div class="region-info">
+                        <span class="region-label"><i class="fa fa-vector-square" style="font-size:0.8rem; margin-right:4px;"></i> ${r.label}</span>
+                        <span class="region-coords">x:${r.relativeCoords.x}, y:${r.relativeCoords.y} (w:${r.relativeCoords.w}, h:${r.relativeCoords.h})</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteRegion('${r.id}')" title="Delete Region">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function exportTemplate() {
+            if (regions.length === 0) {
+                alert("Please map at least one region before exporting.");
+                return;
+            }
+            
+            const templateData = {
+                metadata: {
+                    createdAt: new Date().toISOString(),
+                    type: "ai_pdf_extraction_template"
+                },
+                regions: regions.map(r => ({
+                    label: r.label,
+                    boundingBox: r.relativeCoords
+                }))
+            };
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(templateData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "ai_pdf_template_" + Date.now() + ".json");
+            document.body.appendChild(downloadAnchorNode); // required for firefox
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        async function saveToSupabase() {
+            if (regions.length === 0) {
+                alert("Please map at least one region before saving.");
+                return;
+            }
+            
+            const templateData = {
+                metadata: {
+                    createdAt: new Date().toISOString(),
+                    type: "ai_pdf_extraction_template"
+                },
+                regions: regions.map(r => ({
+                    label: r.label,
+                    boundingBox: r.relativeCoords
+                }))
+            };
+            
+            const jsonStr = JSON.stringify(templateData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            
+            let customName = prompt("Enter a name for this AI PDF Template:", "My Template");
+            if (!customName) return; // User cancelled
+
+            customName = customName.trim().replace(/[^a-zA-Z0-9_\-\ ]/g, '').replace(/ /g, '_');
+            const fileBaseName = customName + "_" + Date.now();
+            const fileName = fileBaseName + ".json";
+            const pdfFileName = fileBaseName + ".pdf";
+
+            try {
+                const bucketName = 'json file'; 
+                
+                // 1. Upload JSON
+                const { data, error } = await supabaseClient
+                    .storage
+                    .from(bucketName)
+                    .upload(fileName, blob, {
+                        contentType: 'application/json',
+                        upsert: false
+                    });
+
+                if (error) {
+                    throw error;
+                }
+                
+                // 2. Upload PDF
+                if (currentPdfFile) {
+                    const { error: pdfError } = await supabaseClient
+                        .storage
+                        .from(bucketName)
+                        .upload(pdfFileName, currentPdfFile, {
+                            contentType: 'application/pdf',
+                            upsert: false
+                        });
+                    if (pdfError) {
+                        console.error("Failed to upload PDF template:", pdfError);
+                        alert(`JSON template saved, but failed to upload PDF: ${pdfError.message}`);
+                    } else {
+                        alert(`Successfully saved template and PDF to Supabase as ${fileBaseName}`);
+                    }
+                } else {
+                    alert(`Successfully saved template to Supabase as ${fileName}`);
+                }
+                
+                fetchSavedTemplates();
+            } catch (err) {
+                console.error("Error uploading to Supabase:", err);
+                if (err.message.includes("row-level security policy") || err.message.includes("RLS")) {
+                    alert("Failed to save to Supabase. This is because your 'json file' bucket does not have a public INSERT policy.\n\nTo fix this: Go to your Supabase Dashboard -> Storage -> Policies, and add an INSERT policy for the 'json file' bucket that allows anonymous users to insert files.");
+                } else {
+                    alert("Failed to save to Supabase: " + err.message);
+                }
+            }
+        }
+
+        let pendingTemplateToLoad = null;
+        let loadedTemplateFilename = null;
+
+        async function fetchSavedTemplates() {
+            const listDiv = document.getElementById('saved-templates-list');
+            listDiv.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 1rem;"><i class="fa fa-spinner fa-spin"></i> Loading...</div>';
+            
+            try {
+                const { data, error } = await supabaseClient.storage.from('json file').list();
+                if (error) throw error;
+                
+                const templates = data.filter(f => f.name.endsWith('.json')).sort((a, b) => b.created_at.localeCompare(a.created_at));
+                
+                if (templates.length === 0) {
+                    listDiv.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 1rem; font-size: 0.85rem;">No saved templates found.</div>';
+                    return;
+                }
+                
+                listDiv.innerHTML = templates.map(t => {
+                    const cleanName = t.name.replace(/_\d+\.json$/, '').replace(/_/g, ' ');
+                    return `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; background: white; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: all 0.2s;">
+                            <div style="flex: 1; min-width: 0; padding-right: 0.5rem;">
+                                <div style="font-weight: 600; font-size: 0.85rem; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${t.name}">${cleanName}</div>
+                                <div style="font-size: 0.7rem; color: #a0aec0;">${new Date(t.created_at).toLocaleDateString()}</div>
+                            </div>
+                            <div style="display: flex; gap: 4px;">
+                                <button onclick="loadTemplateFromSupabase('${t.name}')" style="background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; border-radius: 4px; padding: 0.25rem 0.4rem; cursor: pointer; font-size: 0.75rem; font-weight: bold;" title="Load Template"><i class="fa fa-folder-open"></i></button>
+                                <button onclick="deleteTemplateFromSupabase('${t.name}')" style="background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; border-radius: 4px; padding: 0.25rem 0.4rem; cursor: pointer; font-size: 0.75rem;" title="Delete Template"><i class="fa fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error("Error loading templates list:", err);
+                listDiv.innerHTML = `<div style="text-align: center; color: #e53e3e; padding: 1rem; font-size: 0.8rem;"><i class="fa fa-exclamation-circle"></i> Error loading templates</div>`;
+            }
+        }
+
+        async function loadTemplateFromSupabase(fileName) {
+            try {
+                const { data, error } = await supabaseClient.storage.from('json file').download(fileName);
+                if (error) throw error;
+                
+                const text = await data.text();
+                const template = JSON.parse(text);
+                
+                loadedTemplateFilename = fileName;
+                
+                if (currentPdf) {
+                    reconstructRegionsFromTemplate(template);
+                } else {
+                    pendingTemplateToLoad = template;
+                    alert("Template loaded. Please upload the example PDF to see and edit the mapped regions.");
+                }
+                
+                document.getElementById('active-template-title').innerText = "Editing: " + fileName.replace(/_\d+\.json$/, '').replace(/_/g, ' ');
+                document.getElementById('resave-btn').style.display = 'block';
+                
+                saveDraft();
+            } catch (err) {
+                alert("Failed to load template: " + err.message);
+            }
+        }
+
+        function reconstructRegionsFromTemplate(template) {
+            regions = [];
+            if (template && template.regions) {
+                template.regions.forEach((r, i) => {
+                    const pctX = parseFloat(r.boundingBox.x);
+                    const pctY = parseFloat(r.boundingBox.y);
+                    const pctW = parseFloat(r.boundingBox.w);
+                    const pctH = parseFloat(r.boundingBox.h);
+                    
+                    regions.push({
+                        id: Date.now().toString() + "_" + i,
+                        label: r.label,
+                        x: pctX * overlayCanvas.width,
+                        y: pctY * overlayCanvas.height,
+                        w: pctW * overlayCanvas.width,
+                        h: pctH * overlayCanvas.height,
+                        relativeCoords: r.boundingBox
+                    });
+                });
+            }
+            updateRegionsList();
+            drawOverlay();
+        }
+
+        function recalculateRegionsAbsoluteCoords() {
+            regions.forEach(r => {
+                if (r.relativeCoords) {
+                    r.x = parseFloat(r.relativeCoords.x) * overlayCanvas.width;
+                    r.y = parseFloat(r.relativeCoords.y) * overlayCanvas.height;
+                    r.w = parseFloat(r.relativeCoords.w) * overlayCanvas.width;
+                    r.h = parseFloat(r.relativeCoords.h) * overlayCanvas.height;
+                }
+            });
+        }
+
+        async function deleteTemplateFromSupabase(fileName) {
+            const cleanName = fileName.replace(/_\d+\.json$/, '').replace(/_/g, ' ');
+            if (!confirm(`Are you sure you want to delete the template "${cleanName}" from Supabase?`)) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient.storage.from('json file').remove([fileName]);
+                if (error) throw error;
+                
+                alert("Template deleted successfully.");
+                
+                if (loadedTemplateFilename === fileName) {
+                    clearDraft();
+                }
+                
+                fetchSavedTemplates();
+            } catch (err) {
+                alert("Failed to delete template: " + err.message);
+            }
+        }
+
+        async function resaveToSupabase() {
+            if (!loadedTemplateFilename) return;
+            if (regions.length === 0) {
+                alert("Please map at least one region before saving.");
+                return;
+            }
+            
+            const templateData = {
+                metadata: {
+                    createdAt: new Date().toISOString(),
+                    type: "ai_pdf_extraction_template"
+                },
+                regions: regions.map(r => ({
+                    label: r.label,
+                    boundingBox: r.relativeCoords
+                }))
+            };
+            
+            const jsonStr = JSON.stringify(templateData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            
+            try {
+                const bucketName = 'json file';
+                const { error } = await supabaseClient.storage.from(bucketName).upload(loadedTemplateFilename, blob, {
+                    contentType: 'application/json',
+                    upsert: true
+                });
+                
+                if (error) throw error;
+                
+                alert(`Successfully resaved template changes to '${loadedTemplateFilename}'`);
+                saveDraft();
+                fetchSavedTemplates();
+            } catch (err) {
+                alert("Failed to save changes: " + err.message);
+            }
+        }
+
+        function saveDraft() {
+            const draft = {
+                loadedTemplateFilename: loadedTemplateFilename,
+                regions: regions.map(r => ({
+                    label: r.label,
+                    relativeCoords: r.relativeCoords
+                }))
+            };
+            localStorage.setItem('koduvelly_ai_trainer_draft', JSON.stringify(draft));
+        }
+
+        function loadDraftOnStartup() {
+            const draftJson = localStorage.getItem('koduvelly_ai_trainer_draft');
+            if (!draftJson) return;
+            try {
+                const draft = JSON.parse(draftJson);
+                if (draft.loadedTemplateFilename) {
+                    loadedTemplateFilename = draft.loadedTemplateFilename;
+                    document.getElementById('active-template-title').innerText = "Editing: " + loadedTemplateFilename.replace(/_\d+\.json$/, '').replace(/_/g, ' ');
+                    document.getElementById('resave-btn').style.display = 'block';
+                }
+                
+                pendingTemplateToLoad = {
+                    regions: draft.regions
+                };
+                
+                const notice = document.createElement('div');
+                notice.id = 'draft-notice';
+                notice.style = "background: #feebc8; border: 1px solid #fbd38d; color: #c05621; padding: 0.5rem 1rem; border-radius: 6px; margin-top: 1rem; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box;";
+                notice.innerHTML = `
+                    <span><i class="fa fa-history"></i> Restored draft regions. Upload a PDF to overlay.</span>
+                    <button onclick="clearDraft()" style="background:none; border:none; color:#c05621; cursor:pointer; font-weight:bold; text-decoration:underline;">Discard Draft</button>
+                `;
+                const toolbar = document.querySelector('.toolbar');
+                if (toolbar) {
+                    toolbar.insertAdjacentElement('afterend', notice);
+                }
+            } catch (e) {
+                console.error("Failed to load draft:", e);
+            }
+        }
+
+        function clearDraft() {
+            localStorage.removeItem('koduvelly_ai_trainer_draft');
+            regions = [];
+            pendingTemplateToLoad = null;
+            loadedTemplateFilename = null;
+            document.getElementById('active-template-title').innerText = "New Template Mode";
+            const resaveBtn = document.getElementById('resave-btn');
+            if (resaveBtn) resaveBtn.style.display = 'none';
+            const notice = document.getElementById('draft-notice');
+            if (notice) notice.remove();
+            
+            updateRegionsList();
+            drawOverlay();
+        }
+
+        window.addEventListener('load', () => {
+            fetchSavedTemplates();
+            loadDraftOnStartup();
+        });
+    </script>
+</body>
+</html>

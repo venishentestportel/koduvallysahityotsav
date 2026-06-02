@@ -1,0 +1,558 @@
+/* =========================================================================
+   PREMIUM ADMIN THEME - PALLET THEME INTEGRATION
+   Glassmorphism & Perfect Alignment Overrides (Light Mode)
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* Pallet Color Palette for Admin */
+    --admin-bg: #f8f8f8;          /* Light Background */
+    --admin-card-bg: rgba(255, 255, 255, 0.7); /* Glassmorphic Card */
+    --admin-card-border: rgba(0, 0, 0, 0.05);
+    --admin-primary: #111111;     /* Dark Accent */
+    --admin-primary-hover: #333333;
+    --admin-secondary: #f0f0f0;   /* Light Gray */
+    --admin-text-main: #111111;
+    --admin-text-muted: #666666;
+    
+    /* Layout Variables */
+    --admin-sidebar-width: 280px;
+    --admin-glass-blur: blur(16px);
+    --admin-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    
+    /* Semantic Colors */
+    --admin-success: #10b981;
+    --admin-danger: #ef4444;
+    --admin-warning: #f59e0b;
+}
+
+/* Base Overrides for Admin HTML */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    background: var(--admin-bg) url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E") !important;
+    color: var(--admin-text-main) !important;
+    margin: 0;
+    padding: 0;
+}
+
+/* Overlay for body background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 40%),
+                rgba(248, 248, 248, 0.5); /* Light overlay */
+    z-index: -1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif !important;
+    color: var(--admin-text-main) !important;
+    margin-top: 0;
+}
+
+/* =========================================================================
+   LOGIN OVERLAY (Standalone)
+   ========================================================================= */
+#login-overlay {
+    background: rgba(248, 248, 248, 0.8) !important;
+    backdrop-filter: var(--admin-glass-blur) !important;
+    -webkit-backdrop-filter: var(--admin-glass-blur) !important;
+}
+
+#login-overlay > div {
+    background: var(--admin-card-bg) !important;
+    border: 1px solid var(--admin-card-border) !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+    backdrop-filter: var(--admin-glass-blur) !important;
+    border-radius: 24px !important;
+}
+
+#login-overlay h2 {
+    color: var(--admin-text-main) !important;
+}
+
+#login-overlay label {
+    color: var(--admin-text-muted) !important;
+}
+
+#login-overlay input {
+    background: #ffffff !important;
+    border: 1px solid #e5e5e5 !important;
+    color: var(--admin-text-main) !important;
+    transition: all 0.3s ease !important;
+}
+
+#login-overlay input:focus {
+    border-color: var(--admin-primary) !important;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1) !important;
+    outline: none;
+}
+
+#login-overlay button {
+    background: var(--admin-primary) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50px !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+#login-overlay button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* =========================================================================
+   LAYOUT (Sidebar & Main Content)
+   ========================================================================= */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    border-right: 1px solid var(--admin-card-border) !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.05) !important;
+    padding-top: 0;
+    z-index: 50;
+}
+
+.sidebar-header h2 {
+    color: var(--admin-primary) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px;
+}
+
+.sidebar-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    color: #64748b !important;
+    margin: 0.25rem 1rem !important;
+    border-radius: 12px !important;
+    padding: 0.85rem 1.5rem !important;
+    border-left: none !important;
+    transition: all 0.2s ease !important;
+    font-weight: 500;
+    font-size: 0.85rem !important;
+    white-space: nowrap !important;
+    cursor: pointer;
+}
+
+.sidebar-link i {
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+}
+
+.sidebar-link:hover {
+    background: #f8fafc !important;
+    color: #334155 !important;
+    transform: none !important;
+}
+
+.sidebar-link.active {
+    background: #eff6ff !important;
+    color: #4f46e5 !important;
+    border-left: none !important;
+    box-shadow: none !important;
+}
+
+.main-content {
+    background: transparent !important;
+    padding: 2.5rem 3rem !important;
+}
+
+/* Top Bar */
+.admin-top-bar {
+    background: var(--admin-card-bg) !important;
+    backdrop-filter: var(--admin-glass-blur) !important;
+    border-bottom: 1px solid var(--admin-card-border) !important;
+    margin: -2.5rem -3rem 2.5rem -3rem !important;
+    padding: 1.5rem 3rem !important;
+    border-radius: 0 0 24px 24px;
+    box-shadow: var(--admin-shadow) !important;
+}
+
+.admin-top-bar h1 {
+    color: var(--admin-text-main) !important;
+    font-weight: 700 !important;
+}
+
+/* Make global top header buttons and specific modals' Save Changes/Cancel buttons smaller */
+.admin-top-bar .btn,
+#btn-save-stage-cms,
+button[onclick="closeStageCmsModal()"] {
+    padding: 0.45rem 1rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+}
+
+
+#mobile-menu-toggle {
+    background: var(--admin-secondary) !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+    color: var(--admin-text-main) !important;
+}
+
+/* =========================================================================
+   SECTIONS & CARDS
+   ========================================================================= */
+.admin-section, .admin-card, [style*="background: #f7fafc"], [style*="background: #fffaf0"], [style*="background: #e8f5e9"] {
+    background: var(--admin-card-bg) !important;
+    backdrop-filter: var(--admin-glass-blur) !important;
+    border: 1px solid var(--admin-card-border) !important;
+    border-radius: 24px !important;
+    box-shadow: var(--admin-shadow) !important;
+    padding: 2rem !important;
+    color: var(--admin-text-main) !important;
+    margin-bottom: 2rem !important;
+}
+
+/* Override text colors */
+p[style*="color: #636e72"], p[style*="color: #c05621"], label[style*="color: #4a5568"], h3[style*="color: #9c4221"], h4[style*="color: #2e7d32"] {
+    color: var(--admin-text-muted) !important;
+}
+
+/* =========================================================================
+   TABLES & LISTS
+   ========================================================================= */
+.mark-edit-header, .schedule-edit-header {
+    background: #f0f0f0 !important;
+    border-bottom: none !important;
+    border-radius: 12px;
+    padding: 1rem 1.5rem !important;
+    color: var(--admin-text-muted) !important;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    align-items: center;
+}
+
+.mark-edit-row {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 12px;
+    margin-top: 0.5rem;
+    padding: 1rem 1.5rem !important;
+    transition: all 0.2s !important;
+}
+
+.mark-edit-row:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: translateY(-1px);
+}
+
+.item-list li {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    color: var(--admin-text-main) !important;
+}
+
+/* =========================================================================
+   INPUTS & BUTTONS
+   ========================================================================= */
+input[type="text"], input[type="number"], select, textarea, input[type="password"] {
+    background: #ffffff !important;
+    border: 1px solid #e5e5e5 !important;
+    color: var(--admin-text-main) !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.3s ease !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--admin-primary) !important;
+    box-shadow: 0 0 0 2px rgba(17,17,17, 0.1) !important;
+    outline: none !important;
+}
+
+/* Button Base */
+.btn {
+    border-radius: 50px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem !important;
+}
+
+.btn:hover {
+    transform: translateY(-2px) !important;
+}
+
+.btn-add {
+    background: var(--admin-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(0,0,0, 0.1) !important;
+}
+
+.btn-save {
+    background: var(--admin-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(0,0,0, 0.1) !important;
+}
+
+.btn-delete {
+    background: var(--admin-secondary) !important;
+    color: var(--admin-text-main) !important;
+}
+.btn-delete:hover {
+    background: #e0e0e0 !important;
+}
+
+/* Outline / Default Buttons */
+a.btn[style*="background: #edf2f7"], button.btn[style*="background: white"] {
+    background: var(--admin-secondary) !important;
+    color: var(--admin-text-main) !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+}
+a.btn[style*="background: #edf2f7"]:hover, button.btn[style*="background: white"]:hover {
+    background: #e0e0e0 !important;
+}
+
+/* =========================================================================
+   SPECIFIC SECTION TWEAKS
+   ========================================================================= */
+
+/* Gallery Grid perfect alignment */
+.admin-gallery-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+    gap: 0.75rem !important;
+}
+
+.admin-gallery-item {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 12px !important;
+    padding: 0.5rem !important;
+}
+
+.admin-gallery-item:hover {
+    border-color: rgba(0,0,0,0.1) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+
+/* Design Studio */
+.properties-panel, .canvas-area {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+}
+
+.studio-toolbar {
+    background: #ffffff !important;
+    padding: 1.5rem !important;
+    border-radius: 16px !important;
+    border: 1px solid #f0f0f0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+}
+
+.studio-row-top {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    padding-bottom: 5px !important;
+}
+
+.studio-row-top > * {
+    flex-shrink: 0 !important;
+}
+
+.studio-row-bottom {
+    display: flex !important;
+    align-items: center !important;
+    background: #f8fafc !important;
+    padding: 1rem !important;
+    border-radius: 12px !important;
+    gap: 1rem !important;
+}
+
+.studio-toolbar .btn, .studio-toolbar label.btn, .studio-toolbar input, .studio-toolbar select {
+    margin: 0 !important;
+    height: 36px !important; 
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    padding: 0 0.75rem !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+}
+
+#design-canvas {
+    border-radius: 8px !important;
+}
+
+/* Visual Content Editor Iframe wrapper */
+div[style*="border: 3px solid #cbd5e0"] {
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 16px !important;
+    box-shadow: var(--admin-shadow) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.02); 
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2); 
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.3); 
+}
+
+/* Make sure text doesn't disappear in lists */
+.item-list span {
+    color: var(--admin-text-main) !important;
+}
+
+/* History Modal Overrides */
+.modal-content {
+    background: var(--admin-card-bg) !important;
+    backdrop-filter: var(--admin-glass-blur) !important;
+    border: 1px solid var(--admin-card-border) !important;
+    color: var(--admin-text-main) !important;
+    border-radius: 24px !important;
+}
+
+/* =========================================================================
+   REGISTRATION PROGRAMS SECTION (COMPACT STYLING)
+   ========================================================================= */
+#section-reg-programs label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.3rem !important;
+}
+
+#section-reg-programs input[type="text"],
+#section-reg-programs select {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.75rem !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+}
+
+#section-reg-programs .btn {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.75rem !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+}
+
+#section-reg-programs .btn-delete {
+    padding: 0.2rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    height: 24px !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+}
+
+#existing-reg-programs-list > div,
+#existing-reg-units-list > div {
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 6px !important;
+}
+
+#existing-reg-programs-list span,
+#existing-reg-units-list span {
+    font-size: 0.8rem !important;
+}
+
+/* =========================================================================
+   CONDUCTOR MANAGER SECTION (COMPACT STYLING)
+   ========================================================================= */
+#section-conductor table th {
+    padding: 0.6rem 1rem !important;
+    font-size: 0.75rem !important;
+}
+
+#section-conductor table td {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.85rem !important;
+}
+
+#section-conductor input[type="password"],
+#section-conductor input[type="text"] {
+    padding: 0.3rem 2rem 0.3rem 0.6rem !important;
+    font-size: 0.85rem !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+}
+
+#section-conductor .btn {
+    padding: 0.3rem 0.8rem !important;
+    font-size: 0.8rem !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+}
+
+#section-conductor .toggle-password {
+    font-size: 0.9rem !important;
+    right: 0.6rem !important;
+}
+
+/* =========================================================================
+   GENERATE ID CARDS SECTION (COMPACT STYLING)
+   ========================================================================= */
+#section-generate-card label {
+    font-size: 0.8rem !important;
+    margin-top: 0.8rem !important;
+    margin-bottom: 0.4rem !important;
+}
+
+#section-generate-card input[type="text"],
+#section-generate-card select {
+    padding: 0.45rem 0.8rem !important;
+    font-size: 0.85rem !important;
+    height: 38px !important;
+    border-radius: 6px !important;
+}
+
+#section-generate-card textarea {
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.85rem !important;
+    border-radius: 6px !important;
+    height: 90px !important;
+}
+
+#section-generate-card .btn {
+    padding: 0.5rem 1.2rem !important;
+    font-size: 0.85rem !important;
+    height: 38px !important;
+    border-radius: 6px !important;
+}
+
+#gen-card-programs-list select {
+    padding: 0.45rem 0.8rem !important;
+    font-size: 0.85rem !important;
+    height: 38px !important;
+    border-radius: 6px !important;
+}
+
+#gen-card-programs-list .btn-delete {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.8rem !important;
+    height: 30px !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+}
+
+

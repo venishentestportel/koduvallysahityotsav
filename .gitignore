@@ -1,0 +1,7 @@
+# Dependency directories
+backend/node_modules/
+node_modules/
+
+# WhatsApp Web session and cache files (created dynamically at runtime)
+backend/whatsapp-session/
+backend/.wwebjs_cache/
