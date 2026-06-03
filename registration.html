@@ -1301,93 +1301,31 @@
         }
 
         async function sendSectorNotification(studentName, sector, regularProgsText, generalProgsText, stage) {
-            let sentCount = 0;
-            let totalTargets = 0;
-            let errors = [];
             try {
-                const sectorVal = (sector || '').trim().toLowerCase();
+                const sectorVal = (sector || '').trim();
                 if (!sectorVal) return { success: false, reason: 'No sector name provided' };
 
-                // Load routing from backend with localStorage fallback
                 const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
-                let routing = {};
-                try {
-                    const routingRes = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-routing?clientId=${clientId}`);
-                    if (routingRes.ok) {
-                        const routingData = await routingRes.json();
-                        if (routingData.success && routingData.routing) {
-                            routing = routingData.routing;
-                            localStorage.setItem('whatsapp_sector_routing', JSON.stringify(routing));
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Failed to fetch whatsapp_sector_routing from backend, falling back to local storage", e);
-                    try {
-                        routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
-                    } catch (err) {
-                        console.error("Error parsing whatsapp_sector_routing from local storage", err);
-                    }
-                }
-
-                let message = `*Student Registration Alert*\n*Student Name:* ${studentName}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage || 'N/A'}`;
-                if (regularProgsText && regularProgsText !== 'None' && regularProgsText !== '') {
-                    message += `\n*Registered Program:* ${regularProgsText}`;
-                }
-                if (generalProgsText && generalProgsText !== 'None' && generalProgsText !== '') {
-                    message += `\n*General Program:* ${generalProgsText}`;
-                }
-
-                const cleanSectorName = (str) => {
-                    if (!str) return '';
-                    return str.replace(/\s*\(group\)\s*/i, '')
-                              .toLowerCase()
-                              .replace(/[\p{P}\p{Z}\p{S}\?]/gu, '')
-                              .trim();
-                };
-
-                const cleanStudentSector = cleanSectorName(sector);
-
-                const sendPromises = Object.keys(routing).map(async (chatId) => {
-                    if (chatId.startsWith('offline_')) return;
-                    let targetSector = (routing[chatId].sector || '').trim();
-                    if (!targetSector) {
-                        targetSector = (routing[chatId].name || '').trim();
-                    }
-                    
-                    const cleanTargetSector = cleanSectorName(targetSector);
-                    if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
-                        totalTargets++;
-                        try {
-                            const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ clientId: clientId, chatId: chatId, message: message })
-                            });
-                            if (res.ok) {
-                                const resData = await res.json();
-                                if (resData.success) {
-                                    sentCount++;
-                                } else {
-                                    errors.push(resData.error || 'Unknown send error');
-                                }
-                            } else {
-                                errors.push(`HTTP ${res.status}`);
-                            }
-                        } catch (err) {
-                            errors.push(err.message);
-                        }
-                    }
+                const response = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-sector-notification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        clientId,
+                        studentName,
+                        sector: sectorVal,
+                        regularProgsText,
+                        generalProgsText,
+                        stage
+                    })
                 });
 
-                await Promise.all(sendPromises);
-                
-                if (totalTargets === 0) {
-                    return { success: false, reason: `No mapped WhatsApp target found for sector "${sector}"` };
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                } else {
+                    const errText = await response.text();
+                    return { success: false, reason: `HTTP error ${response.status}: ${errText}` };
                 }
-                if (sentCount > 0) {
-                    return { success: true, sentCount, totalTargets };
-                }
-                return { success: false, reason: errors.join(', ') || 'Failed to send' };
             } catch (e) {
                 console.error("Error sending sector notification:", e);
                 return { success: false, reason: e.message };

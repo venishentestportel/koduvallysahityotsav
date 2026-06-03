@@ -348,6 +348,91 @@ app.post('/whatsapp-routing', async (req, res) => {
     }
 });
 
+app.post('/send-sector-notification', async (req, res) => {
+    let clientId = getClientId(req);
+    const { studentName, sector, regularProgsText, generalProgsText, stage } = req.body;
+    console.log(`[POST /send-sector-notification] Request received. Client: ${clientId}, Student: ${studentName}, Sector: ${sector}, Stage: ${stage}`);
+    
+    if (!studentName || !sector) {
+        console.warn(`[POST /send-sector-notification] Rejected: Missing studentName or sector`);
+        return res.status(400).json({ error: 'Missing studentName or sector' });
+    }
+
+    // Failover to active connected client if requested is offline
+    const resolvedClientId = getActiveClientId(clientId);
+    if (resolvedClientId !== clientId) {
+        console.log(`[POST /send-sector-notification] Client failover: resolved ${clientId} -> ${resolvedClientId}`);
+    }
+
+    let routing = globalWhatsAppRouting;
+    try {
+        const dbRouting = await getRoutingFromSupabase(resolvedClientId);
+        if (dbRouting) {
+            globalWhatsAppRouting = dbRouting;
+            routing = dbRouting;
+            try {
+                fs.writeFileSync(routingFilePath, JSON.stringify(dbRouting, null, 2), 'utf8');
+            } catch (e) {}
+        }
+    } catch (e) {
+        console.warn("[POST /send-sector-notification] Failed to load routing from Supabase, using cache:", e.message);
+    }
+
+    let message = `*Student Registration Alert*\n*Student Name:* ${studentName}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage || 'N/A'}`;
+    if (regularProgsText && regularProgsText !== 'None' && regularProgsText !== '') {
+        message += `\n*Registered Program:* ${regularProgsText}`;
+    }
+    if (generalProgsText && generalProgsText !== 'None' && generalProgsText !== '') {
+        message += `\n*General Program:* ${generalProgsText}`;
+    }
+
+    const cleanSectorName = (str) => {
+        if (!str) return '';
+        return str.replace(/\s*\(group\)\s*/i, '')
+                  .toLowerCase()
+                  .replace(/[\p{P}\p{Z}\p{S}\?]/gu, '')
+                  .trim();
+    };
+
+    const cleanStudentSector = cleanSectorName(sector);
+    let sentCount = 0;
+    let totalTargets = 0;
+    let errors = [];
+
+    const sendPromises = Object.keys(routing).map(async (chatId) => {
+        if (chatId.startsWith('offline_')) return;
+        let targetSector = (routing[chatId].sector || '').trim();
+        if (!targetSector) {
+            targetSector = (routing[chatId].name || '').trim();
+        }
+        
+        const cleanTargetSector = cleanSectorName(targetSector);
+        if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
+            totalTargets++;
+            try {
+                await sendMessage(resolvedClientId, chatId, message);
+                console.log(`[POST /send-sector-notification] Notification sent successfully to ${chatId} (${routing[chatId].name}) for ${studentName}`);
+                sentCount++;
+            } catch (err) {
+                console.error(`[POST /send-sector-notification] Failed to send to ${chatId}:`, err.message);
+                errors.push(err.message);
+            }
+        }
+    });
+
+    await Promise.all(sendPromises);
+
+    if (totalTargets === 0) {
+        console.log(`[POST /send-sector-notification] No targets matched for sector "${sector}"`);
+        return res.json({ success: false, reason: `No mapped WhatsApp target found for sector "${sector}"` });
+    }
+    if (sentCount > 0) {
+        return res.json({ success: true, sentCount, totalTargets });
+    }
+    return res.status(500).json({ success: false, error: errors.join(', ') || 'Failed to send' });
+});
+
+
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
