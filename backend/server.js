@@ -65,8 +65,9 @@ app.get('/status', (req, res) => {
 
 app.get('/chats', async (req, res) => {
     const clientId = getClientId(req);
+    const forceRefresh = req.query.forceRefresh === 'true';
     try {
-        const chats = await getChats(clientId);
+        const chats = await getChats(clientId, forceRefresh);
         res.json({ success: true, chats });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -75,8 +76,9 @@ app.get('/chats', async (req, res) => {
 
 app.get('/contacts', async (req, res) => {
     const clientId = getClientId(req);
+    const forceRefresh = req.query.forceRefresh === 'true';
     try {
-        const contacts = await getContacts(clientId);
+        const contacts = await getContacts(clientId, forceRefresh);
         res.json({ success: true, contacts });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });

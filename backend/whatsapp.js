@@ -136,11 +136,21 @@ async function initializeWhatsAppForClient(clientId) {
         }
     });
     
-    clientInstance.on('ready', () => {
+    clientInstance.on('ready', async () => {
         console.log(`WhatsApp Client ${clientId} is Ready!`);
         isReconnecting = false;
         reconnectAttemptsMap[clientId] = 0; // Reset reconnect attempts on success
         updateStatus('CONNECTED', null, clientInstance.info);
+        
+        // Warm up cache in background
+        try {
+            console.log(`Warming up chats and contacts cache for client ${clientId}...`);
+            await getChats(clientId, true);
+            await getContacts(clientId, true);
+            console.log(`Cache warmed up successfully for client ${clientId}`);
+        } catch (cacheErr) {
+            console.warn(`Failed to warm up cache for client ${clientId}:`, cacheErr.message);
+        }
     });
     
     clientInstance.on('authenticated', () => {
@@ -233,7 +243,7 @@ async function initializeWhatsAppForClient(clientId) {
 function handleClientError(clientId, err) {
     console.error(`Error encountered for client ${clientId}:`, err);
     const msg = err.message || '';
-    if (msg.includes('detached Frame') || msg.includes('Protocol error') || msg.includes('Session closed') || msg.includes('target closed') || msg.includes('Execution context was destroyed')) {
+    if (msg.includes('Session closed') || msg.includes('target closed') || msg.includes('Browser sent no response') || msg.includes('Navigation failed')) {
         console.warn(`Puppeteer crash detected for client ${clientId}. Triggering re-initialization...`);
         const clientObj = clients[clientId];
         if (clientObj && typeof clientObj.triggerReconnect === 'function') {
@@ -242,43 +252,85 @@ function handleClientError(clientId, err) {
     }
 }
 
-async function getChats(clientId) {
+async function getChats(clientId, forceRefresh = false) {
     if (!clientId) clientId = 'default';
     const clientObj = clients[clientId];
-    if (!clientObj || !clientObj.client || clientObj.status.state !== 'CONNECTED') {
+    if (!clientObj || !clientObj.client) {
+        throw new Error('Client not initialized');
+    }
+    
+    const now = Date.now();
+    if (!forceRefresh && clientObj.chatsCache && (now - clientObj.chatsCacheTime < 120000)) {
+        return clientObj.chatsCache;
+    }
+
+    if (clientObj.status.state !== 'CONNECTED') {
+        if (clientObj.chatsCache) {
+            return clientObj.chatsCache;
+        }
         throw new Error('Client not connected');
     }
+
     try {
         const chats = await clientObj.client.getChats();
-        return chats.map(chat => ({
+        const mappedChats = chats.map(chat => ({
             id: chat.id._serialized,
             name: chat.name || chat.id.user || 'Unknown',
             unreadCount: chat.unreadCount,
             isGroup: chat.isGroup,
             timestamp: chat.timestamp
         }));
+        
+        clientObj.chatsCache = mappedChats;
+        clientObj.chatsCacheTime = now;
+        return mappedChats;
     } catch (err) {
         handleClientError(clientId, err);
+        if (clientObj.chatsCache) {
+            console.warn(`Error fetching chats, returning cached data for client ${clientId}`);
+            return clientObj.chatsCache;
+        }
         throw err;
     }
 }
 
-async function getContacts(clientId) {
+async function getContacts(clientId, forceRefresh = false) {
     if (!clientId) clientId = 'default';
     const clientObj = clients[clientId];
-    if (!clientObj || !clientObj.client || clientObj.status.state !== 'CONNECTED') {
+    if (!clientObj || !clientObj.client) {
+        throw new Error('Client not initialized');
+    }
+
+    const now = Date.now();
+    if (!forceRefresh && clientObj.contactsCache && (now - clientObj.contactsCacheTime < 120000)) {
+        return clientObj.contactsCache;
+    }
+
+    if (clientObj.status.state !== 'CONNECTED') {
+        if (clientObj.contactsCache) {
+            return clientObj.contactsCache;
+        }
         throw new Error('Client not connected');
     }
+
     try {
         const contacts = await clientObj.client.getContacts();
-        return contacts.map(contact => ({
+        const mappedContacts = contacts.map(contact => ({
             id: contact.id._serialized,
             name: contact.name || contact.pushname || contact.number || 'Unknown',
             isGroup: contact.isGroup,
             timestamp: 0
         })).filter(c => c.name !== 'Unknown');
+
+        clientObj.contactsCache = mappedContacts;
+        clientObj.contactsCacheTime = now;
+        return mappedContacts;
     } catch (err) {
         handleClientError(clientId, err);
+        if (clientObj.contactsCache) {
+            console.warn(`Error fetching contacts, returning cached data for client ${clientId}`);
+            return clientObj.contactsCache;
+        }
         throw err;
     }
 }

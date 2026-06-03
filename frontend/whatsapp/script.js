@@ -1,4 +1,7 @@
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = (window.parent && window.parent.WA_BACKEND_URL) 
+    ? window.parent.WA_BACKEND_URL 
+    : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'https://koduvelly-backend.onrender.com');
+const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
 let socket;
 let activeChatId = null;
 let chatsData = [];
@@ -45,7 +48,8 @@ function initSocket() {
     });
 
     socket.on('connect', () => {
-        console.log('Connected to server');
+        console.log('Connected to server, joining client room:', clientId);
+        socket.emit('join_client', clientId);
         statusIndicator.className = 'status-indicator online';
     });
 
@@ -73,7 +77,7 @@ function initSocket() {
     });
 
     // Initial check
-    fetch(`${BACKEND_URL}/status`)
+    fetch(`${BACKEND_URL}/status?clientId=${clientId}`)
         .then(res => res.json())
         .then(status => {
             handleStatus(status);
@@ -132,7 +136,7 @@ function showDashboard() {
 async function loadChats() {
     try {
         // Fetch chats first and render immediately
-        fetch(`${BACKEND_URL}/chats`).then(async res => {
+        fetch(`${BACKEND_URL}/chats?clientId=${clientId}`).then(async res => {
             const chatsDataRes = await res.json();
             if (chatsDataRes.success) {
                 // Keep any existing contacts that might have loaded, though unlikely
@@ -143,7 +147,7 @@ async function loadChats() {
         }).catch(err => console.error('Chats fetch error:', err));
 
         // Fetch contacts in the background (can take several minutes)
-        fetch(`${BACKEND_URL}/contacts`).then(async res => {
+        fetch(`${BACKEND_URL}/contacts?clientId=${clientId}`).then(async res => {
             const contactsDataRes = await res.json();
             if (contactsDataRes.success) {
                 const chatIds = new Set(chatsData.map(c => c.id));
@@ -303,7 +307,7 @@ async function sendMsg() {
         const res = await fetch(`${BACKEND_URL}/send-message`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chatId: activeChatId, message: text })
+            body: JSON.stringify({ clientId: clientId, chatId: activeChatId, message: text })
         });
         const data = await res.json();
         if (!data.success) {
@@ -318,7 +322,7 @@ async function sendMsg() {
 async function logout() {
     if (confirm('Are you sure you want to logout from WhatsApp?')) {
         try {
-            await fetch(`${BACKEND_URL}/logout`, { method: 'POST' });
+            await fetch(`${BACKEND_URL}/logout?clientId=${clientId}`, { method: 'POST' });
         } catch (err) {
             console.error('Logout error:', err);
         }
