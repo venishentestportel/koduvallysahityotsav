@@ -175,21 +175,26 @@
 
     <script>
         if (!window.WA_BACKEND_URL) {
-            const hn = window.location.hostname;
-            const isLocal = hn === 'localhost' || 
-                            hn === '127.0.0.1' || 
-                            hn === '[::1]' ||
-                            hn.startsWith('192.168.') || 
-                            hn.startsWith('10.') || 
-                            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
-                            hn.endsWith('.local') ||
-                            window.location.protocol === 'file:';
-            
-            if (isLocal) {
-                const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
-                window.WA_BACKEND_URL = `http://${host}:3001`;
+            const savedUrl = localStorage.getItem('whatsapp_backend_url');
+            if (savedUrl) {
+                window.WA_BACKEND_URL = savedUrl;
             } else {
-                window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
+                const hn = window.location.hostname;
+                const isLocal = hn === 'localhost' || 
+                                hn === '127.0.0.1' || 
+                                hn === '[::1]' ||
+                                hn.startsWith('192.168.') || 
+                                hn.startsWith('10.') || 
+                                /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+                                hn.endsWith('.local') ||
+                                window.location.protocol === 'file:';
+                
+                if (isLocal) {
+                    const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
+                    window.WA_BACKEND_URL = `http://${host}:3001`;
+                } else {
+                    window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
+                }
             }
         }
 
@@ -841,6 +846,21 @@
                                 <button class="btn"
                                     style="background: #128c7e !important; color: white !important; padding: 0 1.5rem; font-weight: 600; border-radius: 8px; box-shadow: none !important;"
                                     onclick="changeSyncClientId()">Save Profile</button>
+                            </div>
+                        </div>
+
+                        <!-- Backend URL Selector -->
+                        <div
+                            style="background: #f7fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
+                            <h3 style="margin: 0; font-size: 1rem; color: #2d3748; font-weight: bold;">WhatsApp Integration Backend URL</h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: #636e72;">Set your WhatsApp server endpoint (local server IP or public HTTPS tunnel e.g. ngrok).</p>
+                            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                                <input type="text" id="wa-sync-backend-url-input"
+                                    style="flex: 1; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem;"
+                                    placeholder="Enter backend URL (e.g. http://localhost:3001)...">
+                                <button class="btn"
+                                    style="background: #128c7e !important; color: white !important; padding: 0 1.5rem; font-weight: 600; border-radius: 8px; box-shadow: none !important;"
+                                    onclick="changeSyncBackendUrl()">Save URL</button>
                             </div>
                         </div>
 
@@ -6904,6 +6924,11 @@
             const syncInput = document.getElementById('wa-sync-client-id-input');
             if (syncInput) syncInput.value = activeWaClientId;
 
+            const urlInput = document.getElementById('wa-sync-backend-url-input');
+            if (urlInput) {
+                urlInput.value = localStorage.getItem('whatsapp_backend_url') || window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com';
+            }
+
             const indicator = document.getElementById('ds-wa-client-indicator');
             if (indicator) indicator.innerText = activeWaClientId;
 
@@ -7052,6 +7077,22 @@
                     if (syncLogoutBtn) syncLogoutBtn.style.display = 'none';
                 }
             }
+        }
+
+        function changeSyncBackendUrl() {
+            const input = document.getElementById('wa-sync-backend-url-input');
+            if (!input) return;
+            const newUrl = input.value.trim();
+            if (!newUrl) {
+                localStorage.removeItem('whatsapp_backend_url');
+                alert('Reset backend URL to default.');
+                window.location.reload();
+                return;
+            }
+            localStorage.setItem('whatsapp_backend_url', newUrl);
+            window.WA_BACKEND_URL = newUrl;
+            alert('WhatsApp Backend URL updated successfully to: ' + newUrl);
+            window.location.reload();
         }
 
         function changeSyncClientId() {

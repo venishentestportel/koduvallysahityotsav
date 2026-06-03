@@ -1,6 +1,6 @@
 const BACKEND_URL = (window.parent && window.parent.WA_BACKEND_URL) 
     ? window.parent.WA_BACKEND_URL 
-    : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'https://koduvelly-backend.onrender.com');
+    : (localStorage.getItem('whatsapp_backend_url') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'https://koduvelly-backend.onrender.com'));
 const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
 let socket;
 let activeChatId = null;

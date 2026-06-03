@@ -1,19 +1,24 @@
 if (!window.WA_BACKEND_URL) {
-    const hn = window.location.hostname;
-    const isLocal = hn === 'localhost' || 
-                    hn === '127.0.0.1' || 
-                    hn === '[::1]' ||
-                    hn.startsWith('192.168.') || 
-                    hn.startsWith('10.') || 
-                    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
-                    hn.endsWith('.local') ||
-                    window.location.protocol === 'file:';
-    
-    if (isLocal) {
-        const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
-        window.WA_BACKEND_URL = `http://${host}:3001`;
+    const savedUrl = localStorage.getItem('whatsapp_backend_url');
+    if (savedUrl) {
+        window.WA_BACKEND_URL = savedUrl;
     } else {
-        window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
+        const hn = window.location.hostname;
+        const isLocal = hn === 'localhost' || 
+                        hn === '127.0.0.1' || 
+                        hn === '[::1]' ||
+                        hn.startsWith('192.168.') || 
+                        hn.startsWith('10.') || 
+                        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+                        hn.endsWith('.local') ||
+                        window.location.protocol === 'file:';
+        
+        if (isLocal) {
+            const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
+            window.WA_BACKEND_URL = `http://${host}:3001`;
+        } else {
+            window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
+        }
     }
 }
 
