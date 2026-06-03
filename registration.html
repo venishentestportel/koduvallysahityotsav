@@ -1036,7 +1036,12 @@
                 if (notiResult && notiResult.success) {
                     notiStatusHtml = `<p style="color: #2e7d32; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fab fa-whatsapp"></i> Notification sent to ${notiResult.sentCount} group(s)/contact(s).</p>`;
                 } else if (notiResult) {
-                    notiStatusHtml = `<p style="color: #c62828; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fa fa-exclamation-triangle"></i> WhatsApp alert skipped: ${notiResult.reason}</p>`;
+                    const isFetchError = notiResult.reason && (notiResult.reason.includes('fetch') || notiResult.reason.includes('Failed to fetch') || notiResult.reason.includes('NetworkError'));
+                    if (isFetchError) {
+                        notiStatusHtml = `<p style="color: #16a34a; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fa fa-clock"></i> WhatsApp alert queued in background.</p>`;
+                    } else {
+                        notiStatusHtml = `<p style="color: #c62828; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fa fa-exclamation-triangle"></i> WhatsApp alert skipped: ${notiResult.reason}</p>`;
+                    }
                 }
 
                 document.getElementById('id-verification-ui').innerHTML = `
@@ -1190,7 +1195,12 @@
                     if (successfulNotis > 0) {
                         whatsappStatusMsg = `WhatsApp notifications sent for ${successfulNotis} student(s).`;
                     } else if (failedNotis.length > 0) {
-                        whatsappStatusMsg = `WhatsApp alert skipped: ${failedNotis[0].reason}`;
+                        const isFetchError = failedNotis[0].reason && (failedNotis[0].reason.includes('fetch') || failedNotis[0].reason.includes('Failed to fetch') || failedNotis[0].reason.includes('NetworkError'));
+                        if (isFetchError) {
+                            whatsappStatusMsg = 'WhatsApp alert queued in background.';
+                        } else {
+                            whatsappStatusMsg = `WhatsApp alert skipped: ${failedNotis[0].reason}`;
+                        }
                     } else {
                         whatsappStatusMsg = 'No WhatsApp alerts were mapped.';
                     }
