@@ -764,6 +764,16 @@
                                     style="width: 100%; padding: 0.5rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.85rem; height: 90px;"></textarea>
                             </div>
                             <div style="flex: 100%; margin-top: 0.5rem;">
+                                <div style="margin-bottom: 1rem;">
+                                    <label
+                                        style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Select Category</label>
+                                    <select id="gen-card-global-category" class="form-control"
+                                        style="width: 100%; max-width: 300px; height: 38px; padding: 0.45rem 0.8rem; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.85rem;"
+                                        onchange="handleGenCardGlobalCategoryChange()">
+                                        <option value="">-- Select Category --</option>
+                                    </select>
+                                </div>
+
                                 <label
                                     style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Attached
                                     Categories & Programs</label>
@@ -808,18 +818,6 @@
                         </div>
                     </div>
 
-                    <!-- WhatsApp Sector Notification Routing -->
-                    <div style="margin-top: 1.5rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                        <h3 style="color: #1e293b; margin: 0; font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fab fa-whatsapp" style="color: #128c7e;"></i> WhatsApp Sector Notification Routing
-                        </h3>
-                        <p style="color: #64748b; margin: 0.25rem 0 1rem 0; font-size: 0.85rem;">Associate WhatsApp contacts/groups with specific Sector names. When a student registers from the registration page, their sector is checked. If it matches, a notification is automatically sent to that group/contact.</p>
-                        
-                        <div id="card-whatsapp-targets-container"
-                            style="max-height: 250px; overflow-y: auto; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
-                            <div style="color: #666; font-size: 0.85rem; text-align: center; padding: 1rem;">Loading WhatsApp contacts... Make sure the WhatsApp backend is running.</div>
-                        </div>
-                    </div>
 
                     <h3 style="color: #2d3748; margin-top: 2rem;">Generated Cards</h3>
                     <div id="generated-cards-container"
@@ -1019,6 +1017,7 @@
             if (tab === 'generate-card') {
                 loadCardHistory();
                 loadCardWhatsAppTargets();
+                populateGenCardGlobalCategory();
             }
         }
 
@@ -1202,7 +1201,7 @@
             }
         }
 
-        async function sendSectorNotification(studentName, sector, programsListText) {
+        async function sendSectorNotification(studentName, sector, regularProgsText, generalProgsText, stage) {
             try {
                 const sectorVal = (sector || '').trim().toLowerCase();
                 if (!sectorVal) return;
@@ -1228,7 +1227,13 @@
                     }
                 }
 
-                const message = `*Student Registration Alert*\n*Student Name:* ${studentName}\n*Registered Program:* ${programsListText}\n*Sector Name:* ${sector}`;
+                let message = `*Student Registration Alert*\n*Student Name:* ${studentName}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage || 'N/A'}`;
+                if (regularProgsText && regularProgsText !== 'None' && regularProgsText !== '') {
+                    message += `\n*Registered Program:* ${regularProgsText}`;
+                }
+                if (generalProgsText && generalProgsText !== 'None' && generalProgsText !== '') {
+                    message += `\n*General Program:* ${generalProgsText}`;
+                }
 
                 const cleanSectorName = (str) => {
                     if (!str) return '';
@@ -1343,19 +1348,45 @@
         }
 
         // Program and General Program Row Adders
+        function handleGenCardGlobalCategoryChange() {
+            const container = document.getElementById('gen-card-programs-list');
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+
+        function populateGenCardGlobalCategory() {
+            const select = document.getElementById('gen-card-global-category');
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">-- Select Category --</option>' + 
+                (currentData.categories || []).map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
+        }
+
         function addGenCardProgramRow(categoryVal = '', programVal = '') {
             const container = document.getElementById('gen-card-programs-list');
             if (!container) return;
 
+            let catVal = categoryVal;
+            if (!catVal) {
+                const globalCatSelect = document.getElementById('gen-card-global-category');
+                catVal = globalCatSelect ? globalCatSelect.value : '';
+            }
+
+            if (!catVal) {
+                alert("Please select a Category first.");
+                return;
+            }
+
             const rowDiv = document.createElement('div');
             rowDiv.className = 'gen-card-program-row';
+            rowDiv.setAttribute('data-category', catVal);
             rowDiv.style = 'display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.25rem;';
 
-            const catSelect = document.createElement('select');
-            catSelect.className = 'form-control gen-card-category-select';
-            catSelect.style = 'flex: 1; height: 38px; padding: 0.45rem 0.8rem; border-radius: 6px;';
-            catSelect.innerHTML = '<option value="">-- Select Category --</option>' + 
-                (currentData.categories || []).map(c => `<option value="${c}" ${c === categoryVal ? 'selected' : ''}>${c}</option>`).join('');
+            const catBadge = document.createElement('span');
+            catBadge.className = 'gen-card-category-badge';
+            catBadge.style = 'flex: 1; padding: 0.45rem 0.8rem; background: #e0e7ff; color: #4338ca; border-radius: 6px; font-weight: bold; font-size: 0.85rem; text-align: center; border: 1px solid #c7d2fe; height: 38px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;';
+            catBadge.innerText = catVal;
 
             const progSelect = document.createElement('select');
             progSelect.className = 'form-control gen-card-program-select';
@@ -1363,38 +1394,32 @@
             progSelect.innerHTML = '<option value="">-- Select Program --</option>';
 
             const updatePrograms = async () => {
-                const selectedCat = catSelect.value;
-                if (selectedCat) {
-                    progSelect.innerHTML = '<option value="">Loading programs...</option>';
-                    try {
-                        const { data, error } = await supabaseClient.from(selectedCat).select('Programs').neq('Programs', null).neq('Programs', '');
-                        if (error) throw error;
-                        
-                        const seenProgs = new Set();
-                        const uniqueProgs = [];
-                        if (data) {
-                            data.forEach(p => {
-                                const val = (p.Programs || '').trim();
-                                if (val && !seenProgs.has(val)) {
-                                    seenProgs.add(val);
-                                    uniqueProgs.push(val);
-                                }
-                            });
-                        }
-
-                        progSelect.innerHTML = '<option value="">-- Select Program --</option>' +
-                            uniqueProgs.map(p => `<option value="${p}" ${p === programVal ? 'selected' : ''}>${p}</option>`).join('');
-                    } catch (err) {
-                        console.error('Failed to load programs for ID Card generator:', err);
-                        progSelect.innerHTML = '<option value="">-- Error Loading Programs --</option>';
+                progSelect.innerHTML = '<option value="">Loading programs...</option>';
+                try {
+                    const { data, error } = await supabaseClient.from(catVal).select('Programs').neq('Programs', null).neq('Programs', '');
+                    if (error) throw error;
+                    
+                    const seenProgs = new Set();
+                    const uniqueProgs = [];
+                    if (data) {
+                        data.forEach(p => {
+                            const val = (p.Programs || '').trim();
+                            if (val && !seenProgs.has(val)) {
+                                seenProgs.add(val);
+                                uniqueProgs.push(val);
+                            }
+                        });
                     }
-                } else {
-                    progSelect.innerHTML = '<option value="">-- Select Program --</option>';
+
+                    progSelect.innerHTML = '<option value="">-- Select Program --</option>' +
+                        uniqueProgs.map(p => `<option value="${p}" ${p === programVal ? 'selected' : ''}>${p}</option>`).join('');
+                } catch (err) {
+                    console.error('Failed to load programs for ID Card generator:', err);
+                    progSelect.innerHTML = '<option value="">-- Error Loading Programs --</option>';
                 }
             };
 
-            catSelect.addEventListener('change', updatePrograms);
-            if (categoryVal) updatePrograms();
+            updatePrograms();
 
             const delBtn = document.createElement('button');
             delBtn.className = 'btn btn-delete';
@@ -1402,7 +1427,7 @@
             delBtn.innerHTML = '<i class="fa fa-trash"></i>';
             delBtn.onclick = () => rowDiv.remove();
 
-            rowDiv.appendChild(catSelect);
+            rowDiv.appendChild(catBadge);
             rowDiv.appendChild(progSelect);
             rowDiv.appendChild(delBtn);
             container.appendChild(rowDiv);
@@ -1484,7 +1509,7 @@
             const regularProgs = [];
             let sharedCategory = '';
             programRows.forEach(row => {
-                const cat = row.querySelector('.gen-card-category-select').value;
+                const cat = row.getAttribute('data-category') || (document.getElementById('gen-card-global-category') ? document.getElementById('gen-card-global-category').value : '');
                 const prog = row.querySelector('.gen-card-program-select').value;
                 if (cat && prog) {
                     regularProgs.push({ category: cat, program: prog });
@@ -1538,24 +1563,7 @@
 
                 if (error) throw error;
 
-                // Dispatch sector notifications for all registered students
-                try {
-                    insertRows.forEach(row => {
-                        const progs = [];
-                        const cat = row.category || '';
-                        if (row['program 1']) progs.push((cat ? cat + ': ' : '') + row['program 1']);
-                        if (row['program 2']) progs.push((cat ? cat + ': ' : '') + row['program 2']);
-                        if (row['program 3']) progs.push((cat ? cat + ': ' : '') + row['program 3']);
-                        if (row['program 4']) progs.push((cat ? cat + ': ' : '') + row['program 4']);
-                        if (row.generals) {
-                            row.generals.split('|').forEach(g => progs.push(`GEN: ${g.trim()}`));
-                        }
-                        const programsListText = progs.length > 0 ? progs.join(', ') : 'None';
-                        sendSectorNotification(row.name, row.sector || 'Unknown', programsListText);
-                    });
-                } catch (notiErr) {
-                    console.error("Error dispatching sector notifications:", notiErr);
-                }
+                // Sector notifications are bypassed when generating cards (requested to only send when registering)
 
                 container.innerHTML = '';
                 const renderedData = data || insertRows;
@@ -1839,6 +1847,9 @@
                     loadProgramsForDesignStudio();
                 }
             }
+
+            // Fill card generator global category dropdown
+            populateGenCardGlobalCategory();
 
             // Render Mark List
             const markEditor = document.getElementById('mark-list-editor');
@@ -4071,14 +4082,88 @@
                     return;
                 }
 
-                container.innerHTML = data.map(item => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <span style="font-weight: 600; color: #2d3748; font-size: 0.8rem;"><i class="fa fa-map-marker-alt" style="color: #dd6b20; margin-right: 0.5rem;"></i> ${item['unit name']}</span>
-                        <button class="btn btn-delete" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; height: 24px; margin: 0;" onclick="deleteRegistrationUnit(${item.id}, this)">
-                            <i class="fa fa-trash"></i> Delete
-                        </button>
-                    </div>
-                `).join('');
+                const clientId = activeWaClientId || 'default';
+                let routing = {};
+                let whatsappTargets = [];
+
+                try {
+                    const routingRes = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-routing?clientId=${clientId}`);
+                    if (routingRes.ok) {
+                        const routingData = await routingRes.json();
+                        if (routingData.success && routingData.routing) {
+                            routing = routingData.routing;
+                            localStorage.setItem('whatsapp_sector_routing', JSON.stringify(routing));
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Failed to fetch routing:", e);
+                    try {
+                        routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
+                    } catch (err) {}
+                }
+
+                try {
+                    const [chatsRes, contactsRes] = await Promise.all([
+                        fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/chats?clientId=${clientId}`).catch(() => ({ json: () => ({ success: false }) })),
+                        fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/contacts?clientId=${clientId}`).catch(() => ({ json: () => ({ success: false }) }))
+                    ]);
+                    
+                    let chatsData = { success: false };
+                    let contactsData = { success: false };
+                    try { chatsData = await chatsRes.json(); } catch(e){}
+                    try { contactsData = await contactsRes.json(); } catch(e){}
+
+                    if (chatsData && chatsData.success) whatsappTargets = [...chatsData.chats];
+                    if (contactsData && contactsData.success) {
+                        const chatIds = new Set(whatsappTargets.map(c => c.id));
+                        contactsData.contacts.forEach(contact => {
+                            if (!chatIds.has(contact.id)) whatsappTargets.push(contact);
+                        });
+                    }
+                    window.whatsappTargetsList = whatsappTargets;
+                } catch (e) {
+                    console.warn("Failed to fetch WhatsApp targets:", e);
+                }
+
+                container.innerHTML = data.map(item => {
+                    const placeName = item['unit name'];
+                    const cleanPlace = (placeName || '').trim().toLowerCase();
+                    let mappedChatId = '';
+                    if (routing) {
+                        mappedChatId = Object.keys(routing).find(chatId => {
+                            const sec = (routing[chatId].sector || '').trim().toLowerCase();
+                            return sec === cleanPlace;
+                        }) || '';
+                    }
+
+                    let optionsHtml = '<option value="">-- No WhatsApp Target --</option>';
+                    if (whatsappTargets && whatsappTargets.length > 0) {
+                        optionsHtml += whatsappTargets.map(target => {
+                            const isSelected = target.id === mappedChatId ? 'selected' : '';
+                            const displayName = target.name + (target.isGroup ? ' (Group)' : '');
+                            return `<option value="${target.id}" ${isSelected}>${displayName}</option>`;
+                        }).join('');
+                    }
+
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); gap: 1rem; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
+                            <span style="font-weight: 600; color: #2d3748; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fa fa-map-marker-alt" style="color: #dd6b20;"></i> ${placeName}
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="font-size: 0.75rem; color: #718096; font-weight: 500;">Send Alert To:</span>
+                                <select onchange="updatePlaceWaMapping('${placeName.replace(/'/g, "\\'")}', this.value)" 
+                                    style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid #cbd5e0; background: white; max-width: 220px; font-family: 'Outfit', sans-serif;">
+                                    ${optionsHtml}
+                                </select>
+                                <button class="btn btn-delete" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; height: auto; margin: 0; display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 6px;" 
+                                    onclick="deleteRegistrationUnit(${item.id}, this)">
+                                    <i class="fa fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
 
             } catch (err) {
                 console.error(err);
@@ -4137,6 +4222,67 @@
                 btn.disabled = false;
             }
         }
+
+        async function updatePlaceWaMapping(placeName, selectedChatId) {
+            const clientId = activeWaClientId || 'default';
+            let routing = {};
+            try {
+                const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-routing?clientId=${clientId}`);
+                const data = await res.json();
+                if (data.success && data.routing) {
+                    routing = data.routing;
+                }
+            } catch (e) {
+                try {
+                    routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
+                } catch (err) {}
+            }
+
+            const cleanPlace = placeName.trim().toLowerCase();
+            // 1. Remove this placeName from any existing mappings in routing
+            Object.keys(routing).forEach(chatId => {
+                const sectorVal = (routing[chatId].sector || '').trim().toLowerCase();
+                if (sectorVal === cleanPlace) {
+                    routing[chatId].sector = '';
+                }
+            });
+
+            // 2. Map selected chat ID to this place
+            if (selectedChatId) {
+                if (!routing[selectedChatId]) {
+                    const target = (window.whatsappTargetsList || []).find(t => t.id === selectedChatId);
+                    const targetName = target ? target.name + (target.isGroup ? ' (Group)' : '') : 'Unknown';
+                    routing[selectedChatId] = { name: targetName, sector: placeName };
+                } else {
+                    routing[selectedChatId].sector = placeName;
+                }
+            }
+
+            // Clean empty routings
+            const activeRouting = {};
+            Object.keys(routing).forEach(chatId => {
+                if (routing[chatId].sector) {
+                    activeRouting[chatId] = routing[chatId];
+                }
+            });
+
+            localStorage.setItem('whatsapp_sector_routing', JSON.stringify(activeRouting));
+            
+            try {
+                await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-routing`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId: clientId, routing: activeRouting })
+                });
+            } catch (err) {
+                console.error("Failed to save sector routing:", err);
+            }
+
+            // Refresh routing lists to stay in sync
+            loadRegistrationUnits();
+            if (typeof loadCardWhatsAppTargets === 'function') loadCardWhatsAppTargets();
+        }
+
 
         // ================= HISTORY MODAL =================
         function openHistoryModal() {

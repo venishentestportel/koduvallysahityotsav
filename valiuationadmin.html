@@ -1104,7 +1104,7 @@
 
                 const program = newReg.program || '';
                 const general = newReg.general || '';
-                const progText = program || general || 'None';
+                const stage = newReg.stage || 'Unknown';
 
                 // Load routing from backend with localStorage fallback
                 const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
@@ -1127,7 +1127,13 @@
                     }
                 }
 
-                const message = `*Student Registration Alert*\n*Name:* ${name}\n*Sector:* ${sector}\n*Program:* ${progText}`;
+                let message = `*Student Registration Alert*\n*Student Name:* ${name}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage}`;
+                if (program && program !== 'None') {
+                    message += `\n*Registered Program:* ${program}`;
+                }
+                if (general && general !== 'None') {
+                    message += `\n*General Program:* ${general}`;
+                }
 
                 const cleanSectorName = (str) => {
                     if (!str) return '';

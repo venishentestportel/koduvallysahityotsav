@@ -1028,8 +1028,9 @@
                 if (registError) throw registError;
                 
                 // Dispatch sector notification
-                const progText = cat === 'GEN' ? prog : (cat ? cat + ': ' : '') + prog;
-                const notiResult = await sendSectorNotification(name, unit, progText);
+                const regularProgText = isGeneral ? '' : (cat ? cat + ': ' : '') + prog;
+                const generalProgText = isGeneral ? (cat ? cat + ': ' : '') + prog : '';
+                const notiResult = await sendSectorNotification(name, unit, regularProgText, generalProgText, stage);
                 
                 let notiStatusHtml = '';
                 if (notiResult && notiResult.success) {
@@ -1158,21 +1159,29 @@
                 let whatsappStatusMsg = '';
                 try {
                     const notiPromises = uploadData.map(async s => {
-                        const progs = [];
-                        if (s.Program) {
-                            const catStr = s.Category || s.category || '';
-                            progs.push((catStr ? catStr + ': ' : '') + s.Program);
+                        const regProgs = [];
+                        const catStr = s.Category || s.category || '';
+                        
+                        if (s.Program && catStr !== 'GEN') {
+                            regProgs.push((catStr ? catStr + ': ' : '') + s.Program);
                         }
-                        if (s['program 1']) progs.push((s.category ? s.category + ': ' : '') + s['program 1']);
-                        if (s['program 2']) progs.push((s.category ? s.category + ': ' : '') + s['program 2']);
-                        if (s['program 3']) progs.push((s.category ? s.category + ': ' : '') + s['program 3']);
-                        if (s['program 4']) progs.push((s.category ? s.category + ': ' : '') + s['program 4']);
+                        if (s['program 1']) regProgs.push((catStr ? catStr + ': ' : '') + s['program 1']);
+                        if (s['program 2']) regProgs.push((catStr ? catStr + ': ' : '') + s['program 2']);
+                        if (s['program 3']) regProgs.push((catStr ? catStr + ': ' : '') + s['program 3']);
+                        if (s['program 4']) regProgs.push((catStr ? catStr + ': ' : '') + s['program 4']);
+
+                        const genProgs = [];
+                        if (s.Program && catStr === 'GEN') {
+                            genProgs.push((catStr ? catStr + ': ' : '') + s.Program);
+                        }
                         if (s.generals) {
-                            s.generals.split(',').forEach(g => progs.push(`GEN: ${g.trim()}`));
+                            s.generals.split(',').forEach(g => genProgs.push(`GEN: ${g.trim()}`));
                         }
-                        const programsListText = progs.length > 0 ? progs.join(', ') : 'None';
+
+                        const regularProgsText = regProgs.length > 0 ? regProgs.join(', ') : '';
+                        const generalProgsText = genProgs.length > 0 ? genProgs.join(', ') : '';
                         const studentSector = s.sector || s.unit || s.prog || '';
-                        return sendSectorNotification(s.name, studentSector, programsListText);
+                        return sendSectorNotification(s.name, studentSector, regularProgsText, generalProgsText, s.Stage || s.stage || 'No Stage');
                     });
                     
                     const notiResults = await Promise.all(notiPromises);
@@ -1291,7 +1300,7 @@
             setTimeout(() => modal.style.display = 'none', 300);
         }
 
-        async function sendSectorNotification(studentName, sector, programsListText) {
+        async function sendSectorNotification(studentName, sector, regularProgsText, generalProgsText, stage) {
             let sentCount = 0;
             let totalTargets = 0;
             let errors = [];
@@ -1320,7 +1329,13 @@
                     }
                 }
 
-                const message = `*Student Registration Alert*\n*Student Name:* ${studentName}\n*Registered Program:* ${programsListText}\n*Sector Name:* ${sector}`;
+                let message = `*Student Registration Alert*\n*Student Name:* ${studentName}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage || 'N/A'}`;
+                if (regularProgsText && regularProgsText !== 'None' && regularProgsText !== '') {
+                    message += `\n*Registered Program:* ${regularProgsText}`;
+                }
+                if (generalProgsText && generalProgsText !== 'None' && generalProgsText !== '') {
+                    message += `\n*General Program:* ${generalProgsText}`;
+                }
 
                 const cleanSectorName = (str) => {
                     if (!str) return '';
