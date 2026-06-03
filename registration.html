@@ -375,8 +375,7 @@
         </div>
 
         <div class="reg-container" id="reg-container" style="display: block;">
-            <div class="reg-header" style="position: relative;">
-                <button onclick="configureBackendUrl()" style="position: absolute; right: 0; top: 0; background: none; border: none; font-size: 1.2rem; color: #a0aec0; cursor: pointer; padding: 0.5rem;" title="Configure WhatsApp Backend"><i class="fa fa-cog"></i></button>
+            <div class="reg-header">
                 <div class="badge-circle">
                     <i class="fa fa-user-plus"></i>
                 </div>
@@ -499,58 +498,21 @@
 
     <script>
         if (!window.WA_BACKEND_URL) {
-            const savedUrl = localStorage.getItem('whatsapp_backend_url');
-            if (savedUrl) {
-                window.WA_BACKEND_URL = savedUrl;
+            const hn = window.location.hostname;
+            const isLocal = hn === 'localhost' || 
+                            hn === '127.0.0.1' || 
+                            hn === '[::1]' ||
+                            hn.startsWith('192.168.') || 
+                            hn.startsWith('10.') || 
+                            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+                            hn.endsWith('.local') ||
+                            window.location.protocol === 'file:';
+            
+            if (isLocal) {
+                const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
+                window.WA_BACKEND_URL = `http://${host}:3001`;
             } else {
-                const hn = window.location.hostname;
-                const isLocal = hn === 'localhost' || 
-                                hn === '127.0.0.1' || 
-                                hn === '[::1]' ||
-                                hn.startsWith('192.168.') || 
-                                hn.startsWith('10.') || 
-                                /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
-                                hn.endsWith('.local') ||
-                                window.location.protocol === 'file:';
-                
-                if (isLocal) {
-                    const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
-                    window.WA_BACKEND_URL = `http://${host}:3001`;
-                } else {
-                    window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
-                }
-            }
-        }
-
-        function configureBackendUrl() {
-            const currentUrl = localStorage.getItem('whatsapp_backend_url') || window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com';
-            const newUrl = prompt("Enter WhatsApp Backend URL (e.g. http://192.168.1.3:3001 or ngrok HTTPS URL):", currentUrl);
-            if (newUrl !== null) {
-                const trimmed = newUrl.trim();
-                if (trimmed) {
-                    localStorage.setItem('whatsapp_backend_url', trimmed);
-                    window.WA_BACKEND_URL = trimmed;
-                    alert("WhatsApp Backend URL updated to: " + trimmed);
-                    // Force reload routing cache
-                    try {
-                        const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
-                        fetch(`${trimmed}/whatsapp-routing?clientId=${clientId}`)
-                            .then(r => r.json())
-                            .then(data => {
-                                if (data.success && data.routing) {
-                                    localStorage.setItem('whatsapp_sector_routing', JSON.stringify(data.routing));
-                                    alert("Successfully refreshed WhatsApp routing from the new backend!");
-                                }
-                            }).catch(err => {
-                                console.error("Failed to fetch routing from updated backend:", err);
-                                alert("Warning: Failed to reach the backend URL to sync routing. Please make sure the backend is running and correct.");
-                            });
-                    } catch(e){}
-                } else {
-                    localStorage.removeItem('whatsapp_backend_url');
-                    alert("Reset to default backend URL.");
-                    window.location.reload();
-                }
+                window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
             }
         }
 
