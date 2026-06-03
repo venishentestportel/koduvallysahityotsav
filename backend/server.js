@@ -173,7 +173,11 @@ try {
 }
 
 app.get('/whatsapp-targets', (req, res) => {
-    const clientId = getClientId(req);
+    const requestedClientId = getClientId(req);
+    const clientId = getActiveClientId(requestedClientId);
+    if (requestedClientId !== clientId) {
+        console.log(`[GET /whatsapp-targets] Client failover: resolved ${requestedClientId} -> ${clientId}`);
+    }
     res.json({ success: true, targets: globalWhatsAppTargets[clientId] || [] });
 });
 
@@ -307,7 +311,11 @@ try {
 }
 
 app.get('/whatsapp-routing', async (req, res) => {
-    const clientId = getClientId(req);
+    const requestedClientId = getClientId(req);
+    const clientId = getActiveClientId(requestedClientId);
+    if (requestedClientId !== clientId) {
+        console.log(`[GET /whatsapp-routing] Client failover: resolved ${requestedClientId} -> ${clientId}`);
+    }
     // Try to load from Supabase first
     const routing = await getRoutingFromSupabase(clientId);
     if (routing) {

@@ -1029,14 +1029,22 @@
                 
                 // Dispatch sector notification
                 const progText = cat === 'GEN' ? prog : (cat ? cat + ': ' : '') + prog;
-                sendSectorNotification(name, unit, progText);
+                const notiResult = await sendSectorNotification(name, unit, progText);
                 
+                let notiStatusHtml = '';
+                if (notiResult && notiResult.success) {
+                    notiStatusHtml = `<p style="color: #2e7d32; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fab fa-whatsapp"></i> Notification sent to ${notiResult.sentCount} group(s)/contact(s).</p>`;
+                } else if (notiResult) {
+                    notiStatusHtml = `<p style="color: #c62828; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fa fa-exclamation-triangle"></i> WhatsApp alert skipped: ${notiResult.reason}</p>`;
+                }
+
                 document.getElementById('id-verification-ui').innerHTML = `
                     <div style="padding: 3rem 2rem; text-align: center; background: white; border-radius: 20px;">
                         <i class="fa fa-check-circle" style="font-size: 4rem; color: #48bb78; margin-bottom: 1rem;"></i>
                         <h2 style="color: #2d3748; margin: 0 0 1rem 0;">Successfully Registered!</h2>
                         <p style="color: #718096; margin-bottom: 2rem;"><strong>${name}</strong> has been registered for <strong>${prog}</strong> at <strong>${stage}</strong>.</p>
-                        <button class="btn-register" style="background: #3182ce;" onclick="window.location.href = window.location.pathname">Scan Next Student</button>
+                        ${notiStatusHtml}
+                        <button class="btn-register" style="background: #3182ce; margin-top: 1.5rem;" onclick="window.location.href = window.location.pathname">Scan Next Student</button>
                     </div>
                 `;
             } catch (err) {
@@ -1147,8 +1155,9 @@
                 if (error) throw error;
 
                 // Dispatch sector notifications for all registered students
+                let whatsappStatusMsg = '';
                 try {
-                    uploadData.forEach(s => {
+                    const notiPromises = uploadData.map(async s => {
                         const progs = [];
                         if (s.Program) {
                             const catStr = s.Category || s.category || '';
@@ -1163,10 +1172,22 @@
                         }
                         const programsListText = progs.length > 0 ? progs.join(', ') : 'None';
                         const studentSector = s.sector || s.unit || s.prog || '';
-                        sendSectorNotification(s.name, studentSector, programsListText);
+                        return sendSectorNotification(s.name, studentSector, programsListText);
                     });
+                    
+                    const notiResults = await Promise.all(notiPromises);
+                    const successfulNotis = notiResults.filter(r => r && r.success).length;
+                    const failedNotis = notiResults.filter(r => r && !r.success);
+                    if (successfulNotis > 0) {
+                        whatsappStatusMsg = `WhatsApp notifications sent for ${successfulNotis} student(s).`;
+                    } else if (failedNotis.length > 0) {
+                        whatsappStatusMsg = `WhatsApp alert skipped: ${failedNotis[0].reason}`;
+                    } else {
+                        whatsappStatusMsg = 'No WhatsApp alerts were mapped.';
+                    }
                 } catch (notiErr) {
                     console.error("Error dispatching queued sector notifications:", notiErr);
+                    whatsappStatusMsg = "WhatsApp dispatch error occurred.";
                 }
 
                 // On success, filter out the ones we just uploaded
@@ -1177,7 +1198,7 @@
                 closeList();
                 
                 // Show Success Popup Animation
-                document.getElementById('success-student-name').innerText = `Successfully registered ${uploadData.length} student(s) to the database.`;
+                document.getElementById('success-student-name').innerText = `Successfully registered ${uploadData.length} student(s) to the database.\n(${whatsappStatusMsg})`;
                 const popup = document.getElementById('success-popup');
                 popup.style.display = 'flex';
                 setTimeout(() => {
@@ -1271,9 +1292,12 @@
         }
 
         async function sendSectorNotification(studentName, sector, programsListText) {
+            let sentCount = 0;
+            let totalTargets = 0;
+            let errors = [];
             try {
                 const sectorVal = (sector || '').trim().toLowerCase();
-                if (!sectorVal) return;
+                if (!sectorVal) return { success: false, reason: 'No sector name provided' };
 
                 // Load routing from backend with localStorage fallback
                 const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
@@ -1308,7 +1332,7 @@
 
                 const cleanStudentSector = cleanSectorName(sector);
 
-                Object.keys(routing).forEach(async (chatId) => {
+                const sendPromises = Object.keys(routing).map(async (chatId) => {
                     if (chatId.startsWith('offline_')) return;
                     let targetSector = (routing[chatId].sector || '').trim();
                     if (!targetSector) {
@@ -1317,19 +1341,41 @@
                     
                     const cleanTargetSector = cleanSectorName(targetSector);
                     if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
+                        totalTargets++;
                         try {
-                            await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
+                            const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ clientId: clientId, chatId: chatId, message: message })
                             });
+                            if (res.ok) {
+                                const resData = await res.json();
+                                if (resData.success) {
+                                    sentCount++;
+                                } else {
+                                    errors.push(resData.error || 'Unknown send error');
+                                }
+                            } else {
+                                errors.push(`HTTP ${res.status}`);
+                            }
                         } catch (err) {
-                            console.error(`Failed to send sector WhatsApp message to ${chatId}:`, err);
+                            errors.push(err.message);
                         }
                     }
                 });
+
+                await Promise.all(sendPromises);
+                
+                if (totalTargets === 0) {
+                    return { success: false, reason: `No mapped WhatsApp target found for sector "${sector}"` };
+                }
+                if (sentCount > 0) {
+                    return { success: true, sentCount, totalTargets };
+                }
+                return { success: false, reason: errors.join(', ') || 'Failed to send' };
             } catch (e) {
                 console.error("Error sending sector notification:", e);
+                return { success: false, reason: e.message };
             }
         }
     </script>
