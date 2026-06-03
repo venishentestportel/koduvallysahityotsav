@@ -91,18 +91,25 @@ let lastSentMessages = {}; // clientId_chatId -> { message, timestamp }
 app.post('/send-message', async (req, res) => {
     let clientId = getClientId(req);
     const { chatId, message } = req.body;
-    if (!chatId || !message) return res.status(400).json({ error: 'Missing chatId or message' });
+    console.log(`[POST /send-message] Request received. Client: ${clientId}, ChatId: ${chatId}, Message: "${(message || '').substring(0, 50).replace(/\n/g, ' ')}..."`);
+    if (!chatId || !message) {
+        console.warn(`[POST /send-message] Rejected: Missing chatId or message`);
+        return res.status(400).json({ error: 'Missing chatId or message' });
+    }
 
     // Failover to active connected client if requested is offline
-    clientId = getActiveClientId(clientId);
+    const resolvedClientId = getActiveClientId(clientId);
+    if (resolvedClientId !== clientId) {
+        console.log(`[POST /send-message] Client offline failover: resolved ${clientId} -> ${resolvedClientId}`);
+    }
 
     // Deduplicate identical messages sent within 5 seconds
     const now = Date.now();
-    const cacheKey = `${clientId}_${chatId}`;
+    const cacheKey = `${resolvedClientId}_${chatId}`;
     if (lastSentMessages[cacheKey] && 
         lastSentMessages[cacheKey].message === message && 
         (now - lastSentMessages[cacheKey].timestamp) < 5000) {
-        console.log(`Deduplicated duplicate message to ${chatId}`);
+        console.log(`[POST /send-message] Deduplicated duplicate message to ${chatId}`);
         return res.json({ success: true, duplicated: true, note: 'Message deduplicated' });
     }
 
@@ -110,9 +117,11 @@ app.post('/send-message', async (req, res) => {
     lastSentMessages[cacheKey] = { message: message, timestamp: now };
 
     try {
-        const response = await sendMessage(clientId, chatId, message);
+        const response = await sendMessage(resolvedClientId, chatId, message);
+        console.log(`[POST /send-message] Message sent successfully via client ${resolvedClientId}`);
         res.json({ success: true, response });
     } catch (error) {
+        console.error(`[POST /send-message] Failed to send message via client ${resolvedClientId}:`, error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -120,15 +129,24 @@ app.post('/send-message', async (req, res) => {
 app.post('/send-media', async (req, res) => {
     let clientId = getClientId(req);
     const { chatId, base64Data, filename, caption } = req.body;
-    if (!chatId || !base64Data) return res.status(400).json({ error: 'Missing chatId or base64Data' });
+    console.log(`[POST /send-media] Request received. Client: ${clientId}, ChatId: ${chatId}, Filename: ${filename || 'poster.jpg'}`);
+    if (!chatId || !base64Data) {
+        console.warn(`[POST /send-media] Rejected: Missing chatId or base64Data`);
+        return res.status(400).json({ error: 'Missing chatId or base64Data' });
+    }
 
     // Failover to active connected client if requested is offline
-    clientId = getActiveClientId(clientId);
+    const resolvedClientId = getActiveClientId(clientId);
+    if (resolvedClientId !== clientId) {
+        console.log(`[POST /send-media] Client offline failover: resolved ${clientId} -> ${resolvedClientId}`);
+    }
 
     try {
-        const response = await sendMedia(clientId, chatId, base64Data, filename || 'poster.jpg', caption || '');
+        const response = await sendMedia(resolvedClientId, chatId, base64Data, filename || 'poster.jpg', caption || '');
+        console.log(`[POST /send-media] Media sent successfully via client ${resolvedClientId}`);
         res.json({ success: true, response });
     } catch (error) {
+        console.error(`[POST /send-media] Failed to send media via client ${resolvedClientId}:`, error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
