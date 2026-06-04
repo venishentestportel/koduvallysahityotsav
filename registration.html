@@ -1262,7 +1262,7 @@
                         height: Math.floor(minEdge * 0.75)
                     };
                 },
-                aspectRatio: 1.0,
+                // Removing aspectRatio: 1.0 constraint to allow the browser to negotiate high-resolution widescreen camera modes naturally without cropping/scaling degradation.
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning on modern mobile browsers
                 }
@@ -1316,11 +1316,24 @@
                 return html5QrcodeScanner.start(constraints, config, onScanSuccess, onScanFailure);
             };
 
-            // Attempt 1: Standard environment camera (compatible back-camera mode)
-            startWithConstraints({ facingMode: "environment" })
+            // Attempt 1: Full HD (1080p) rear-facing camera for maximum quality and sharpness
+            startWithConstraints({ 
+                facingMode: "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            })
                 .catch(err => {
-                    console.warn("Environment camera failed, retrying with default camera...", err);
-                    // Attempt 2: Fallback to default/any camera (like front webcam on laptops)
+                    console.warn("Attempt 1: 1080p rear camera failed, trying 720p rear camera...", err);
+                    // Attempt 2: HD (720p) rear-facing camera fallback
+                    return startWithConstraints({ 
+                        facingMode: "environment",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    });
+                })
+                .catch(err => {
+                    console.warn("Attempt 2: 720p rear camera failed, retrying with default camera (no constraints)...", err);
+                    // Attempt 3: Fallback to any default camera device (laptop front webcams, generic cameras)
                     return startWithConstraints({});
                 })
                 .catch(err => {
