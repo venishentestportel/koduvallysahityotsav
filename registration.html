@@ -814,6 +814,16 @@
             if (activeCat && activeProg) {
                 loadRegisteredStudentsList(activeCat, activeProg);
             }
+
+            // Restore draft category and program in Conductor Dashboard
+            const savedCat = localStorage.getItem('conductor_draft_category');
+            if (savedCat) {
+                const catSelect = document.getElementById('conductor-cat');
+                if (catSelect) {
+                    catSelect.value = savedCat;
+                    loadConductorPrograms();
+                }
+            }
         });
 
         // ================= ADMIN PORTAL LOGIC =================
@@ -910,11 +920,17 @@
         }
 
         async function loadConductorPrograms() {
-            const cat = document.getElementById('conductor-cat').value;
+            const catSelect = document.getElementById('conductor-cat');
+            const cat = catSelect ? catSelect.value.trim() : '';
             const progSelect = document.getElementById('conductor-prog');
             
+            // Save category draft
+            localStorage.setItem('conductor_draft_category', cat);
+
             if (!cat) {
                 progSelect.innerHTML = '<option value="">-- Program --</option>';
+                localStorage.setItem('conductor_draft_program', '');
+                loadConductorParticipants();
                 return;
             }
 
@@ -930,6 +946,8 @@
 
                 if (!data || data.length === 0) {
                     progSelect.innerHTML = '<option value="">No Programs Found</option>';
+                    localStorage.setItem('conductor_draft_program', '');
+                    loadConductorParticipants();
                     return;
                 }
 
@@ -938,6 +956,14 @@
 
                 progSelect.innerHTML = '<option value="">-- Program --</option>' + 
                     uniqueProgs.map(p => `<option value="${p}">${p}</option>`).join('');
+
+                // Restore saved program draft if it exists in the newly loaded list
+                const savedProg = localStorage.getItem('conductor_draft_program');
+                if (savedProg && uniqueProgs.includes(savedProg)) {
+                    progSelect.value = savedProg;
+                } else {
+                    localStorage.setItem('conductor_draft_program', '');
+                }
 
                 // Automatically reload participants list for the newly selected category
                 loadConductorParticipants();
@@ -1054,6 +1080,9 @@
             const cat = catSelect ? catSelect.value.trim() : '';
             const prog = progSelect ? progSelect.value.trim() : '';
 
+            // Save program draft
+            localStorage.setItem('conductor_draft_program', prog);
+
             if (!cat || !prog) {
                 listDiv.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 2rem;">Select a category and program to view participants.</div>';
                 return;
@@ -1076,11 +1105,10 @@
 
                 const catDbName = categoryMap[cat] || cat;
 
-                // Fetch allotted students from registred table
-                const { data: allottedData, error: allottedErr } = await supabaseClient
+                // Fetch ALL allotted students from registred table (in-memory filtering to avoid spaces-in-filter errors)
+                const { data: rawData, error: allottedErr } = await supabaseClient
                     .from('registred')
-                    .select('*')
-                    .or(`category.ilike.${cat},category.ilike.${catDbName}`);
+                    .select('*');
 
                 if (allottedErr) throw allottedErr;
 
@@ -1088,8 +1116,15 @@
                 const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
                 const normSearch = normalize(prog);
 
-                // Filter allotted students by program
-                const filteredAllotted = (allottedData || []).filter(s => {
+                // Filter allotted students in memory by both category and program
+                const filteredAllotted = (rawData || []).filter(s => {
+                    const sCat = s.category ? s.category.toLowerCase().trim() : '';
+                    const searchCat = cat.toLowerCase().trim();
+                    const searchCatDb = catDbName.toLowerCase().trim();
+                    
+                    // Match category
+                    if (sCat !== searchCat && sCat !== searchCatDb) return false;
+
                     const p1 = normalize(s['program 1']);
                     const p2 = normalize(s['program 2']);
                     const p3 = normalize(s['program 3']);
@@ -1647,11 +1682,10 @@
 
                 const catDbName = categoryMap[cat] || cat;
 
-                // Fetch allotted students from registred
-                const { data: allottedData, error: allottedErr } = await supabaseClient
+                // Fetch ALL allotted students from registred
+                const { data: rawData, error: allottedErr } = await supabaseClient
                     .from('registred')
-                    .select('*')
-                    .or(`category.ilike.${cat},category.ilike.${catDbName}`);
+                    .select('*');
 
                 if (allottedErr) throw allottedErr;
 
@@ -1666,8 +1700,15 @@
                 const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
                 const normSearch = normalize(prog);
 
-                // Filter allotted students
-                const filteredAllotted = (allottedData || []).filter(s => {
+                // Filter allotted students in memory
+                const filteredAllotted = (rawData || []).filter(s => {
+                    const sCat = s.category ? s.category.toLowerCase().trim() : '';
+                    const searchCat = cat.toLowerCase().trim();
+                    const searchCatDb = catDbName.toLowerCase().trim();
+                    
+                    // Match category
+                    if (sCat !== searchCat && sCat !== searchCatDb) return false;
+
                     const p1 = normalize(s['program 1']);
                     const p2 = normalize(s['program 2']);
                     const p3 = normalize(s['program 3']);
