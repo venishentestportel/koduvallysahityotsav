@@ -655,8 +655,8 @@
             const verifiedSector = urlParams.get('sector');
             const verifiedProgs = urlParams.get('progs');
             const verifiedGenProgs = urlParams.get('genprogs');
-            const isAdmin = urlParams.get('admin') === 'true' || sessionStorage.getItem('admin_logged_in') === 'true';
-            const adminStage = urlParams.get('stage') || sessionStorage.getItem('admin_stage');
+            const isAdmin = urlParams.get('admin') === 'true' || localStorage.getItem('admin_logged_in') === 'true';
+            const adminStage = urlParams.get('stage') || localStorage.getItem('admin_stage');
 
             if (verifiedName !== null) {
                 // Show Verification UI
@@ -788,11 +788,11 @@
             } else {
                 // Show Admin Portal
                 document.getElementById('id-verification-ui').style.display = 'none';
-                if (sessionStorage.getItem('admin_logged_in') === 'true') {
+                if (localStorage.getItem('admin_logged_in') === 'true') {
                     document.getElementById('password-overlay').style.display = 'none';
                     document.getElementById('admin-wrapper').style.display = 'block';
                     
-                    const savedStage = sessionStorage.getItem('admin_stage');
+                    const savedStage = localStorage.getItem('admin_stage');
                     if (savedStage) {
                         document.getElementById('stage-select').value = savedStage;
                         const display = document.getElementById('conductor-stage-display');
@@ -886,8 +886,8 @@
             document.getElementById('password-overlay').style.display = 'none';
             document.getElementById('admin-wrapper').style.display = 'block';
             
-            sessionStorage.setItem('admin_logged_in', 'true');
-            sessionStorage.setItem('admin_stage', stage);
+            localStorage.setItem('admin_logged_in', 'true');
+            localStorage.setItem('admin_stage', stage);
             
             // Pre-fill the stage selectors
             const stageSelect = document.getElementById('stage-select');
@@ -950,7 +950,7 @@
         }
 
         async function triggerConductorSituation(situation) {
-            const stage = sessionStorage.getItem('admin_stage');
+            const stage = localStorage.getItem('admin_stage');
             if (!stage) {
                 alert("Critical Error: No stage assigned. Please log in again.");
                 return;
@@ -1013,7 +1013,7 @@
         }
 
         async function loadConductorParticipants() {
-            const stage = sessionStorage.getItem('admin_stage');
+            const stage = localStorage.getItem('admin_stage');
             const listDiv = document.getElementById('conductor-participants-list');
             
             if (!stage) {
