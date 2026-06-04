@@ -1228,7 +1228,7 @@
                             <div style="flex: 2; min-width: 300px;">
                                 <label
                                     style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student Names (One per line, e.g. Name - ChestNo)</label>
-                                <textarea id="gen-card-names"
+                                <textarea id="gen-card-names" oninput="clearExcelPreviewOnInput()"
                                     placeholder="e.g. John Doe - 101&#10;Jane Smith - 102&#10;or just Names" rows="3"
                                     style="width: 100%; padding: 0.5rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.85rem; height: 90px;"></textarea>
                             </div>
@@ -1280,6 +1280,9 @@
                                 </button>
                             </div>
                         </div>
+                        <!-- Excel Preview Container -->
+                        <div id="excel-preview-container" style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;"></div>
+
                         <div style="margin-top: 1.2rem; display: flex; gap: 0.75rem;">
                             <button class="btn btn-save" onclick="generateIdCards()"
                                 style="margin-bottom: 0; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
@@ -1917,123 +1920,108 @@
         async function generateIdCards() {
             const sector = document.getElementById('gen-card-sector').value.trim();
             const baseUrl = document.getElementById('gen-card-baseurl').value.trim();
-            const namesText = document.getElementById('gen-card-names').value.trim();
 
-            if (!sector) {
-                alert("Please enter a Sector Name.");
-                return;
-            }
             if (!baseUrl) {
                 alert("Please enter a Base Website URL.");
                 return;
             }
-            if (!namesText) {
-                alert("Please enter student names.");
-                return;
+
+            let parsedStudents = [];
+            let sharedCategory = '';
+
+            // Check if Excel imported data exists and is not empty
+            if (window.genCardExcelStudents && window.genCardExcelStudents.length > 0) {
+                parsedStudents = window.genCardExcelStudents.map(student => {
+                    return {
+                        name: student.name,
+                        chest: student.chest,
+                        sector: student.sector,
+                        category: student.category,
+                        regularProgs: student.regularProgs || [],
+                        generalProgs: student.generalProgs || [],
+                        isFromExcel: true
+                    };
+                });
+            } else {
+                // Parse manually typed names
+                const namesText = document.getElementById('gen-card-names').value.trim();
+                if (!namesText) {
+                    alert("Please enter student names or select an Excel file.");
+                    return;
+                }
+                if (!sector) {
+                    alert("Please enter a Sector Name.");
+                    return;
+                }
+
+                // Gather GUI regular programs
+                const programRows = document.querySelectorAll('.gen-card-program-row');
+                const regularProgs = [];
+                programRows.forEach(row => {
+                    const cat = row.getAttribute('data-category') || (document.getElementById('gen-card-global-category') ? document.getElementById('gen-card-global-category').value : '');
+                    const prog = row.querySelector('.gen-card-program-select').value;
+                    if (cat && prog) {
+                        regularProgs.push({ category: cat, program: prog });
+                        if (!sharedCategory) sharedCategory = cat;
+                    }
+                });
+
+                // Gather GUI general programs
+                const generalRows = document.querySelectorAll('.gen-card-general-program-row');
+                const generalProgs = [];
+                generalRows.forEach(row => {
+                    const prog = row.querySelector('.gen-card-general-program-select').value;
+                    if (prog) {
+                        generalProgs.push(prog);
+                    }
+                });
+
+                // Parse names from textbox
+                const lines = namesText.split('\n').map(n => n.trim()).filter(Boolean);
+                lines.forEach((line) => {
+                    // Try splitting by hyphen, colon, or pipe to check for manually entered chest number
+                    const parts = line.split(/[-|:]/);
+                    let chest = '';
+                    let name = '';
+                    if (parts.length >= 2) {
+                        chest = parts.pop().trim();
+                        name = parts.join('-').trim();
+                    } else {
+                        const commaParts = line.split(',');
+                        if (commaParts.length >= 2) {
+                            const last = commaParts[commaParts.length - 1].trim();
+                            if (/^[A-Za-z0-9\s.]+$/.test(last) && (/\d/.test(last) || last.length <= 6)) {
+                                chest = commaParts.pop().trim();
+                                name = commaParts.join(',').trim();
+                            } else {
+                                name = line;
+                            }
+                        } else {
+                            // Check if line ends with a number
+                            const numMatch = line.match(/(.+?)\s+(\d+[A-Za-z]?|[A-Za-z]?\d+)$/);
+                            if (numMatch) {
+                                name = numMatch[1].trim();
+                                chest = numMatch[2].trim();
+                            } else {
+                                name = line;
+                            }
+                        }
+                    }
+
+                    parsedStudents.push({
+                        name,
+                        chest,
+                        sector: sector,
+                        category: '',
+                        regularProgs: regularProgs,
+                        generalProgs: generalProgs,
+                        isFromExcel: false
+                    });
+                });
             }
 
-            // Gather GUI regular programs
-            const programRows = document.querySelectorAll('.gen-card-program-row');
-            const regularProgs = [];
-            let sharedCategory = '';
-            programRows.forEach(row => {
-                const cat = row.getAttribute('data-category') || (document.getElementById('gen-card-global-category') ? document.getElementById('gen-card-global-category').value : '');
-                const prog = row.querySelector('.gen-card-program-select').value;
-                if (cat && prog) {
-                    regularProgs.push({ category: cat, program: prog });
-                    if (!sharedCategory) sharedCategory = cat;
-                }
-            });
-
-            // Gather GUI general programs
-            const generalRows = document.querySelectorAll('.gen-card-general-program-row');
-            const generalProgs = [];
-            generalRows.forEach(row => {
-                const prog = row.querySelector('.gen-card-general-program-select').value;
-                if (prog) {
-                    generalProgs.push(prog);
-                }
-            });
-
-            const progsParamVal = regularProgs.map(p => `${p.category}: ${p.program}`).join('|');
-            const genProgsParamVal = generalProgs.join('|');
-
-            // Parse names from textbox
-            const lines = namesText.split('\n').map(n => n.trim()).filter(Boolean);
-            let parsedStudents = [];
-            
-            lines.forEach((line, idx) => {
-                // Try splitting by hyphen, colon, or pipe to check for manually entered chest number
-                const parts = line.split(/[-|:]/);
-                let chest = '';
-                let name = '';
-                if (parts.length >= 2) {
-                    chest = parts.pop().trim();
-                    name = parts.join('-').trim();
-                } else {
-                    const commaParts = line.split(',');
-                    if (commaParts.length >= 2) {
-                        const last = commaParts[commaParts.length - 1].trim();
-                        if (/^[A-Za-z0-9\s.]+$/.test(last) && (/\d/.test(last) || last.length <= 6)) {
-                            chest = commaParts.pop().trim();
-                            name = commaParts.join(',').trim();
-                        } else {
-                            name = line;
-                        }
-                    } else {
-                        // Check if line ends with a number
-                        const numMatch = line.match(/(.+?)\s+(\d+[A-Za-z]?|[A-Za-z]?\d+)$/);
-                        if (numMatch) {
-                            name = numMatch[1].trim();
-                            chest = numMatch[2].trim();
-                        } else {
-                            name = line;
-                        }
-                    }
-                }
-                
-                // Try to find matching student in Excel imported data to merge their specific programs
-                let regularProgsList = [];
-                let generalProgsList = [];
-                let resolvedCategory = '';
-                let resolvedSector = sector;
-                let excelStudent = null;
-
-                if (window.genCardExcelStudents && window.genCardExcelStudents.length > 0) {
-                    // Try to match by index first to ensure separate rows map correctly
-                    if (window.genCardExcelStudents[idx] && window.genCardExcelStudents[idx].name.toLowerCase() === name.toLowerCase()) {
-                        excelStudent = window.genCardExcelStudents[idx];
-                    } else {
-                        // Fallback to name search
-                        excelStudent = window.genCardExcelStudents.find(s => s.name.toLowerCase() === name.toLowerCase());
-                    }
-                    if (excelStudent) {
-                        regularProgsList = excelStudent.regularProgs;
-                        generalProgsList = excelStudent.generalProgs;
-                        resolvedCategory = excelStudent.category;
-                        // Use sector from Excel if none specified globally or placeholder present
-                        if (!sector || sector.includes("Multiple Sectors")) {
-                            resolvedSector = excelStudent.sector;
-                        }
-                        if (!chest && excelStudent.chest) {
-                            chest = excelStudent.chest;
-                        }
-                    }
-                }
-
-                parsedStudents.push({
-                    name,
-                    chest,
-                    sector: resolvedSector,
-                    category: resolvedCategory,
-                    regularProgs: regularProgsList,
-                    generalProgs: generalProgsList,
-                    isFromExcel: !!excelStudent
-                });
-            });
-
             if (parsedStudents.length === 0) {
-                alert("Please enter at least one valid student name.");
+                alert("Please enter or import at least one student.");
                 return;
             }
 
@@ -2051,8 +2039,8 @@
                     studentRegularProgs = student.regularProgs;
                     studentGeneralProgs = student.generalProgs;
                 } else {
-                    studentRegularProgs = regularProgs; // from GUI selections
-                    studentGeneralProgs = generalProgs; // from GUI selections
+                    studentRegularProgs = student.regularProgs; // from GUI selections
+                    studentGeneralProgs = student.generalProgs; // from GUI selections
                 }
 
                 const sProgsParamVal = studentRegularProgs.map(p => `${p.category}: ${p.program}`).join('|');
@@ -2136,6 +2124,13 @@
                 if (fileInput) fileInput.value = '';
                 const infoSpan = document.getElementById('gen-card-excel-info');
                 if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
+
+                // Hide Excel preview table
+                const previewContainer = document.getElementById('excel-preview-container');
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                    previewContainer.innerHTML = '';
+                }
 
                 loadCardHistory();
                 alert(`Successfully generated ${insertRows.length} ID card(s) and saved to database!`);
@@ -2279,7 +2274,8 @@
                     const namesPreview = studentsArray.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
                     document.getElementById('gen-card-names').value = namesPreview;
 
-                    alert(`Successfully imported ${studentsArray.length} student(s) from Excel file!\nClick "Generate Cards" to save to Supabase and generate their printed cards.`);
+                    // Render preview table
+                    renderExcelPreview();
 
                 } catch (err) {
                     console.error("Excel import error:", err);
@@ -2289,6 +2285,135 @@
             };
 
             reader.readAsArrayBuffer(file);
+        }
+
+        function renderExcelPreview() {
+            const container = document.getElementById('excel-preview-container');
+            if (!container) return;
+
+            if (!window.genCardExcelStudents || window.genCardExcelStudents.length === 0) {
+                container.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+
+            container.style.display = 'block';
+
+            let tableHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #2d3748; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa fa-list-alt" style="color: #3182ce;"></i> Imported Students Preview (${window.genCardExcelStudents.length})
+                    </h3>
+                    <button class="btn btn-delete" type="button" onclick="clearExcelPreview()" style="background: #e53e3e; color: white; padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; height: auto; margin-bottom: 0;">
+                        <i class="fa fa-times"></i> Clear Import
+                    </button>
+                </div>
+                <div style="overflow-x: auto; border-radius: 8px; border: 1px solid #cbd5e0; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; font-family: inherit;">
+                        <thead>
+                            <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e0; color: #475569; font-weight: 700;">
+                                <th style="padding: 0.75rem 1rem;">Student Name</th>
+                                <th style="padding: 0.75rem 1rem;">Chest No</th>
+                                <th style="padding: 0.75rem 1rem;">Sector</th>
+                                <th style="padding: 0.75rem 1rem;">Category</th>
+                                <th style="padding: 0.75rem 1rem;">Programs</th>
+                                <th style="padding: 0.75rem 1rem;">General Programs</th>
+                                <th style="padding: 0.75rem 1rem; text-align: center; width: 80px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            window.genCardExcelStudents.forEach((student, index) => {
+                const nameText = student.name || 'N/A';
+                const chestText = student.chest || 'N/A';
+                const chestStyle = chestText === 'N/A' ? 'color: #ef4444; font-weight: bold;' : 'font-weight: bold; color: #2d3748;';
+                const sectorText = student.sector || 'N/A';
+                const categoryText = student.category || 'N/A';
+                
+                const regularProgramsText = student.regularProgs && student.regularProgs.length > 0 
+                    ? student.regularProgs.map(p => p.program).join(', ') 
+                    : 'N/A';
+                    
+                const generalProgramsText = student.generalProgs && student.generalProgs.length > 0 
+                    ? student.generalProgs.join('|') 
+                    : 'N/A';
+
+                tableHtml += `
+                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        <td style="padding: 0.75rem 1rem; color: #3b82f6; font-weight: 600;">${nameText}</td>
+                        <td style="padding: 0.75rem 1rem; ${chestStyle}">${chestText}</td>
+                        <td style="padding: 0.75rem 1rem; color: #4a5568;">${sectorText}</td>
+                        <td style="padding: 0.75rem 1rem; color: #4a5568;">${categoryText}</td>
+                        <td style="padding: 0.75rem 1rem; color: #4a5568; line-height: 1.4;">${regularProgramsText}</td>
+                        <td style="padding: 0.75rem 1rem; color: #4a5568; line-height: 1.4;">${generalProgramsText}</td>
+                        <td style="padding: 0.75rem 1rem; text-align: center;">
+                            <button type="button" onclick="deleteExcelPreviewRow(${index})" style="background: #f1f5f9; border: none; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#ef4444';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569';" title="Delete Student Row">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
+        function deleteExcelPreviewRow(index) {
+            if (window.genCardExcelStudents && window.genCardExcelStudents[index]) {
+                window.genCardExcelStudents.splice(index, 1);
+                renderExcelPreview();
+                
+                // Keep the names textarea in sync
+                const namesPreview = window.genCardExcelStudents.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
+                document.getElementById('gen-card-names').value = namesPreview;
+                
+                // Update loaded info message
+                const infoSpan = document.getElementById('gen-card-excel-info');
+                if (infoSpan) {
+                    if (window.genCardExcelStudents.length > 0) {
+                        infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${window.genCardExcelStudents.length} student(s) from Excel.</span>`;
+                    } else {
+                        infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
+                    }
+                }
+            }
+        }
+
+        function clearExcelPreview() {
+            window.genCardExcelStudents = null;
+            const fileInput = document.getElementById('gen-card-excel');
+            if (fileInput) fileInput.value = '';
+            const infoSpan = document.getElementById('gen-card-excel-info');
+            if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
+            document.getElementById('gen-card-names').value = '';
+            
+            const container = document.getElementById('excel-preview-container');
+            if (container) {
+                container.style.display = 'none';
+                container.innerHTML = '';
+            }
+        }
+
+        function clearExcelPreviewOnInput() {
+            if (window.genCardExcelStudents && window.genCardExcelStudents.length > 0) {
+                window.genCardExcelStudents = null;
+                const fileInput = document.getElementById('gen-card-excel');
+                if (fileInput) fileInput.value = '';
+                const infoSpan = document.getElementById('gen-card-excel-info');
+                if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
+                
+                const container = document.getElementById('excel-preview-container');
+                if (container) {
+                    container.style.display = 'none';
+                    container.innerHTML = '';
+                }
+            }
         }
 
         function filterCardHistory() {

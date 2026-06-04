@@ -665,11 +665,54 @@
                                 const regBtn = document.getElementById('admin-register-btn');
                                 regBtn.style.display = 'block';
                                 regBtn.onclick = () => registerFromIdPage(verifiedName, verifiedSector, cat, progName, adminStage);
+
+                                const codeLetterContainer = document.getElementById('codeletter-input-container');
+                                if (codeLetterContainer) {
+                                    codeLetterContainer.style.display = 'block';
+                                }
                             };
                             btnContainer.appendChild(btn);
                         });
                         
                         progsContainer.appendChild(btnContainer);
+
+                        // Create Code Letter container
+                        const codeLetterDiv = document.createElement('div');
+                        codeLetterDiv.id = 'codeletter-input-container';
+                        codeLetterDiv.style = 'margin-top: 1rem; margin-bottom: 1rem; text-align: left; display: none;';
+                        codeLetterDiv.innerHTML = `
+                            <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.85rem;">Code Letter (Optional)</label>
+                            <input type="text" id="reg-codeletter" placeholder="Type or select code letter (e.g. A)" list="code-letters-list" class="form-control" style="width: 100%; border: 1px solid #cbd5e0; border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.9rem; box-sizing: border-box;">
+                            <datalist id="code-letters-list">
+                                <option value="A"></option>
+                                <option value="B"></option>
+                                <option value="C"></option>
+                                <option value="D"></option>
+                                <option value="E"></option>
+                                <option value="F"></option>
+                                <option value="G"></option>
+                                <option value="H"></option>
+                                <option value="I"></option>
+                                <option value="J"></option>
+                                <option value="K"></option>
+                                <option value="L"></option>
+                                <option value="M"></option>
+                                <option value="N"></option>
+                                <option value="O"></option>
+                                <option value="P"></option>
+                                <option value="Q"></option>
+                                <option value="R"></option>
+                                <option value="S"></option>
+                                <option value="T"></option>
+                                <option value="U"></option>
+                                <option value="V"></option>
+                                <option value="W"></option>
+                                <option value="X"></option>
+                                <option value="Y"></option>
+                                <option value="Z"></option>
+                            </datalist>
+                        `;
+                        progsContainer.appendChild(codeLetterDiv);
                         
                         const regBtn = document.createElement('button');
                         regBtn.id = 'admin-register-btn';
@@ -1028,6 +1071,9 @@
                 const genProgsParam = gpParam ? `&genprogs=${encodeURIComponent(gpParam)}` : '';
                 const cardUrl = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(name)}&sector=${encodeURIComponent(unit || '')}${progsParam}${genProgsParam}`;
 
+                const codeLetterInput = document.getElementById('reg-codeletter');
+                const codeLetterVal = codeLetterInput ? codeLetterInput.value.trim() : '';
+
                 const { error: registError } = await supabaseClient
                     .from('regist')
                     .insert([{
@@ -1036,7 +1082,8 @@
                         program: isGeneral ? null : `${cat ? cat + ': ' : ''}${prog}`,
                         general: isGeneral ? prog : null,
                         url: cardUrl,
-                        stage: stage || 'Unknown'
+                        stage: stage || 'Unknown',
+                        codeletter: codeLetterVal || null
                     }]);
 
                 if (registError) throw registError;
@@ -1058,11 +1105,13 @@
                     }
                 }
 
+                const codeLetterMsg = codeLetterVal ? ` with Code Letter <strong>${codeLetterVal}</strong>` : '';
+
                 document.getElementById('id-verification-ui').innerHTML = `
                     <div style="padding: 3rem 2rem; text-align: center; background: white; border-radius: 20px;">
                         <i class="fa fa-check-circle" style="font-size: 4rem; color: #48bb78; margin-bottom: 1rem;"></i>
                         <h2 style="color: #2d3748; margin: 0 0 1rem 0;">Successfully Registered!</h2>
-                        <p style="color: #718096; margin-bottom: 2rem;"><strong>${name}</strong> has been registered for <strong>${prog}</strong> at <strong>${stage}</strong>.</p>
+                        <p style="color: #718096; margin-bottom: 2rem;"><strong>${name}</strong> has been registered for <strong>${prog}</strong> at <strong>${stage}</strong>${codeLetterMsg}.</p>
                         ${notiStatusHtml}
                         <button class="btn-register" style="background: #3182ce; margin-top: 1.5rem;" onclick="window.location.href = window.location.pathname">Scan Next Student</button>
                     </div>

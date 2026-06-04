@@ -364,18 +364,19 @@ app.post('/send-sector-notification', async (req, res) => {
         console.log(`[POST /send-sector-notification] Client failover: resolved ${clientId} -> ${resolvedClientId}`);
     }
 
+    // Use cached routing mapping (extremely fast, no Supabase/WhatsApp API fetches needed during send)
     let routing = globalWhatsAppRouting;
-    try {
-        const dbRouting = await getRoutingFromSupabase(resolvedClientId);
-        if (dbRouting) {
-            globalWhatsAppRouting = dbRouting;
-            routing = dbRouting;
-            try {
-                fs.writeFileSync(routingFilePath, JSON.stringify(dbRouting, null, 2), 'utf8');
-            } catch (e) {}
+    
+    // Fallback in case routing is not initialized in memory yet
+    if (!routing || Object.keys(routing).length === 0) {
+        try {
+            if (fs.existsSync(routingFilePath)) {
+                globalWhatsAppRouting = JSON.parse(fs.readFileSync(routingFilePath, 'utf8'));
+                routing = globalWhatsAppRouting;
+            }
+        } catch (e) {
+            console.error("Failed to load routing from file fallback:", e.message);
         }
-    } catch (e) {
-        console.warn("[POST /send-sector-notification] Failed to load routing from Supabase, using cache:", e.message);
     }
 
     let message = `*Student Registration Alert*\n*Student Name:* ${studentName}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage || 'N/A'}`;
