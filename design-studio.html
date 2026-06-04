@@ -827,6 +827,10 @@
                                 style="margin-bottom: 0; background: #3182ce; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
                                 <i class="fa fa-print"></i> Print Cards
                             </button>
+                            <button class="btn" onclick="printAllStudentCards()"
+                                style="margin-bottom: 0; background: #805ad5; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
+                                <i class="fa fa-file-pdf"></i> Print All Student Cards (PDF)
+                            </button>
                         </div>
                     </div>
 
@@ -1255,6 +1259,132 @@
                 container.innerHTML = `<div style="color: #ef4444; font-size: 0.9rem; text-align: center; padding: 2rem;">Failed to load history: ${err.message}</div>`;
             }
         }
+
+        async function printAllStudentCards() {
+            if (!window.cardHistoryData || window.cardHistoryData.length === 0) {
+                // Ensure data is loaded
+                await loadCardHistory();
+            }
+            if (!window.cardHistoryData || window.cardHistoryData.length === 0) {
+                alert("No records found in the database.");
+                return;
+            }
+
+            // Filter out only those that actually have a URL (i.e., generated cards, not just standard registrations)
+            const idCardsData = window.cardHistoryData.filter(row => row.url);
+            if (idCardsData.length === 0) {
+                alert("No generated ID cards found. Generate some cards first.");
+                return;
+            }
+
+            // Create print container
+            let printContainer = document.getElementById('print-all-container');
+            if (!printContainer) {
+                printContainer = document.createElement('div');
+                printContainer.id = 'print-all-container';
+                document.body.appendChild(printContainer);
+                
+                // Add print styles dynamically
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    @media print {
+                        body * { visibility: hidden !important; }
+                        #print-all-container, #print-all-container * { visibility: visible !important; }
+                        #print-all-container {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            display: grid !important;
+                            grid-template-columns: repeat(2, 3.4in);
+                            grid-auto-rows: 2.1in;
+                            gap: 0.1in 0.4in; /* row-gap col-gap */
+                            justify-content: center;
+                            padding: 0.2in 0;
+                            margin: 0;
+                        }
+                        /* Page break every 10 cards (every 5 rows, but grid deals in items so every 10th item) */
+                        #print-all-container > div:nth-child(10n) {
+                            break-after: page;
+                            page-break-after: always;
+                        }
+                    }
+                    @media screen {
+                        #print-all-container { display: none !important; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Show loading overlay
+            const overlay = document.createElement('div');
+            overlay.style = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;';
+            overlay.innerHTML = '<i class="fa fa-spinner fa-spin" style="font-size:3rem; color:#805ad5; margin-bottom:1rem;"></i><h2 style="color:#2d3748;">Generating PDF Layout...</h2><p id="pdf-progress">0 / ' + idCardsData.length + ' cards processed</p>';
+            document.body.appendChild(overlay);
+
+            printContainer.innerHTML = '';
+            
+            // We use setTimeout to yield to the browser UI to avoid freezing
+            let i = 0;
+            function processBatch() {
+                const batchSize = 25; // process 25 cards at a time
+                const end = Math.min(i + batchSize, idCardsData.length);
+                for (; i < end; i++) {
+                    const row = idCardsData[i];
+                    
+                    const cardId = \`print-qr-\${row.id || i}\`;
+                    const card = document.createElement('div');
+                    // Style matching 3.4 x 2.1 inches (Standard CR80 size)
+                    card.style.cssText = 'width: 3.4in; height: 2.1in; border: 1px solid #000; box-sizing: border-box; display: flex; overflow: hidden; background: white; border-radius: 8px; break-inside: avoid; page-break-inside: avoid;';
+                    card.innerHTML = \`
+                        <!-- Left Side: Info -->
+                        <div style="flex: 2; padding: 0.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px dashed #cbd5e0; background: #f8fafc;">
+                            <h3 style="margin: 0; font-size: 0.45rem; color: #718096; font-weight: 600; text-transform: uppercase;">Sahithyolsav 2026</h3>
+                            <h1 style="margin: 0.2rem 0; font-size: 0.85rem; color: #2b6cb0; word-break: break-word; font-weight: 700; line-height: 1.1;">\${row.name || 'Unknown'}</h1>
+                            <div style="margin-top: 0.2rem; border-top: 1px solid #e2e8f0; padding-top: 0.2rem;">
+                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Sector: <strong>\${row.sector || 'N/A'}</strong></h3>
+                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 0.7rem;">\${row['chest no.'] || 'N/A'}</strong></h3>
+                            </div>
+                        </div>
+                        <!-- Right Side: QR -->
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.2rem; background: white;">
+                            <div id="\${cardId}" style="width: 55px; height: 55px; margin-bottom: 0.2rem;"></div>
+                            <p style="margin: 0; font-size: 0.35rem; color: #718096; text-align: center; font-weight: bold;">SCAN TO VERIFY</p>
+                        </div>
+                    \`;
+                    printContainer.appendChild(card);
+                    
+                    try {
+                        new QRCode(document.getElementById(cardId), {
+                            text: row.url,
+                            width: 55,
+                            height: 55,
+                            colorDark: "#1a202c",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.L
+                        });
+                    } catch(e){
+                        console.error("QR Code generation error:", e);
+                    }
+                }
+                
+                document.getElementById('pdf-progress').innerText = i + ' / ' + idCardsData.length + ' cards processed';
+                
+                if (i < idCardsData.length) {
+                    setTimeout(processBatch, 10);
+                } else {
+                    document.body.removeChild(overlay);
+                    // trigger print after a small delay to ensure rendering is complete
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
+                }
+            }
+            
+            setTimeout(processBatch, 10);
+        }
+
+
 
         function renderCardHistory(data) {
             const container = document.getElementById('card-history-table-container');
