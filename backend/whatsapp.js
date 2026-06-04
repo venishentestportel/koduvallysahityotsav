@@ -243,8 +243,8 @@ async function initializeWhatsAppForClient(clientId) {
 function handleClientError(clientId, err) {
     console.error(`Error encountered for client ${clientId}:`, err);
     const msg = err.message || '';
-    if (msg.includes('Session closed') || msg.includes('target closed') || msg.includes('Browser sent no response') || msg.includes('Navigation failed')) {
-        console.warn(`Puppeteer crash detected for client ${clientId}. Triggering re-initialization...`);
+    if (msg.includes('Session closed') || msg.includes('target closed') || msg.includes('Browser sent no response') || msg.includes('Navigation failed') || msg.includes('detached Frame')) {
+        console.warn(`Puppeteer crash or detached frame detected for client ${clientId}. Triggering re-initialization...`);
         const clientObj = clients[clientId];
         if (clientObj && typeof clientObj.triggerReconnect === 'function') {
             clientObj.triggerReconnect();
