@@ -1252,7 +1252,6 @@
             modal.style.display = 'flex';
             setTimeout(() => modal.classList.add('active'), 10);
             
-            html5QrcodeScanner = new Html5Qrcode("reader");
             const config = { 
                 fps: 30, // Higher frame rate for much faster scans
                 formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
@@ -1267,12 +1266,6 @@
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning on modern mobile browsers
                 }
-            };
-            
-            const cameraConstraints = { 
-                facingMode: "environment",
-                width: { min: 640, ideal: 1280, max: 1920 }, // Request high-definition stream for far/small codes
-                height: { min: 480, ideal: 720, max: 1080 }
             };
             
             const onScanSuccess = (decodedText) => {
@@ -1313,17 +1306,22 @@
                 // Ignore scanning errors
             };
 
-            // Start scanner with robust fallback logic
-            html5QrcodeScanner.start(cameraConstraints, config, onScanSuccess, onScanFailure)
+            const startWithConstraints = (constraints) => {
+                if (html5QrcodeScanner) {
+                    try {
+                        html5QrcodeScanner.stop().catch(() => {});
+                    } catch(e){}
+                }
+                html5QrcodeScanner = new Html5Qrcode("reader");
+                return html5QrcodeScanner.start(constraints, config, onScanSuccess, onScanFailure);
+            };
+
+            // Attempt 1: Standard environment camera (compatible back-camera mode)
+            startWithConstraints({ facingMode: "environment" })
                 .catch(err => {
-                    console.warn("HD camera constraints failed, retrying with default environment constraints...", err);
-                    // Fallback 1: Try environment mode without resolution constraints
-                    return html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
-                })
-                .catch(err => {
-                    console.warn("Environment camera failed, retrying with default constraints...", err);
-                    // Fallback 2: Try default camera (any available)
-                    return html5QrcodeScanner.start({}, config, onScanSuccess, onScanFailure);
+                    console.warn("Environment camera failed, retrying with default camera...", err);
+                    // Attempt 2: Fallback to default/any camera (like front webcam on laptops)
+                    return startWithConstraints({});
                 })
                 .catch(err => {
                     console.error("All camera scanner attempts failed:", err);
