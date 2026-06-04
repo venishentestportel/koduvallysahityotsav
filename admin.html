@@ -1847,7 +1847,7 @@
                         </div>
                         <!-- Right Side: QR -->
                         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.2rem; background: white;">
-                            <div id="${cardId}" style="width: 85px; height: 85px; margin-bottom: 0.2rem;"></div>
+                            <div id="${cardId}" style="width: 125px; height: 125px; margin-bottom: 0.2rem;"></div>
                             <p style="margin: 0; font-size: 0.35rem; color: #718096; text-align: center; font-weight: bold;">SCAN TO VERIFY</p>
                         </div>
                     `;
@@ -1856,8 +1856,8 @@
                     try {
                         new QRCode(document.getElementById(cardId), {
                             text: row.url,
-                            width: 85,
-                            height: 85,
+                            width: 125,
+                            height: 125,
                             colorDark: "#1a202c",
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
