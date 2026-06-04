@@ -2083,7 +2083,7 @@
                 if (error) throw error;
 
                 container.innerHTML = '';
-                const renderedData = data || insertRows;
+                const renderedData = insertRows;
                 renderedData.forEach((row, idx) => {
                     const cardId = `id-card-gen-${idx}`;
                     const correctUrl = row.url;
@@ -2139,6 +2139,26 @@
                 alert("Failed to generate ID cards: " + err.message);
                 container.innerHTML = '<div style="color: #ef4444; font-size: 0.9rem; text-align: center; width: 100%; padding: 2rem;">Failed to generate cards.</div>';
             }
+        }
+
+        function findColumnKey(row, synonyms) {
+            if (!row) return null;
+            const keys = Object.keys(row);
+            for (const key of keys) {
+                const normalizedKey = key.toLowerCase().trim();
+                if (synonyms.includes(normalizedKey)) {
+                    return key;
+                }
+            }
+            for (const key of keys) {
+                const normalizedKey = key.toLowerCase().trim();
+                for (const syn of synonyms) {
+                    if (normalizedKey.includes(syn) || syn.includes(normalizedKey)) {
+                        return key;
+                    }
+                }
+            }
+            return null;
         }
 
         async function handleGenCardExcelUpload(event) {
