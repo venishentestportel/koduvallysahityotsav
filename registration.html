@@ -1036,6 +1036,25 @@
         }
 
         async function registerFromIdPage(name, unit, cat, prog, stage) {
+            const codeLetterInput = document.getElementById('reg-codeletter');
+            let codeLetterVal = codeLetterInput ? codeLetterInput.value.trim() : '';
+
+            // Prompt the user to verify/enter the code letter
+            const promptVal = prompt("Please type or select a code letter for this student registration:", codeLetterVal);
+            if (promptVal === null) {
+                // User cancelled the prompt, cancel registration
+                return;
+            }
+            codeLetterVal = promptVal.trim();
+            if (!codeLetterVal) {
+                alert("A Code Letter is required to complete the registration.");
+                return;
+            }
+
+            if (codeLetterInput) {
+                codeLetterInput.value = codeLetterVal;
+            }
+
             const btn = document.getElementById('admin-register-btn');
             btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Registering...';
             btn.disabled = true;
@@ -1070,9 +1089,6 @@
                 const progsParam = pParam ? `&progs=${encodeURIComponent(pParam)}` : '';
                 const genProgsParam = gpParam ? `&genprogs=${encodeURIComponent(gpParam)}` : '';
                 const cardUrl = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(name)}&sector=${encodeURIComponent(unit || '')}${progsParam}${genProgsParam}`;
-
-                const codeLetterInput = document.getElementById('reg-codeletter');
-                const codeLetterVal = codeLetterInput ? codeLetterInput.value.trim() : '';
 
                 const { error: registError } = await supabaseClient
                     .from('regist')
