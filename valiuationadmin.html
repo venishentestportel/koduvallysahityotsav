@@ -547,7 +547,8 @@
                 const sector = (student.sector || '').toLowerCase();
                 const program = (student.program || '').toLowerCase();
                 const general = (student.general || '').toLowerCase();
-                return name.includes(query) || sector.includes(query) || program.includes(query) || general.includes(query);
+                const codeletter = (student.codeletter || '').toLowerCase();
+                return name.includes(query) || sector.includes(query) || program.includes(query) || general.includes(query) || codeletter.includes(query);
             });
 
             renderRegistrations(filtered);

@@ -502,6 +502,55 @@
         </div>
     </div>
 
+    <!-- Code Letter Modal -->
+    <div class="success-overlay" id="codeletter-modal" style="z-index: 1003;">
+        <div class="success-modal" style="width: 90%; max-width: 400px; padding: 2rem;">
+            <div class="badge-circle" style="background: #fff8e1;">
+                <i class="fa fa-tag" style="color: #ffb300;"></i>
+            </div>
+            <h2 style="color: #2d3748; margin: 0 0 0.5rem 0;">Enter Code Letter</h2>
+            <p id="codeletter-modal-subtitle" style="color: #718096; margin: 0 0 1.5rem 0; font-size: 0.95rem;">Please type or select a code letter for this student registration.</p>
+            
+            <div class="form-group" style="text-align: left; margin-bottom: 1.5rem;">
+                <label>Code Letter</label>
+                <input type="text" id="modal-codeletter-input" placeholder="Type or select letter (e.g., A)" list="modal-code-letters-list" class="form-control" style="width: 100%;">
+                <datalist id="modal-code-letters-list">
+                    <option value="A"></option>
+                    <option value="B"></option>
+                    <option value="C"></option>
+                    <option value="D"></option>
+                    <option value="E"></option>
+                    <option value="F"></option>
+                    <option value="G"></option>
+                    <option value="H"></option>
+                    <option value="I"></option>
+                    <option value="J"></option>
+                    <option value="K"></option>
+                    <option value="L"></option>
+                    <option value="M"></option>
+                    <option value="N"></option>
+                    <option value="O"></option>
+                    <option value="P"></option>
+                    <option value="Q"></option>
+                    <option value="R"></option>
+                    <option value="S"></option>
+                    <option value="T"></option>
+                    <option value="U"></option>
+                    <option value="V"></option>
+                    <option value="W"></option>
+                    <option value="X"></option>
+                    <option value="Y"></option>
+                    <option value="Z"></option>
+                </datalist>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn-register" id="codeletter-cancel-btn" style="background: #e2e8f0; color: #4a5568; flex: 1; margin: 0;">Cancel</button>
+                <button class="btn-register" id="codeletter-confirm-btn" style="background: #3182ce; color: white; flex: 1; margin: 0;">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         if (!window.WA_BACKEND_URL) {
             const hn = window.location.hostname;
@@ -606,8 +655,8 @@
             const verifiedSector = urlParams.get('sector');
             const verifiedProgs = urlParams.get('progs');
             const verifiedGenProgs = urlParams.get('genprogs');
-            const isAdmin = urlParams.get('admin') === 'true';
-            const adminStage = urlParams.get('stage');
+            const isAdmin = urlParams.get('admin') === 'true' || sessionStorage.getItem('admin_logged_in') === 'true';
+            const adminStage = urlParams.get('stage') || sessionStorage.getItem('admin_stage');
 
             if (verifiedName !== null) {
                 // Show Verification UI
@@ -1035,21 +1084,63 @@
             }
         }
 
+        function showCodeLetterModal(defaultVal, studentName) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('codeletter-modal');
+                const input = document.getElementById('modal-codeletter-input');
+                const subtitle = document.getElementById('codeletter-modal-subtitle');
+                const confirmBtn = document.getElementById('codeletter-confirm-btn');
+                const cancelBtn = document.getElementById('codeletter-cancel-btn');
+
+                if (subtitle && studentName) {
+                    subtitle.innerHTML = `Please type or select a code letter for <strong>${studentName}</strong>.`;
+                }
+
+                if (input) {
+                    input.value = defaultVal || '';
+                }
+
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    if (input) input.focus();
+                }, 10);
+
+                const cleanUp = () => {
+                    modal.classList.remove('active');
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
+                };
+
+                confirmBtn.onclick = () => {
+                    const val = input.value.trim().toUpperCase();
+                    if (!val) {
+                        alert("A Code Letter is required to complete the registration.");
+                        return;
+                    }
+                    cleanUp();
+                    resolve(val);
+                };
+
+                cancelBtn.onclick = () => {
+                    cleanUp();
+                    resolve(null);
+                };
+            });
+        }
+
         async function registerFromIdPage(name, unit, cat, prog, stage) {
             const codeLetterInput = document.getElementById('reg-codeletter');
             let codeLetterVal = codeLetterInput ? codeLetterInput.value.trim() : '';
 
-            // Prompt the user to verify/enter the code letter
-            const promptVal = prompt("Please type or select a code letter for this student registration:", codeLetterVal);
-            if (promptVal === null) {
+            // Show custom code letter modal and await the result
+            const codeLetterResult = await showCodeLetterModal(codeLetterVal, name);
+            if (codeLetterResult === null) {
                 // User cancelled the prompt, cancel registration
                 return;
             }
-            codeLetterVal = promptVal.trim();
-            if (!codeLetterVal) {
-                alert("A Code Letter is required to complete the registration.");
-                return;
-            }
+            codeLetterVal = codeLetterResult;
 
             if (codeLetterInput) {
                 codeLetterInput.value = codeLetterVal;
