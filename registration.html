@@ -1254,11 +1254,28 @@
             
             html5QrcodeScanner = new Html5Qrcode("reader");
             const config = { 
-                fps: 20,
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
+                fps: 30, // Higher frame rate for much faster scans
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+                qrbox: (width, height) => {
+                    const minEdge = Math.min(width, height);
+                    return {
+                        width: Math.floor(minEdge * 0.75), // Large, focused scanning area
+                        height: Math.floor(minEdge * 0.75)
+                    };
+                },
+                aspectRatio: 1.0,
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning on modern mobile browsers
+                }
             };
             
-            html5QrcodeScanner.start({ facingMode: "environment" }, config, (decodedText) => {
+            const cameraConstraints = { 
+                facingMode: "environment",
+                width: { min: 640, ideal: 1280, max: 1920 }, // Request high-definition stream for far/small codes
+                height: { min: 480, ideal: 720, max: 1080 }
+            };
+            
+            html5QrcodeScanner.start(cameraConstraints, config, (decodedText) => {
                 try {
                     const url = new URL(decodedText);
                     const name = url.searchParams.get('name');
