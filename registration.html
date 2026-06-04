@@ -1506,9 +1506,16 @@
             modal.style.display = 'flex';
             setTimeout(() => modal.classList.add('active'), 10);
             
+            // Secure context validation
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Camera access requires a secure connection (HTTPS or localhost). Please load the page securely.");
+                stopScanner();
+                return;
+            }
+
             const config = { 
                 fps: 30, // Higher frame rate for much faster scans
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+                formatsToSupport: (typeof Html5QrcodeSupportedFormats !== 'undefined') ? [ Html5QrcodeSupportedFormats.QR_CODE ] : undefined,
                 qrbox: (width, height) => {
                     const minEdge = Math.min(width, height);
                     return {
@@ -1516,7 +1523,6 @@
                         height: Math.floor(minEdge * 0.75)
                     };
                 },
-                // Removing aspectRatio: 1.0 constraint to allow the browser to negotiate high-resolution widescreen camera modes naturally without cropping/scaling degradation.
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning on modern mobile browsers
                 }
@@ -1560,13 +1566,12 @@
                 // Ignore scanning errors
             };
 
-            const startWithConstraints = (constraints) => {
-                if (html5QrcodeScanner) {
-                    try {
-                        html5QrcodeScanner.stop().catch(() => {});
-                    } catch(e){}
-                }
+            // Instantiate only once
+            if (!html5QrcodeScanner) {
                 html5QrcodeScanner = new Html5Qrcode("reader");
+            }
+
+            const startWithConstraints = (constraints) => {
                 return html5QrcodeScanner.start(constraints, config, onScanSuccess, onScanFailure);
             };
 
@@ -1586,27 +1591,36 @@
                     });
                 })
                 .catch(err => {
-                    console.warn("Attempt 2: 720p rear camera failed, retrying with default camera (no constraints)...", err);
-                    // Attempt 3: Fallback to any default camera device (laptop front webcams, generic cameras)
+                    console.warn("Attempt 2: 720p rear camera failed, retrying with default rear camera...", err);
+                    // Attempt 3: Rear-facing camera with no size constraints
+                    return startWithConstraints({ facingMode: "environment" });
+                })
+                .catch(err => {
+                    console.warn("Attempt 3: Rear camera failed, retrying with default camera (no constraints)...", err);
+                    // Attempt 4: Fallback to any default camera device (laptop front webcams, generic cameras)
                     return startWithConstraints({});
                 })
                 .catch(err => {
                     console.error("All camera scanner attempts failed:", err);
-                    alert("Camera permission denied or not supported. Please ensure camera access is allowed.");
+                    alert("Camera permission denied, or camera is busy, or context is insecure. Please ensure permissions are granted.");
                     stopScanner();
                 });
         }
 
-        function stopScanner() {
+        async function stopScanner() {
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    html5QrcodeScanner.clear();
-                }).catch(e => console.log(e));
+                try {
+                    await html5QrcodeScanner.stop();
+                } catch (e) {
+                    console.warn("Error calling stop on Html5Qrcode:", e);
+                }
                 html5QrcodeScanner = null;
             }
             const modal = document.getElementById('scanner-modal');
-            modal.classList.remove('active');
-            setTimeout(() => modal.style.display = 'none', 300);
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
         }
 
         async function sendSectorNotification(studentName, sector, regularProgsText, generalProgsText, stage) {
