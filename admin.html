@@ -577,6 +577,12 @@
                         <button class="btn preset-cat-btn"
                             style="padding: 0.4rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; background: #f8fafc; color: #64748b; border: none;"
                             onclick="loadPresetCategoryPrograms('GEN')">GEN</button>
+                        <button class="btn preset-cat-btn"
+                            style="padding: 0.4rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; background: #f8fafc; color: #64748b; border: none;"
+                            onclick="loadPresetCategoryPrograms('General Category-A')">General Category-A</button>
+                        <button class="btn preset-cat-btn"
+                            style="padding: 0.4rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; background: #f8fafc; color: #64748b; border: none;"
+                            onclick="loadPresetCategoryPrograms('General Category-b')">General Category-b</button>
                     </div>
 
                     <div id="preset-programs-container"
@@ -2203,9 +2209,11 @@
 
                     function resolveCategory(progName, rowCategory) {
                         if (rowCategory) {
-                            const normCat = rowCategory.toUpperCase().trim();
-                            if (['UP', 'LP', 'HS', 'HSS', 'JR', 'SR', 'GEN'].includes(normCat)) {
-                                return normCat;
+                            const normCat = rowCategory.trim().toLowerCase();
+                            const categoriesList = currentData.categories || ['UP', 'LP', 'HS', 'HSS', 'JR', 'SR', 'GEN', 'General Category-A', 'General Category-b'];
+                            const found = categoriesList.find(c => c.toLowerCase() === normCat);
+                            if (found) {
+                                return found;
                             }
                         }
                         for (const cat of Object.keys(currentData.categoryPrograms || {})) {

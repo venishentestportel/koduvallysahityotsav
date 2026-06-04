@@ -165,7 +165,7 @@ async function fetchSupabaseData() {
         if (contentErr) throw contentErr;
 
         // 1. Categories & Programs (Preset)
-        appData.categories = ['UP', 'LP', 'HS', 'HSS', 'JR', 'SR', 'GEN'];
+        appData.categories = ['UP', 'LP', 'HS', 'HSS', 'JR', 'SR', 'GEN', 'General Category-A', 'General Category-b'];
         appData.programs = []; 
         appData.categoryPrograms = {};
 

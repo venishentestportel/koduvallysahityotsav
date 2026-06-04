@@ -1733,9 +1733,11 @@
 
                     function resolveCategory(progName, rowCategory) {
                         if (rowCategory) {
-                            const normCat = rowCategory.toUpperCase().trim();
-                            if (['UP', 'LP', 'HS', 'HSS', 'JR', 'SR', 'GEN'].includes(normCat)) {
-                                return normCat;
+                            const normCat = rowCategory.trim().toLowerCase();
+                            const categoriesList = currentData.categories || ['UP', 'LP', 'HS', 'HSS', 'JR', 'SR', 'GEN', 'General Category-A', 'General Category-b'];
+                            const found = categoriesList.find(c => c.toLowerCase() === normCat);
+                            if (found) {
+                                return found;
                             }
                         }
                         for (const cat of Object.keys(currentData.categoryPrograms || {})) {

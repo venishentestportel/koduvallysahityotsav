@@ -405,6 +405,9 @@
                     <i class="fa-solid fa-list-ul"></i> View Queue ( <span id="list-count">0</span> )
                 </button>
             </div>
+            
+            <!-- Active Allotted/Registered Students List -->
+            <div id="active-registered-list-container" style="margin-top: 1.5rem; display: none;"></div>
         </div>
 
         <!-- Conductor Dashboard -->
@@ -802,6 +805,13 @@
                     document.getElementById('password-overlay').style.display = 'block';
                 }
             }
+
+            // Restore active allotted/registered students list if set
+            const activeCat = localStorage.getItem('active_conductor_category');
+            const activeProg = localStorage.getItem('active_conductor_program');
+            if (activeCat && activeProg) {
+                loadRegisteredStudentsList(activeCat, activeProg);
+            }
         });
 
         // ================= ADMIN PORTAL LOGIC =================
@@ -1006,6 +1016,20 @@
                 }
 
                 alert(`Successfully triggered: ${situation}`);
+
+                if (situation === 'Start Registration') {
+                    localStorage.setItem('active_conductor_category', cat);
+                    localStorage.setItem('active_conductor_program', prog);
+                    if (typeof loadRegisteredStudentsList === 'function') {
+                        loadRegisteredStudentsList(cat, prog);
+                    }
+                    switchAdminTab('reg-container');
+                } else if (situation === 'End Registration' || situation === 'End Program') {
+                    localStorage.removeItem('active_conductor_category');
+                    localStorage.removeItem('active_conductor_program');
+                    const container = document.getElementById('active-registered-list-container');
+                    if (container) container.style.display = 'none';
+                }
             } catch (err) {
                 console.error(err);
                 alert("Error triggering situation: " + err.message);
@@ -1412,6 +1436,13 @@
             setTimeout(() => {
                 popup.style.display = 'none';
             }, 300);
+
+            // Refresh list if active
+            const activeCat = localStorage.getItem('active_conductor_category');
+            const activeProg = localStorage.getItem('active_conductor_program');
+            if (activeCat && activeProg && typeof loadRegisteredStudentsList === 'function') {
+                loadRegisteredStudentsList(activeCat, activeProg);
+            }
         }
 
         // ================= QR SCANNER LOGIC =================
@@ -1554,6 +1585,128 @@
             } catch (e) {
                 console.error("Error sending sector notification:", e);
                 return { success: false, reason: e.message };
+            }
+        }
+
+        async function loadRegisteredStudentsList(cat, prog) {
+            const container = document.getElementById('active-registered-list-container');
+            if (!container) return;
+
+            if (!cat || !prog) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div style="background: #f8fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #cbd5e0; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #1e293b; font-family: 'Outfit', sans-serif;">
+                            <i class="fa fa-clipboard-list" style="color: #4f46e5; margin-right: 0.5rem;"></i> Allotted Students: <span style="color: #4f46e5;">${cat} - ${prog}</span>
+                        </h3>
+                        <button class="btn-register" onclick="loadRegisteredStudentsList('${cat}', '${prog}')" style="width: auto; padding: 0.4rem 0.8rem; margin: 0; font-size: 0.75rem; background: #3182ce; border-radius: 6px;">
+                            <i class="fa fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="allotted-students-list" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="text-align: center; color: #a0aec0; padding: 1.5rem;"><i class="fa fa-spinner fa-spin"></i> Loading...</div>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const categoryMap = {
+                    'LP': 'Lower Primary',
+                    'UP': 'Upper Primary',
+                    'HS': 'High School',
+                    'HSS': 'Higher Secondary',
+                    'JR': 'Junior',
+                    'SR': 'Senior',
+                    'GEN': 'General',
+                    'General Category-A': 'General Category-A',
+                    'General Category-b': 'General Category-B'
+                };
+
+                const catDbName = categoryMap[cat] || cat;
+
+                // Fetch allotted students from registred
+                const { data: allottedData, error: allottedErr } = await supabaseClient
+                    .from('registred')
+                    .select('*')
+                    .or(`category.ilike.${cat},category.ilike.${catDbName}`);
+
+                if (allottedErr) throw allottedErr;
+
+                // Fetch checked-in students from regist
+                const { data: checkedInData, error: checkedInErr } = await supabaseClient
+                    .from('regist')
+                    .select('name, sector, program, general, codeletter');
+
+                if (checkedInErr) throw checkedInErr;
+
+                // Normalize helper
+                const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
+                const normSearch = normalize(prog);
+
+                // Filter allotted students
+                const filteredAllotted = (allottedData || []).filter(s => {
+                    const p1 = normalize(s['program 1']);
+                    const p2 = normalize(s['program 2']);
+                    const p3 = normalize(s['program 3']);
+                    const p4 = normalize(s['program 4']);
+                    const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                    
+                    return p1 === normSearch || p1.includes(normSearch) ||
+                           p2 === normSearch || p2.includes(normSearch) ||
+                           p3 === normSearch || p3.includes(normSearch) ||
+                           p4 === normSearch || p4.includes(normSearch) ||
+                           gens.some(g => g === normSearch || g.includes(normSearch));
+                });
+
+                const listDiv = document.getElementById('allotted-students-list');
+
+                if (filteredAllotted.length === 0) {
+                    listDiv.innerHTML = '<div style="text-align: center; color: #718096; padding: 1.5rem; font-size: 0.85rem;">No students allotted to this program.</div>';
+                    return;
+                }
+
+                // Render list
+                listDiv.innerHTML = filteredAllotted.map((s, idx) => {
+                    const normName = normalize(s.name);
+                    const isRegistered = (checkedInData || []).find(c => {
+                        if (normalize(c.name) !== normName) return false;
+                        const cProg = normalize(c.program);
+                        const cGen = normalize(c.general);
+                        return cProg.includes(normSearch) || cGen.includes(normSearch) || normSearch.includes(cProg) || normSearch.includes(cGen);
+                    });
+
+                    const statusBadge = isRegistered 
+                        ? `<span style="background: #e6fffa; color: #00875a; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: bold; font-size: 0.75rem; border: 1px solid #b2f5ea; display: flex; align-items: center; gap: 4px;">
+                             <i class="fa fa-check-circle"></i> Registered ${isRegistered.codeletter ? `[${isRegistered.codeletter}]` : ''}
+                           </span>`
+                        : `<span style="background: #f7fafc; color: #718096; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: bold; font-size: 0.75rem; border: 1px solid #cbd5e0;">
+                             Pending
+                           </span>`;
+
+                    return `
+                        <div style="background: white; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                            <div>
+                                <div style="font-weight: 700; color: #2d3748; font-size: 0.9rem;">${idx + 1}. ${s.name}</div>
+                                <div style="font-size: 0.75rem; color: #718096; margin-top: 0.15rem;">
+                                    <i class="fa fa-university" style="margin-right: 0.2rem;"></i> ${s.sector || s.unit || 'Unknown'} 
+                                    ${s['chest no.'] ? `| <i class="fa fa-id-card" style="margin-right: 0.2rem;"></i> Chest No: ${s['chest no.']}` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('allotted-students-list').innerHTML = `<div style="color: #e53e3e; text-align: center; padding: 1.5rem; font-size: 0.85rem;">Error: ${err.message}</div>`;
             }
         }
     </script>
