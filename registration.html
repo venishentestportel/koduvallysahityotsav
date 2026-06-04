@@ -443,7 +443,7 @@
                         <option value="senior">SR</option>
                         <option value="general">GEN</option>
                     </select>
-                    <select id="conductor-prog" class="form-control" style="flex: 1; padding: 0.6rem 2rem 0.6rem 0.8rem; border-radius: 8px; font-size: 0.85rem; background-position: right 0.6rem center; background-size: 1rem;">
+                    <select id="conductor-prog" class="form-control" onchange="loadConductorParticipants()" style="flex: 1; padding: 0.6rem 2rem 0.6rem 0.8rem; border-radius: 8px; font-size: 0.85rem; background-position: right 0.6rem center; background-size: 1rem;">
                         <option value="">-- Program --</option>
                     </select>
                 </div>
@@ -937,6 +937,8 @@
                 progSelect.innerHTML = '<option value="">-- Program --</option>' + 
                     uniqueProgs.map(p => `<option value="${p}">${p}</option>`).join('');
 
+                // Automatically reload participants list for the newly selected category
+                loadConductorParticipants();
             } catch (err) {
                 console.error("Failed to load programs:", err);
                 progSelect.innerHTML = '<option value="">Error loading</option>';
@@ -1045,63 +1047,103 @@
                 return;
             }
 
+            const catSelect = document.getElementById('conductor-cat');
+            const progSelect = document.getElementById('conductor-prog');
+            const cat = catSelect ? catSelect.value.trim() : '';
+            const prog = progSelect ? progSelect.value.trim() : '';
+
+            if (!cat || !prog) {
+                listDiv.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 2rem;">Select a category and program to view participants.</div>';
+                return;
+            }
+
             listDiv.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Loading participants...</div>';
 
             try {
-                let activeProg = document.getElementById('conductor-prog').value.trim();
-                
-                if (!activeProg) {
-                    // Try to fetch from Schedule Manager
-                    const { data: schedData, error: schedErr } = await supabaseClient
-                        .from('Schedule Manager')
-                        .select('*');
-                    if (!schedErr && schedData) {
-                        const row = schedData.find(r => r['Stage Name'] && r['Stage Name'].toLowerCase().trim() === stage.toLowerCase().trim());
-                        if (row && row['Current Program']) {
-                            activeProg = row['Current Program'].replace(/^[- \s]+/, '').trim();
-                        }
-                    }
-                }
+                const categoryMap = {
+                    'LP': 'Lower Primary',
+                    'UP': 'Upper Primary',
+                    'HS': 'High School',
+                    'HSS': 'Higher Secondary',
+                    'JR': 'Junior',
+                    'SR': 'Senior',
+                    'GEN': 'General',
+                    'General Category-A': 'General Category-A',
+                    'General Category-b': 'General Category-B'
+                };
 
-                const tableName = stage.toLowerCase().trim();
-                const { data, error } = await supabaseClient
-                    .from(tableName)
+                const catDbName = categoryMap[cat] || cat;
+
+                // Fetch allotted students from registred table
+                const { data: allottedData, error: allottedErr } = await supabaseClient
+                    .from('registred')
                     .select('*')
-                    .eq('situation', 'Check-in');
+                    .or(`category.ilike.${cat},category.ilike.${catDbName}`);
 
-                if (error) throw error;
+                if (allottedErr) throw allottedErr;
+
+                // Fetch checked-in students from regist table
+                const { data: checkedInData, error: checkedInErr } = await supabaseClient
+                    .from('regist')
+                    .select('name, sector, program, general, codeletter');
+
+                if (checkedInErr) throw checkedInErr;
 
                 // Normalize helper for comparing programs
                 const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
-                const normalizedActiveProg = normalize(activeProg);
+                const normSearch = normalize(prog);
 
-                const filteredData = data.filter(s => {
-                    if (!normalizedActiveProg) return true;
-                    const sProg = normalize(s.Programs);
-                    return sProg === normalizedActiveProg || sProg.includes(normalizedActiveProg) || normalizedActiveProg.includes(sProg);
+                // Filter allotted students by program
+                const filteredAllotted = (allottedData || []).filter(s => {
+                    const p1 = normalize(s['program 1']);
+                    const p2 = normalize(s['program 2']);
+                    const p3 = normalize(s['program 3']);
+                    const p4 = normalize(s['program 4']);
+                    const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                    
+                    return p1 === normSearch || p1.includes(normSearch) ||
+                           p2 === normSearch || p2.includes(normSearch) ||
+                           p3 === normSearch || p3.includes(normSearch) ||
+                           p4 === normSearch || p4.includes(normSearch) ||
+                           gens.some(g => g === normSearch || g.includes(normSearch));
                 });
 
-                if (!filteredData || filteredData.length === 0) {
-                    listDiv.innerHTML = `<div style="text-align: center; color: #718096; padding: 2rem;">No participants checked in for ${stage}${activeProg ? ' (' + activeProg + ')' : ''} yet.</div>`;
+                if (!filteredAllotted || filteredAllotted.length === 0) {
+                    listDiv.innerHTML = `<div style="text-align: center; color: #718096; padding: 2rem;">No students allotted to category "${cat}" and program "${prog}".</div>`;
                     return;
                 }
 
-                listDiv.innerHTML = filteredData.map((s, idx) => `
-                    <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                        <div>
-                            <div style="font-weight: bold; color: #2d3748; font-size: 1.1rem; margin-bottom: 0.2rem;">${idx + 1}. ${s.Categories}</div>
-                            <div style="font-size: 0.85rem; color: #718096;">
-                                <i class="fa fa-music" style="margin-right: 0.2rem; color: #805ad5;"></i> ${s.Programs} (${s.cat || 'N/A'})
+                listDiv.innerHTML = filteredAllotted.map((s, idx) => {
+                    const normName = normalize(s.name);
+                    const isRegistered = (checkedInData || []).find(c => {
+                        if (normalize(c.name) !== normName) return false;
+                        const cProg = normalize(c.program);
+                        const cGen = normalize(c.general);
+                        return cProg.includes(normSearch) || cGen.includes(normSearch) || normSearch.includes(cProg) || normSearch.includes(cGen);
+                    });
+
+                    const statusBadge = isRegistered 
+                        ? `<div style="color: #48bb78; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                             <i class="fa fa-check-circle"></i> Checked-in ${isRegistered.codeletter ? `[${isRegistered.codeletter}]` : ''}
+                           </div>`
+                        : `<div style="color: #a0aec0; font-weight: bold; font-size: 0.8rem;">
+                             Pending
+                           </div>`;
+
+                    return `
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748; font-size: 1.1rem; margin-bottom: 0.2rem;">${idx + 1}. ${s.name}</div>
+                                <div style="font-size: 0.85rem; color: #718096;">
+                                    <i class="fa fa-university" style="margin-right: 0.2rem; color: #805ad5;"></i> ${s.sector || s.unit || 'Unknown'} 
+                                    ${s['chest no.'] ? `(${s['chest no.']})` : ''}
+                                </div>
                             </div>
-                            <div style="font-size: 0.8rem; color: #a0aec0; margin-top: 0.2rem;">
-                                <i class="fa fa-map-marker-alt" style="margin-right: 0.2rem;"></i> ${s.prog || 'N/A'}
-                            </div>
+                            ${statusBadge}
                         </div>
-                        <div style="color: #48bb78; font-weight: bold; font-size: 0.8rem;">
-                            <i class="fa fa-check-circle"></i> Checked-in
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
+
             } catch (err) {
                 console.error(err);
                 listDiv.innerHTML = `<div style="text-align: center; color: #e53e3e; padding: 2rem;">Error loading data: ${err.message}</div>`;
