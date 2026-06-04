@@ -1271,10 +1271,33 @@
             }
 
             // Filter out only those that actually have a URL (i.e., generated cards, not just standard registrations)
-            const idCardsData = window.cardHistoryData.filter(row => row.url);
+            let idCardsData = window.cardHistoryData.filter(row => row.url);
             if (idCardsData.length === 0) {
                 alert("No generated ID cards found. Generate some cards first.");
                 return;
+            }
+
+            const rangeInput = prompt(`Found ${idCardsData.length} cards.\nEnter number of cards to print (e.g., '50' for first 50, '11-30' for a range), or leave blank to print ALL:`);
+            if (rangeInput !== null && rangeInput.trim() !== '') {
+                const parts = rangeInput.split('-');
+                if (parts.length === 2) {
+                    const start = parseInt(parts[0].trim()) - 1;
+                    const end = parseInt(parts[1].trim());
+                    if (!isNaN(start) && !isNaN(end) && start >= 0 && end > start) {
+                        idCardsData = idCardsData.slice(start, end);
+                    } else {
+                        alert("Invalid range format. Proceeding with all cards.");
+                    }
+                } else {
+                    const count = parseInt(rangeInput.trim());
+                    if (!isNaN(count) && count > 0) {
+                        idCardsData = idCardsData.slice(0, count);
+                    } else {
+                        alert("Invalid number format. Proceeding with all cards.");
+                    }
+                }
+            } else if (rangeInput === null) {
+                return; // User cancelled
             }
 
             // Create print container
@@ -1348,7 +1371,7 @@
                         </div>
                         <!-- Right Side: QR -->
                         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.2rem; background: white;">
-                            <div id="${cardId}" style="width: 55px; height: 55px; margin-bottom: 0.2rem;"></div>
+                            <div id="${cardId}" style="width: 85px; height: 85px; margin-bottom: 0.2rem;"></div>
                             <p style="margin: 0; font-size: 0.35rem; color: #718096; text-align: center; font-weight: bold;">SCAN TO VERIFY</p>
                         </div>
                     `;
@@ -1357,8 +1380,8 @@
                     try {
                         new QRCode(document.getElementById(cardId), {
                             text: row.url,
-                            width: 55,
-                            height: 55,
+                            width: 85,
+                            height: 85,
                             colorDark: "#1a202c",
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
