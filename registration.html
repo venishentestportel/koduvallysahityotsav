@@ -1082,13 +1082,6 @@
 
                 if (allottedErr) throw allottedErr;
 
-                // Fetch checked-in students from regist table
-                const { data: checkedInData, error: checkedInErr } = await supabaseClient
-                    .from('regist')
-                    .select('name, sector, program, general, codeletter');
-
-                if (checkedInErr) throw checkedInErr;
-
                 // Normalize helper for comparing programs
                 const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
                 const normSearch = normalize(prog);
@@ -1109,40 +1102,21 @@
                 });
 
                 if (!filteredAllotted || filteredAllotted.length === 0) {
-                    listDiv.innerHTML = `<div style="text-align: center; color: #718096; padding: 2rem;">No students allotted to category "${cat}" and program "${prog}".</div>`;
+                    listDiv.innerHTML = `<div style="text-align: center; color: #718096; padding: 2rem;">No students registered for category "${cat}" and program "${prog}".</div>`;
                     return;
                 }
 
-                listDiv.innerHTML = filteredAllotted.map((s, idx) => {
-                    const normName = normalize(s.name);
-                    const isRegistered = (checkedInData || []).find(c => {
-                        if (normalize(c.name) !== normName) return false;
-                        const cProg = normalize(c.program);
-                        const cGen = normalize(c.general);
-                        return cProg.includes(normSearch) || cGen.includes(normSearch) || normSearch.includes(cProg) || normSearch.includes(cGen);
-                    });
-
-                    const statusBadge = isRegistered 
-                        ? `<div style="color: #48bb78; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
-                             <i class="fa fa-check-circle"></i> Checked-in ${isRegistered.codeletter ? `[${isRegistered.codeletter}]` : ''}
-                           </div>`
-                        : `<div style="color: #a0aec0; font-weight: bold; font-size: 0.8rem;">
-                             Pending
-                           </div>`;
-
-                    return `
-                        <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                            <div>
-                                <div style="font-weight: bold; color: #2d3748; font-size: 1.1rem; margin-bottom: 0.2rem;">${idx + 1}. ${s.name}</div>
-                                <div style="font-size: 0.85rem; color: #718096;">
-                                    <i class="fa fa-university" style="margin-right: 0.2rem; color: #805ad5;"></i> ${s.sector || s.unit || 'Unknown'} 
-                                    ${s['chest no.'] ? `(${s['chest no.']})` : ''}
-                                </div>
+                listDiv.innerHTML = filteredAllotted.map((s, idx) => `
+                    <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <div>
+                            <div style="font-weight: bold; color: #2d3748; font-size: 1.1rem; margin-bottom: 0.2rem;">${idx + 1}. ${s.name}</div>
+                            <div style="font-size: 0.85rem; color: #718096;">
+                                <i class="fa fa-university" style="margin-right: 0.2rem; color: #805ad5;"></i> ${s.sector || s.unit || 'Unknown'} 
+                                ${s['chest no.'] ? `(${s['chest no.']})` : ''}
                             </div>
-                            ${statusBadge}
                         </div>
-                    `;
-                }).join('');
+                    </div>
+                `).join('');
 
             } catch (err) {
                 console.error(err);
