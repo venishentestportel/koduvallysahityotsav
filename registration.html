@@ -318,9 +318,15 @@
                 <p style="color: #718096; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; margin: 0 0 0.2rem 0; letter-spacing: 1px;">Student Name</p>
                 <h1 id="verify-name" style="color: #2d3748; margin: 0; font-size: 2rem; word-break: break-word;">Loading...</h1>
             </div>
-            <div style="background: #ebf8ff; padding: 1rem; border-radius: 12px; border: 1px solid #bee3f8; display: inline-block;">
-                <p style="color: #3182ce; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; margin: 0 0 0.2rem 0;">Sector</p>
-                <h2 id="verify-sector" style="color: #2b6cb0; margin: 0; font-size: 1.5rem;">Loading...</h2>
+            <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <div style="background: #ebf8ff; padding: 0.75rem 1.25rem; border-radius: 12px; border: 1px solid #bee3f8; min-width: 120px;">
+                    <p style="color: #3182ce; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; margin: 0 0 0.2rem 0;">Sector</p>
+                    <h2 id="verify-sector" style="color: #2b6cb0; margin: 0; font-size: 1.3rem; font-weight: 700;">Loading...</h2>
+                </div>
+                <div id="verify-chest-wrapper" style="display: none; background: #fffaf0; padding: 0.75rem 1.25rem; border-radius: 12px; border: 1px solid #feebc8; min-width: 120px;">
+                    <p style="color: #dd6b20; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; margin: 0 0 0.2rem 0;">Chest No</p>
+                    <h2 id="verify-chest" style="color: #dd6b20; margin: 0; font-size: 1.3rem; font-weight: 700;">N/A</h2>
+                </div>
             </div>
             <div style="margin-top: 2.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #48bb78; font-weight: bold;">
                 <i class="fa fa-check-circle" style="font-size: 1.5rem;"></i>
@@ -610,6 +616,14 @@
                 document.getElementById('id-verification-ui').style.display = 'block';
                 document.getElementById('verify-name').innerText = verifiedName || 'Unknown Student';
                 document.getElementById('verify-sector').innerText = verifiedSector || 'N/A';
+
+                const verifiedChest = urlParams.get('chestno');
+                const chestWrapper = document.getElementById('verify-chest-wrapper');
+                const chestEl = document.getElementById('verify-chest');
+                if (verifiedChest && chestWrapper && chestEl) {
+                    chestEl.innerText = verifiedChest;
+                    chestWrapper.style.display = 'block';
+                }
                 
                 const progsContainer = document.getElementById('verify-progs-container');
                 const progsList = document.getElementById('verify-progs-list');

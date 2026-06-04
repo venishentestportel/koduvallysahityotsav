@@ -757,10 +757,9 @@
                             </div>
                             <div style="flex: 2; min-width: 300px;">
                                 <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student
-                                    Names (Comma separated or one per line)</label>
+                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student Names (One per line, e.g. Name - ChestNo)</label>
                                 <textarea id="gen-card-names"
-                                    placeholder="e.g. John Doe, Jane Smith&#10;or multiple lines" rows="3"
+                                    placeholder="e.g. John Doe - 101&#10;Jane Smith - 102&#10;or just Names" rows="3"
                                     style="width: 100%; padding: 0.5rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.85rem; height: 90px;"></textarea>
                             </div>
                             <div style="flex: 100%; margin-top: 0.5rem;">
@@ -1257,6 +1256,7 @@
                     <thead>
                         <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e0;">
                             <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Student Name</th>
+                            <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Chest No</th>
                             <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Sector</th>
                             <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Category</th>
                             <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Programs</th>
@@ -1279,6 +1279,7 @@
                         <td style="padding: 0.75rem 1rem; font-weight: 600; color: #2d3748;">
                             <a href="#" onclick="showCardDetails(${row.id}); return false;" style="color: #3b82f6; text-decoration: none;">${row.name}</a>
                         </td>
+                        <td style="padding: 0.75rem 1rem; color: #c53030; font-weight: bold;">${row['chest no.'] || 'N/A'}</td>
                         <td style="padding: 0.75rem 1rem; color: #4a5568;">${row.sector || 'N/A'}</td>
                         <td style="padding: 0.75rem 1rem; color: #4a5568;">${row.category || 'N/A'}</td>
                         <td style="padding: 0.75rem 1rem; color: #4a5568;">${programs.join(', ') || 'N/A'}</td>
@@ -1451,8 +1452,53 @@
                 return;
             }
 
-            const names = namesText.split(/[\n,]+/).map(n => n.trim()).filter(Boolean);
-            if (names.length === 0) {
+            // Split by newline to support one student per line (with optional chest number)
+            const lines = namesText.split('\n').map(n => n.trim()).filter(Boolean);
+            let students = [];
+            
+            // Check if there are no newlines, but commas are present (for backwards compatibility/comma-separated names without chest number)
+            if (lines.length === 1 && lines[0].includes(',') && !lines[0].includes('-')) {
+                const parts = lines[0].split(',');
+                const lastPart = parts[parts.length - 1].trim();
+                // If last part is not a short alphanumeric chest number/code, then treat all parts as names
+                if (!(/^[A-Za-z0-9\s.]+$/.test(lastPart) && (/\d/.test(lastPart) || lastPart.length <= 6))) {
+                    students = parts.map(p => ({ name: p.trim(), chest: '' })).filter(s => s.name);
+                }
+            }
+            
+            if (students.length === 0) {
+                lines.forEach(line => {
+                    // Try splitting by hyphen, colon, or pipe
+                    const parts = line.split(/[-|:]/);
+                    if (parts.length >= 2) {
+                        const chest = parts.pop().trim();
+                        const name = parts.join('-').trim();
+                        students.push({ name, chest });
+                    } else {
+                        // Check if there is a comma separating Name and Chest No (e.g. "John Doe, 101")
+                        const commaParts = line.split(',');
+                        if (commaParts.length >= 2) {
+                            const last = commaParts[commaParts.length - 1].trim();
+                            if (/^[A-Za-z0-9\s.]+$/.test(last) && (/\d/.test(last) || last.length <= 6)) {
+                                const chest = commaParts.pop().trim();
+                                const name = commaParts.join(',').trim();
+                                students.push({ name, chest });
+                                return;
+                            }
+                        }
+                        
+                        // Check if line ends with a number (e.g. "John Doe 105")
+                        const numMatch = line.match(/(.+?)\s+(\d+[A-Za-z]?|[A-Za-z]?\d+)$/);
+                        if (numMatch) {
+                            students.push({ name: numMatch[1].trim(), chest: numMatch[2].trim() });
+                        } else {
+                            students.push({ name: line, chest: '' });
+                        }
+                    }
+                });
+            }
+
+            if (students.length === 0) {
                 alert("Please enter at least one valid student name.");
                 return;
             }
@@ -1490,11 +1536,12 @@
             container.innerHTML = '<div style="color: #666; font-size: 0.9rem; text-align: center; width: 100%; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Generating cards and saving to database...</div>';
 
             const insertRows = [];
-            names.forEach(name => {
-                const cardUrl = `${baseUrl.replace(/\/$/, '')}/registration.html?name=${encodeURIComponent(name)}&sector=${encodeURIComponent(sector)}${progsParam}${genProgsParam}`;
+            students.forEach(student => {
+                const chestParam = student.chest ? `&chestno=${encodeURIComponent(student.chest)}` : '';
+                const cardUrl = `${baseUrl.replace(/\/$/, '')}/registration.html?name=${encodeURIComponent(student.name)}&sector=${encodeURIComponent(sector)}${progsParam}${genProgsParam}${chestParam}`;
 
                 const dbRow = {
-                    name: name,
+                    name: student.name,
                     sector: sector,
                     category: sharedCategory || null,
                     'program 1': regularProgs[0] ? regularProgs[0].program : null,
@@ -1503,6 +1550,7 @@
                     'program 4': regularProgs[3] ? regularProgs[3].program : null,
                     generals: genProgsParamVal || null,
                     url: cardUrl,
+                    'chest no.': student.chest || null,
                     time: new Date().toISOString()
                 };
                 insertRows.push(dbRow);
@@ -1529,20 +1577,14 @@
                     cardHtml.style = 'width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;';
                     cardHtml.innerHTML = `
                         <!-- Left Side: Info -->
-                        <div style="flex: 2; padding: 2rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
+                        <div style="flex: 2; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
                             <h3 style="margin: 0; font-size: 1.2rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Sahithyolsav 2026</h3>
-                            <h1 style="margin: 0.5rem 0; font-size: 2.2rem; color: #2b6cb0; word-break: break-word;">${row.name}</h1>
-                            <h3 style="margin: 0; font-size: 1.2rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
+                            <h1 style="margin: 0.75rem 0; font-size: 2.4rem; color: #2b6cb0; word-break: break-word; font-weight: 700;">${row.name}</h1>
                             
-                            ${(regularProgs.length > 0 || generalProgs.length > 0) ? `
-                            <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.75rem; flex-grow: 1; overflow-y: auto;">
-                                <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #a0aec0; font-weight: bold;">REGISTERED PROGRAMS:</p>
-                                <ul style="margin: 0; padding-left: 1rem; font-size: 0.95rem; color: #2d3748;">
-                                    ${regularProgs.map(p => `<li>${p.category}: ${p.program}</li>`).join('')}
-                                    ${generalProgs.map(p => `<li>GEN: ${p}</li>`).join('')}
-                                </ul>
+                            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
+                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 1.5rem;">${row['chest no.'] || 'N/A'}</strong></h3>
                             </div>
-                            ` : ''}
                         </div>
                         <!-- Right Side: QR -->
                         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; background: white;">
@@ -1642,6 +1684,8 @@
 
             document.getElementById('details-student-name').innerText = row.name || 'Unknown Student';
             document.getElementById('details-sector').innerText = row.sector || 'N/A';
+            const chestEl = document.getElementById('details-chest');
+            if (chestEl) chestEl.innerText = row['chest no.'] || 'N/A';
             document.getElementById('details-time').innerText = row.time ? new Date(row.time).toLocaleString() : 'N/A';
 
             // Regularly Registered Programs
@@ -4553,6 +4597,10 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.4rem; font-size: 0.85rem; color: #64748b;">
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
                                 <i class="fa fa-map-marker-alt" style="color: #ef4444;"></i> <strong id="details-sector" style="color: #334155;">Sector</strong>
+                            </span>
+                            <span style="color: #cbd5e1;">|</span>
+                            <span style="display: flex; align-items: center; gap: 0.25rem;">
+                                <i class="fa fa-tag" style="color: #eab308;"></i> Chest No: <strong id="details-chest" style="color: #334155;">N/A</strong>
                             </span>
                             <span style="color: #cbd5e1;">|</span>
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
