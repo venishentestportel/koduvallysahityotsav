@@ -1962,7 +1962,7 @@
             const lines = namesText.split('\n').map(n => n.trim()).filter(Boolean);
             let parsedStudents = [];
             
-            lines.forEach(line => {
+            lines.forEach((line, idx) => {
                 // Try splitting by hyphen, colon, or pipe to check for manually entered chest number
                 const parts = line.split(/[-|:]/);
                 let chest = '';
@@ -2000,7 +2000,13 @@
                 let excelStudent = null;
 
                 if (window.genCardExcelStudents && window.genCardExcelStudents.length > 0) {
-                    excelStudent = window.genCardExcelStudents.find(s => s.name.toLowerCase() === name.toLowerCase());
+                    // Try to match by index first to ensure separate rows map correctly
+                    if (window.genCardExcelStudents[idx] && window.genCardExcelStudents[idx].name.toLowerCase() === name.toLowerCase()) {
+                        excelStudent = window.genCardExcelStudents[idx];
+                    } else {
+                        // Fallback to name search
+                        excelStudent = window.genCardExcelStudents.find(s => s.name.toLowerCase() === name.toLowerCase());
+                    }
                     if (excelStudent) {
                         regularProgsList = excelStudent.regularProgs;
                         generalProgsList = excelStudent.generalProgs;
@@ -2196,8 +2202,8 @@
                         throw new Error("Could not find a 'Team Name' or 'Sector' column in the Excel file.");
                     }
 
-                    // Group rows by student name and team name to combine multiple competition lines per student
-                    const grouped = {};
+                    // Process each Excel row separately as its own student card record
+                    const studentsArray = [];
                     const generalProgramsSet = new Set((currentData.categoryPrograms && currentData.categoryPrograms["GEN"]) || []);
 
                     function resolveCategory(progName, rowCategory) {
@@ -2224,49 +2230,40 @@
 
                         if (!name) return; // skip empty rows
 
-                        const key = `${name.toLowerCase()}|${team.toLowerCase()}`;
-                        if (!grouped[key]) {
-                            grouped[key] = {
-                                name: name,
-                                sector: team,
-                                category: category,
-                                chest: chest,
-                                regularProgs: [],
-                                generalProgs: []
-                            };
-                        }
+                        const student = {
+                            name: name,
+                            sector: team,
+                            category: category,
+                            chest: chest,
+                            regularProgs: [],
+                            generalProgs: []
+                        };
 
                         if (competition) {
                             const resolvedCat = resolveCategory(competition, category);
                             if (resolvedCat === 'GEN' || generalProgramsSet.has(competition)) {
-                                if (!grouped[key].generalProgs.includes(competition)) {
-                                    grouped[key].generalProgs.push(competition);
-                                }
+                                student.generalProgs.push(competition);
                             } else {
-                                if (!grouped[key].regularProgs.some(p => p.program === competition)) {
-                                    grouped[key].regularProgs.push({
-                                        category: resolvedCat,
-                                        program: competition
-                                    });
-                                }
-                                if (!grouped[key].category || grouped[key].category === 'GEN') {
-                                    grouped[key].category = resolvedCat;
+                                student.regularProgs.push({
+                                    category: resolvedCat,
+                                    program: competition
+                                });
+                                if (!student.category || student.category === 'GEN') {
+                                    student.category = resolvedCat;
                                 }
                             }
                         }
 
-                        if (chest && !grouped[key].chest) {
-                            grouped[key].chest = chest;
-                        }
+                        studentsArray.push(student);
                     });
 
-                    const studentsArray = Object.values(grouped);
-                    if (studentsArray.length === 0) {
+                    const studentsArrayLoaded = studentsArray;
+                    if (studentsArrayLoaded.length === 0) {
                         throw new Error("No valid student records found in the Excel file.");
                     }
 
                     // Autofill the card generation inputs!
-                    const sectors = [...new Set(studentsArray.map(s => s.sector))];
+                    const sectors = [...new Set(studentsArrayLoaded.map(s => s.sector))];
                     if (sectors.length === 1) {
                         document.getElementById('gen-card-sector').value = sectors[0];
                     } else {
@@ -2274,7 +2271,7 @@
                     }
 
                     // Save parsed Excel students globally
-                    window.genCardExcelStudents = studentsArray;
+                    window.genCardExcelStudents = studentsArrayLoaded;
 
                     infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArray.length} student(s) from Excel.</span>`;
                     
