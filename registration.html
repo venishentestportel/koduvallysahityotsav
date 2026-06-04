@@ -1514,18 +1514,9 @@
             }
 
             const config = { 
-                fps: 30, // Higher frame rate for much faster scans
-                formatsToSupport: (typeof Html5QrcodeSupportedFormats !== 'undefined') ? [ Html5QrcodeSupportedFormats.QR_CODE ] : undefined,
-                qrbox: (width, height) => {
-                    const minEdge = Math.min(width, height);
-                    return {
-                        width: Math.floor(minEdge * 0.75), // Large, focused scanning area
-                        height: Math.floor(minEdge * 0.75)
-                    };
-                },
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning on modern mobile browsers
-                }
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
             };
             
             const onScanSuccess = (decodedText) => {
@@ -1571,40 +1562,54 @@
                 html5QrcodeScanner = new Html5Qrcode("reader");
             }
 
-            const startWithConstraints = (constraints) => {
-                return html5QrcodeScanner.start(constraints, config, onScanSuccess, onScanFailure);
-            };
-
-            // Attempt 1: Full HD (1080p) rear-facing camera for maximum quality and sharpness
-            startWithConstraints({ 
-                facingMode: "environment",
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            })
-                .catch(err => {
-                    console.warn("Attempt 1: 1080p rear camera failed, trying 720p rear camera...", err);
-                    // Attempt 2: HD (720p) rear-facing camera fallback
-                    return startWithConstraints({ 
-                        facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+            // Ask for permissions and get cameras
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    let cameraId = devices[0].id;
+                    // Try to find a back camera
+                    for (let i = 0; i < devices.length; i++) {
+                        const label = devices[i].label.toLowerCase();
+                        if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+                            cameraId = devices[i].id;
+                            break;
+                        }
+                    }
+                    
+                    html5QrcodeScanner.start(
+                        cameraId,
+                        config,
+                        onScanSuccess,
+                        onScanFailure
+                    ).catch(err => {
+                        console.error("Camera start failed with cameraId:", err);
+                        // Fallback to environment facingMode
+                        html5QrcodeScanner.start(
+                            { facingMode: "environment" },
+                            config,
+                            onScanSuccess,
+                            onScanFailure
+                        ).catch(e => {
+                            alert("Could not start camera. Please ensure permissions are granted.");
+                            stopScanner();
+                        });
                     });
-                })
-                .catch(err => {
-                    console.warn("Attempt 2: 720p rear camera failed, retrying with default rear camera...", err);
-                    // Attempt 3: Rear-facing camera with no size constraints
-                    return startWithConstraints({ facingMode: "environment" });
-                })
-                .catch(err => {
-                    console.warn("Attempt 3: Rear camera failed, retrying with default camera (no constraints)...", err);
-                    // Attempt 4: Fallback to any default camera device (laptop front webcams, generic cameras)
-                    return startWithConstraints({});
-                })
-                .catch(err => {
-                    console.error("All camera scanner attempts failed:", err);
-                    alert("Camera permission denied, or camera is busy, or context is insecure. Please ensure permissions are granted.");
-                    stopScanner();
-                });
+                } else {
+                    // Fallback if getCameras returns empty but didn't throw
+                    html5QrcodeScanner.start(
+                        { facingMode: "environment" },
+                        config,
+                        onScanSuccess,
+                        onScanFailure
+                    ).catch(err => {
+                        alert("No cameras found or permission denied.");
+                        stopScanner();
+                    });
+                }
+            }).catch(err => {
+                console.error("Error getting cameras:", err);
+                alert("Camera permission denied. Please grant permissions and try again.");
+                stopScanner();
+            });
         }
 
         async function stopScanner() {
