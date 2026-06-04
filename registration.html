@@ -1275,7 +1275,7 @@
                 height: { min: 480, ideal: 720, max: 1080 }
             };
             
-            html5QrcodeScanner.start(cameraConstraints, config, (decodedText) => {
+            const onScanSuccess = (decodedText) => {
                 try {
                     const url = new URL(decodedText);
                     const name = url.searchParams.get('name');
@@ -1307,12 +1307,29 @@
                 } catch (e) {
                     // Ignore, maybe not a valid URL
                 }
-            }, (error) => {
+            };
+
+            const onScanFailure = (error) => {
                 // Ignore scanning errors
-            }).catch(err => {
-                alert("Camera permission denied or not supported.");
-                stopScanner();
-            });
+            };
+
+            // Start scanner with robust fallback logic
+            html5QrcodeScanner.start(cameraConstraints, config, onScanSuccess, onScanFailure)
+                .catch(err => {
+                    console.warn("HD camera constraints failed, retrying with default environment constraints...", err);
+                    // Fallback 1: Try environment mode without resolution constraints
+                    return html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+                })
+                .catch(err => {
+                    console.warn("Environment camera failed, retrying with default constraints...", err);
+                    // Fallback 2: Try default camera (any available)
+                    return html5QrcodeScanner.start({}, config, onScanSuccess, onScanFailure);
+                })
+                .catch(err => {
+                    console.error("All camera scanner attempts failed:", err);
+                    alert("Camera permission denied or not supported. Please ensure camera access is allowed.");
+                    stopScanner();
+                });
         }
 
         function stopScanner() {
