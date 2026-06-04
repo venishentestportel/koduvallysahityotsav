@@ -1332,26 +1332,26 @@
                 for (; i < end; i++) {
                     const row = idCardsData[i];
                     
-                    const cardId = \`print-qr-\${row.id || i}\`;
+                    const cardId = `print-qr-${row.id || i}`;
                     const card = document.createElement('div');
                     // Style matching 3.4 x 2.1 inches (Standard CR80 size)
                     card.style.cssText = 'width: 3.4in; height: 2.1in; border: 1px solid #000; box-sizing: border-box; display: flex; overflow: hidden; background: white; border-radius: 8px; break-inside: avoid; page-break-inside: avoid;';
-                    card.innerHTML = \`
+                    card.innerHTML = `
                         <!-- Left Side: Info -->
                         <div style="flex: 2; padding: 0.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px dashed #cbd5e0; background: #f8fafc;">
                             <h3 style="margin: 0; font-size: 0.45rem; color: #718096; font-weight: 600; text-transform: uppercase;">Sahithyolsav 2026</h3>
-                            <h1 style="margin: 0.2rem 0; font-size: 0.85rem; color: #2b6cb0; word-break: break-word; font-weight: 700; line-height: 1.1;">\${row.name || 'Unknown'}</h1>
+                            <h1 style="margin: 0.2rem 0; font-size: 0.85rem; color: #2b6cb0; word-break: break-word; font-weight: 700; line-height: 1.1;">${row.name || 'Unknown'}</h1>
                             <div style="margin-top: 0.2rem; border-top: 1px solid #e2e8f0; padding-top: 0.2rem;">
-                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Sector: <strong>\${row.sector || 'N/A'}</strong></h3>
-                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 0.7rem;">\${row['chest no.'] || 'N/A'}</strong></h3>
+                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
+                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 0.7rem;">${row['chest no.'] || 'N/A'}</strong></h3>
                             </div>
                         </div>
                         <!-- Right Side: QR -->
                         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.2rem; background: white;">
-                            <div id="\${cardId}" style="width: 55px; height: 55px; margin-bottom: 0.2rem;"></div>
+                            <div id="${cardId}" style="width: 55px; height: 55px; margin-bottom: 0.2rem;"></div>
                             <p style="margin: 0; font-size: 0.35rem; color: #718096; text-align: center; font-weight: bold;">SCAN TO VERIFY</p>
                         </div>
-                    \`;
+                    `;
                     printContainer.appendChild(card);
                     
                     try {
