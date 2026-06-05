@@ -2035,53 +2035,42 @@
                 html5QrcodeScanner = new Html5Qrcode("reader");
             }
 
-            // Ask for permissions and get cameras
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    let cameraId = devices[0].id;
-                    // Try to find a back camera
-                    for (let i = 0; i < devices.length; i++) {
-                        const label = devices[i].label.toLowerCase();
-                        if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
-                            cameraId = devices[i].id;
-                            break;
+            // Try to start camera using environment facingMode directly first
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.warn("Failed to start with facingMode environment, falling back to getCameras:", err);
+                // Fallback if environment direct start fails
+                Html5Qrcode.getCameras().then(devices => {
+                    if (devices && devices.length) {
+                        let cameraId = devices[0].id;
+                        for (let i = 0; i < devices.length; i++) {
+                            const label = devices[i].label.toLowerCase();
+                            if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+                                cameraId = devices[i].id;
+                                break;
+                            }
                         }
-                    }
-                    
-                    html5QrcodeScanner.start(
-                        cameraId,
-                        config,
-                        onScanSuccess,
-                        onScanFailure
-                    ).catch(err => {
-                        console.error("Camera start failed with cameraId:", err);
-                        // Fallback to environment facingMode
                         html5QrcodeScanner.start(
-                            { facingMode: "environment" },
+                            cameraId,
                             config,
                             onScanSuccess,
                             onScanFailure
-                        ).catch(e => {
+                        ).catch(err2 => {
                             alert("Could not start camera. Please ensure permissions are granted.");
                             stopScanner();
                         });
-                    });
-                } else {
-                    // Fallback if getCameras returns empty but didn't throw
-                    html5QrcodeScanner.start(
-                        { facingMode: "environment" },
-                        config,
-                        onScanSuccess,
-                        onScanFailure
-                    ).catch(err => {
-                        alert("No cameras found or permission denied.");
+                    } else {
+                        alert("No cameras found.");
                         stopScanner();
-                    });
-                }
-            }).catch(err => {
-                console.error("Error getting cameras:", err);
-                alert("Camera permission denied. Please grant permissions and try again.");
-                stopScanner();
+                    }
+                }).catch(err3 => {
+                    alert("Camera access failed: " + err3);
+                    stopScanner();
+                });
             });
         }
 
