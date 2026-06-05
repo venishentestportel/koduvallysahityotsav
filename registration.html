@@ -1116,6 +1116,25 @@
                     }
                 }
 
+                // Remove Programs that have already Ended
+                if (stage && uniqueProgs.length > 0) {
+                    try {
+                        const tableName = stage.toLowerCase().trim();
+                        const { data: endedData, error: endedErr } = await supabaseClient
+                            .from(tableName)
+                            .select('Programs')
+                            .eq('situation', 'End Program')
+                            .eq('Categories', cat);
+                        
+                        if (!endedErr && endedData && endedData.length > 0) {
+                            const endedProgs = endedData.map(d => d.Programs);
+                            uniqueProgs = uniqueProgs.filter(p => !endedProgs.includes(p));
+                        }
+                    } catch (e) {
+                        console.warn("Could not check ended programs", e);
+                    }
+                }
+
                 if (uniqueProgs.length === 0) {
                     progSelect.innerHTML = '<option value="">No Programs Scheduled</option>';
                     localStorage.setItem('conductor_draft_program', '');
@@ -1228,6 +1247,11 @@
                     localStorage.removeItem('active_conductor_program');
                     const container = document.getElementById('active-registered-list-container');
                     if (container) container.style.display = 'none';
+                    
+                    if (situation === 'End Program') {
+                        // Refresh the program list to remove the ended program from the dropdown
+                        loadConductorPrograms();
+                    }
                 }
             } catch (err) {
                 console.error(err);
