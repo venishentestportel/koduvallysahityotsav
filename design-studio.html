@@ -1512,7 +1512,7 @@
 
                             <!-- QR Code (Middle) -->
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 3px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div id="${cardId}" style="width: 82px; height: 82px;"></div>
+                                <div id="${cardId}" style="width: 92px; height: 92px;"></div>
                             </div>
 
                             <!-- Chest No (Bottom) -->
@@ -1527,8 +1527,8 @@
                     try {
                         new QRCode(document.getElementById(cardId), {
                             text: row.url,
-                            width: 82,
-                            height: 82,
+                            width: 92,
+                            height: 92,
                             colorDark: "#000000",
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
