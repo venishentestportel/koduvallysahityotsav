@@ -664,6 +664,64 @@
             const adminStage = urlParams.get('stage') || localStorage.getItem('admin_stage');
 
             if (verifiedName !== null) {
+                // EARLY VERIFICATION: Check allotment immediately if conductor is running a session
+                const activeCat = localStorage.getItem('active_conductor_category');
+                const activeProg = localStorage.getItem('active_conductor_program');
+                
+                if (activeCat && activeProg && isAdmin) {
+                    try {
+                        const { data: allottedData, error: allottedErr } = await supabaseClient
+                            .from('registred')
+                            .select('*')
+                            .eq('name', verifiedName);
+
+                        let isAllotted = false;
+                        if (allottedData && allottedData.length > 0) {
+                            const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
+                            const normUnit = normalize(verifiedSector);
+                            const normActiveCat = normalize(activeCat);
+                            const normActiveProg = normalize(activeProg);
+                            const categoryMap = {
+                                'LP': 'Lower Primary', 'UP': 'Upper Primary', 'HS': 'High School',
+                                'HSS': 'Higher Secondary', 'JR': 'Junior', 'SR': 'Senior',
+                                'GEN': 'General', 'General Category-A': 'General Category-A', 'General Category-b': 'General Category-B'
+                            };
+                            const normDbCat = normalize(categoryMap[activeCat] || activeCat);
+
+                            isAllotted = allottedData.some(s => {
+                                // 1. Sector check
+                                const sUnit = normalize(s.sector || s.unit || s.prog);
+                                if (sUnit && normUnit && sUnit !== normUnit) return false;
+
+                                // 2. Category check
+                                const sCat = normalize(s.category);
+                                if (activeCat !== 'GEN' && sCat && normActiveCat && sCat !== normActiveCat && sCat !== normDbCat) return false;
+
+                                // 3. Program check
+                                const p1 = normalize(s['program 1']);
+                                const p2 = normalize(s['program 2']);
+                                const p3 = normalize(s['program 3']);
+                                const p4 = normalize(s['program 4']);
+                                const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                                
+                                return p1 === normActiveProg || p1.includes(normActiveProg) ||
+                                       p2 === normActiveProg || p2.includes(normActiveProg) ||
+                                       p3 === normActiveProg || p3.includes(normActiveProg) ||
+                                       p4 === normActiveProg || p4.includes(normActiveProg) ||
+                                       gens.some(g => g === normActiveProg || g.includes(normActiveProg));
+                            });
+                        }
+
+                        if (!isAllotted) {
+                            alert(`Verification Failed!\n\nStudent "${verifiedName}" (Sector: ${verifiedSector || 'N/A'}) is NOT found in the official allotted list for:\nCategory: ${activeCat}\nProgram: ${activeProg}\n\nRegistration Blocked.`);
+                            window.location.href = window.location.pathname; // Kick back to main screen
+                            return; // Stop rendering
+                        }
+                    } catch (e) {
+                        console.error("Early verification error:", e);
+                    }
+                }
+
                 // Show Verification UI
                 document.getElementById('password-overlay').style.display = 'none';
                 document.getElementById('admin-wrapper').style.display = 'none';
