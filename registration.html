@@ -398,6 +398,30 @@
                 <i class="fa-solid fa-table-cells-large"></i> Launch ID Scanner
             </button>
 
+            <!-- Manual Category and Program Selection -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1.2rem; border-radius: 12px; margin-bottom: 1rem;">
+                <h3 style="margin-top: 0; color: #14532d; font-size: 1rem; margin-bottom: 0.8rem; font-family: 'Outfit', sans-serif;">
+                    <i class="fa fa-list"></i> Select Category & Program
+                </h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select id="reg-cat" class="form-control" onchange="loadRegPrograms()" style="flex: 1; padding: 0.6rem 2rem 0.6rem 0.8rem; border-radius: 8px; font-size: 0.85rem; background-position: right 0.6rem center; background-size: 1rem; cursor: pointer; outline: none; border: 1px solid #bbf7d0;">
+                        <option value="">-- Category --</option>
+                        <option value="LP">LP</option>
+                        <option value="UP">UP</option>
+                        <option value="HS">HS</option>
+                        <option value="HSS">HSS</option>
+                        <option value="JR">JR</option>
+                        <option value="SR">SR</option>
+                        <option value="GEN">GEN</option>
+                        <option value="General Category-A">General Category-A</option>
+                        <option value="General Category-b">General Category-b</option>
+                    </select>
+                    <select id="reg-prog" class="form-control" onchange="loadRegParticipants()" style="flex: 1; padding: 0.6rem 2rem 0.6rem 0.8rem; border-radius: 8px; font-size: 0.85rem; background-position: right 0.6rem center; background-size: 1rem; cursor: pointer; outline: none; border: 1px solid #bbf7d0;">
+                        <option value="">-- Program --</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="button-container">
                 <button class="btn-register btn-outline" id="view-list-btn" onclick="viewList()">
                     <i class="fa-solid fa-list-ul"></i> View Queue ( <span id="list-count">0</span> )
@@ -606,6 +630,11 @@
                 catSelect.innerHTML = '<option value="">-- No Categories Scheduled --</option>';
                 const progSelect = document.getElementById('conductor-prog');
                 if (progSelect) progSelect.innerHTML = '<option value="">-- No Programs Scheduled --</option>';
+                
+                const regCatSelect = document.getElementById('reg-cat');
+                if (regCatSelect) regCatSelect.innerHTML = '<option value="">-- No Categories Scheduled --</option>';
+                const regProgSelect = document.getElementById('reg-prog');
+                if (regProgSelect) regProgSelect.innerHTML = '<option value="">-- No Programs Scheduled --</option>';
                 return;
             }
 
@@ -626,6 +655,18 @@
                 catSelect.value = currentVal;
             } else {
                 localStorage.setItem('conductor_draft_category', '');
+            }
+
+            const regCatSelect = document.getElementById('reg-cat');
+            if (regCatSelect) {
+                const currentRegVal = regCatSelect.value;
+                regCatSelect.innerHTML = '<option value="">-- Category --</option>' + 
+                    allowedCats.map(c => `<option value="${c}">${catMap[c] || c}</option>`).join('');
+                if (allowedCats.includes(currentRegVal)) {
+                    regCatSelect.value = currentRegVal;
+                } else {
+                    localStorage.setItem('reg_draft_category', '');
+                }
             }
         }
 
@@ -946,6 +987,20 @@
                     progSelect.value = activeProg;
                     progSelect.disabled = true;
                 }
+
+                // Lock manual registration selectors as well if active conductor session
+                const regCatSelect = document.getElementById('reg-cat');
+                const regProgSelect = document.getElementById('reg-prog');
+                if (regCatSelect) {
+                    regCatSelect.value = activeCat;
+                    regCatSelect.disabled = true;
+                }
+                if (regProgSelect) {
+                    regProgSelect.innerHTML = `<option value="${activeProg}">${activeProg}</option>`;
+                    regProgSelect.value = activeProg;
+                    regProgSelect.disabled = true;
+                }
+
                 loadRegisteredStudentsList(activeCat, activeProg);
             } else {
                 // Apply schedules before loading draft category
@@ -958,6 +1013,16 @@
                     if (catSelect) {
                         catSelect.value = savedCat;
                         loadConductorPrograms();
+                    }
+                }
+
+                // Restore draft category and program in Registration Dashboard
+                const savedRegCat = localStorage.getItem('reg_draft_category');
+                if (savedRegCat) {
+                    const regCatSelect = document.getElementById('reg-cat');
+                    if (regCatSelect) {
+                        regCatSelect.value = savedRegCat;
+                        loadRegPrograms();
                     }
                 }
             }
@@ -1163,6 +1228,88 @@
             }
         }
 
+        async function loadRegPrograms() {
+            const catSelect = document.getElementById('reg-cat');
+            const cat = catSelect ? catSelect.value.trim() : '';
+            const progSelect = document.getElementById('reg-prog');
+            
+            // Save category draft
+            localStorage.setItem('reg_draft_category', cat);
+
+            if (!cat) {
+                progSelect.innerHTML = '<option value="">-- Program --</option>';
+                localStorage.setItem('reg_draft_program', '');
+                loadRegParticipants();
+                return;
+            }
+
+            progSelect.innerHTML = '<option value="">Loading...</option>';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from(cat)
+                    .select('Programs')
+                    .not('Programs', 'is', null);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    progSelect.innerHTML = '<option value="">No Programs Found</option>';
+                    localStorage.setItem('reg_draft_program', '');
+                    loadRegParticipants();
+                    return;
+                }
+
+                // Filter out duplicates and sort alphabetically
+                let uniqueProgs = [...new Set(data.map(d => d.Programs))].sort();
+
+                // Apply Stage Schedule Filtering
+                const stage = localStorage.getItem('admin_stage');
+                if (stage && globalStageSchedules) {
+                    const sched = globalStageSchedules[stage.toLowerCase().trim()];
+                    if (sched && sched.length > 0) {
+                        const allowedProgs = sched.filter(s => s.cat === cat).map(s => s.prog);
+                        uniqueProgs = uniqueProgs.filter(p => allowedProgs.includes(p));
+                    }
+                }
+
+                if (uniqueProgs.length === 0) {
+                    progSelect.innerHTML = '<option value="">No Programs Scheduled</option>';
+                    localStorage.setItem('reg_draft_program', '');
+                    loadRegParticipants();
+                    return;
+                }
+
+                progSelect.innerHTML = '<option value="">-- Program --</option>' + 
+                    uniqueProgs.map(p => `<option value="${p}">${p}</option>`).join('');
+
+                // Restore saved program draft if it exists in the newly loaded list
+                const savedProg = localStorage.getItem('reg_draft_program');
+                if (savedProg && uniqueProgs.includes(savedProg)) {
+                    progSelect.value = savedProg;
+                } else {
+                    localStorage.setItem('reg_draft_program', '');
+                }
+
+                loadRegParticipants();
+            } catch (err) {
+                console.error("Failed to load registration programs:", err);
+                progSelect.innerHTML = '<option value="">Error loading</option>';
+            }
+        }
+
+        function loadRegParticipants() {
+            const catSelect = document.getElementById('reg-cat');
+            const cat = catSelect ? catSelect.value : '';
+            const progSelect = document.getElementById('reg-prog');
+            const prog = progSelect ? progSelect.value : '';
+            
+            // Save program draft
+            localStorage.setItem('reg_draft_program', prog);
+
+            loadRegisteredStudentsList(cat, prog);
+        }
+
         function switchAdminTab(tabId) {
             document.getElementById('reg-container').style.display = 'none';
             document.getElementById('conductor-container').style.display = 'none';
@@ -1246,6 +1393,19 @@
                     if (catSelect) catSelect.disabled = true;
                     if (progSelect) progSelect.disabled = true;
 
+                    // Lock Registration tab selectors as well!
+                    const regCatSelect = document.getElementById('reg-cat');
+                    const regProgSelect = document.getElementById('reg-prog');
+                    if (regCatSelect) {
+                        regCatSelect.value = cat;
+                        regCatSelect.disabled = true;
+                    }
+                    if (regProgSelect) {
+                        regProgSelect.innerHTML = `<option value="${prog}">${prog}</option>`;
+                        regProgSelect.value = prog;
+                        regProgSelect.disabled = true;
+                    }
+
                     if (typeof loadRegisteredStudentsList === 'function') {
                         loadRegisteredStudentsList(cat, prog);
                     }
@@ -1259,11 +1419,18 @@
                     if (catSelect) catSelect.disabled = false;
                     if (progSelect) progSelect.disabled = false;
 
+                    // Unlock Registration tab selectors as well!
+                    const regCatSelect = document.getElementById('reg-cat');
+                    const regProgSelect = document.getElementById('reg-prog');
+                    if (regCatSelect) regCatSelect.disabled = false;
+                    if (regProgSelect) regProgSelect.disabled = false;
+
                     const container = document.getElementById('active-registered-list-container');
                     if (container) container.style.display = 'none';
                     
                     // Refresh the program list to remove the ended program from the dropdown
                     loadConductorPrograms();
+                    loadRegPrograms(); // Refresh registration programs list too!
                 } else if (situation === 'End Registration') {
                     const container = document.getElementById('active-registered-list-container');
                     if (container) container.style.display = 'none';
@@ -1760,9 +1927,9 @@
                 popup.style.display = 'none';
             }, 300);
 
-            // Refresh list if active
-            const activeCat = localStorage.getItem('active_conductor_category');
-            const activeProg = localStorage.getItem('active_conductor_program');
+            // Refresh list if active or manually selected
+            const activeCat = localStorage.getItem('active_conductor_category') || (document.getElementById('reg-cat') ? document.getElementById('reg-cat').value : '');
+            const activeProg = localStorage.getItem('active_conductor_program') || (document.getElementById('reg-prog') ? document.getElementById('reg-prog').value : '');
             if (activeCat && activeProg && typeof loadRegisteredStudentsList === 'function') {
                 loadRegisteredStudentsList(activeCat, activeProg);
             }
