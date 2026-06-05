@@ -2091,9 +2091,8 @@
                                 <div style="font-size: 0.65rem; font-weight: 700; color: #0f172a; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.sector || 'N/A'}</div>
                             </div>
 
-                            <!-- QR Code (Middle) -->
-                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 2px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div id="${cardId}" style="width: 112px; height: 112px;"></div>
+                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 2px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <div id="${cardId}" style="width: 116px; height: 116px;"></div>
                             </div>
 
                             <!-- Chest No (Bottom) -->
@@ -2114,8 +2113,8 @@
                         }
                         new QRCode(document.getElementById(cardId), {
                             text: correctUrl,
-                            width: 112,
-                            height: 112,
+                            width: 116,
+                            height: 116,
                             colorDark: "#000000",
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
@@ -3582,8 +3581,8 @@
             if (urlVal) {
                 new QRCode(qrContainer, {
                     text: urlVal,
-                    width: 180,
-                    height: 180,
+                    width: 190,
+                    height: 190,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
@@ -3648,8 +3647,8 @@
             setTimeout(() => {
                 new QRCode(document.getElementById(`print-qr-${cardId}`), {
                     text: correctUrl,
-                    width: 190,
-                    height: 190,
+                    width: 200,
+                    height: 200,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
