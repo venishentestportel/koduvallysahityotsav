@@ -481,6 +481,9 @@
                 <div class="sidebar-link" onclick="switchTab('conductor', this)">
                     <i class="fa fa-microphone"></i> Conductor Manager
                 </div>
+                <div class="sidebar-link" onclick="switchTab('allotment-upload', this)">
+                    <i class="fa fa-upload"></i> Allotment Upload
+                </div>
                 <div class="sidebar-link" onclick="switchTab('generate-card', this)">
                     <i class="fa fa-address-card"></i> Generate Card
                 </div>
@@ -1278,6 +1281,36 @@
             </div>
 
 
+            <!-- Section: Allotment Upload -->
+            <div id="section-allotment-upload" class="admin-section-content">
+                <div class="admin-section" style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <h2 style="margin: 0 0 0.5rem 0; color: #2d3748;">Allotment Upload</h2>
+                    <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 1.5rem;">Import students list from Excel/CSV to populate the eligible students database (`registred` table).</p>
+
+                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #2d3748; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa fa-file-excel" style="color: #38a169;"></i> Excel/CSV Import
+                        </h3>
+                        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                            <input type="file" id="allotment-excel-file" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleAllotmentExcelUpload(event)">
+                            <button class="btn" type="button" style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('allotment-excel-file').click()">
+                                <i class="fa fa-file-excel" style="color: #38a169;"></i> Select Excel File
+                            </button>
+                            <span id="allotment-excel-info" style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns: Participant Name, Team Name, Category, Chest Number, Competition</span>
+                        </div>
+                    </div>
+
+                    <!-- Excel Preview Container -->
+                    <div id="allotment-preview-container" style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;"></div>
+
+                    <div style="margin-top: 1.2rem; display: flex; gap: 0.75rem;">
+                        <button class="btn btn-save" id="allotment-upload-btn" onclick="uploadAllotmentList()" style="margin-bottom: 0; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; background: #3182ce; color: white; display: none;">
+                            <i class="fa fa-cloud-upload-alt"></i> Upload Allotment List to Database
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Section: Generate ID Cards -->
             <div id="section-generate-card" class="admin-section-content">
                 <div class="admin-section">
@@ -1285,37 +1318,29 @@
 
                     <div
                         style="background: #f7fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">Card Details</h3>
+                        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">Card Details (Single Student)</h3>
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
+                            <div style="flex: 1; min-width: 250px;">
                                 <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Sector</label>
-                                <input type="text" id="gen-card-sector" placeholder="Enter Sector Name..."
-                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; height: 38px; font-size: 0.85rem;">
+                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student Name</label>
+                                <input type="text" id="gen-card-name" placeholder="Enter Student Name..."
+                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; height: 38px; font-size: 0.85rem; margin-bottom: 0.8rem;">
 
                                 <label
-                                    style="display: block; font-weight: bold; margin: 0.8rem 0 0.4rem 0; color: #4a5568; font-size: 0.8rem;">Base
-                                    Website URL (For QR)</label>
-                                <input type="text" id="gen-card-baseurl" value="https://yourwebsite.com"
-                                    placeholder="https://..."
-                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-family: monospace; font-size: 0.85rem; height: 38px;">
+                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Chest Number (Optional)</label>
+                                <input type="text" id="gen-card-chest" placeholder="Enter Chest Number..."
+                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; height: 38px; font-size: 0.85rem;">
                             </div>
-                            <div style="flex: 2; min-width: 300px;">
+                            <div style="flex: 1; min-width: 250px;">
                                 <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student Names (One per line, e.g. Name - ChestNo)</label>
-                                <textarea id="gen-card-names" oninput="clearExcelPreviewOnInput()"
-                                    placeholder="e.g. John Doe - 101&#10;Jane Smith - 102&#10;or just Names" rows="3"
-                                    style="width: 100%; padding: 0.5rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.85rem; height: 90px;"></textarea>
-                            </div>
-                            <div style="flex: 100%; border-top: 1px dashed #e2e8f0; padding-top: 1rem; margin-top: 0.5rem;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Or Import from Excel File</label>
-                                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                                    <input type="file" id="gen-card-excel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleGenCardExcelUpload(event)">
-                                    <button class="btn" type="button" style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('gen-card-excel').click()">
-                                        <i class="fa fa-file-excel" style="color: #38a169;"></i> Select Excel File
-                                    </button>
-                                    <span id="gen-card-excel-info" style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns: Participant Name, Team Name, Category, Chest Number, Competition</span>
-                                </div>
+                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Sector / Team Name</label>
+                                <input type="text" id="gen-card-sector" placeholder="Enter Sector Name..."
+                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; height: 38px; font-size: 0.85rem; margin-bottom: 0.8rem;">
+
+                                <label
+                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Base Website URL (For QR)</label>
+                                <input type="text" id="gen-card-baseurl" placeholder="https://..."
+                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-family: monospace; font-size: 0.85rem; height: 38px;">
                             </div>
                             <div style="flex: 100%; margin-top: 0.5rem;">
                                 <div style="margin-bottom: 1rem;">
@@ -1355,8 +1380,6 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- Excel Preview Container -->
-                        <div id="excel-preview-container" style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;"></div>
 
                         <div style="margin-top: 1.2rem; display: flex; gap: 0.75rem;">
                             <button class="btn btn-save" onclick="generateIdCards()"
@@ -1558,6 +1581,7 @@
                 'stage-schedule': 'Stage Scheduling',
                 'reg-programs': 'Registration Programs',
                 'conductor': 'Conductor Manager',
+                'allotment-upload': 'Allotment Upload',
                 'generate-card': 'Generate ID Cards',
                 'pdf-generator': 'PDF Generator'
             };
@@ -1580,6 +1604,15 @@
                 loadCardHistory();
                 loadCardWhatsAppTargets();
                 populateGenCardGlobalCategory();
+                
+                // Auto populate baseurl if empty
+                const buInput = document.getElementById('gen-card-baseurl');
+                if (buInput && !buInput.value) {
+                    buInput.value = window.location.origin + window.location.pathname.replace('admin.html', 'registration.html');
+                }
+            }
+            if (tab === 'allotment-upload') {
+                clearAllotmentPreview();
             }
         }
 
@@ -2157,268 +2190,140 @@
         }
 
         async function generateIdCards() {
+            const name = document.getElementById('gen-card-name').value.trim();
+            const chest = document.getElementById('gen-card-chest').value.trim();
             const sector = document.getElementById('gen-card-sector').value.trim();
             const baseUrl = document.getElementById('gen-card-baseurl').value.trim();
 
+            if (!name) {
+                alert("Please enter Student Name.");
+                return;
+            }
+            if (!sector) {
+                alert("Please enter a Sector Name.");
+                return;
+            }
             if (!baseUrl) {
                 alert("Please enter a Base Website URL.");
                 return;
             }
 
-            let parsedStudents = [];
+            // Gather GUI regular programs
+            const programRows = document.querySelectorAll('.gen-card-program-row');
+            const regularProgs = [];
             let sharedCategory = '';
-
-            // Check if Excel imported data exists and is not empty
-            if (window.genCardExcelStudents && window.genCardExcelStudents.length > 0) {
-                parsedStudents = window.genCardExcelStudents.map(student => {
-                    return {
-                        name: student.name,
-                        chest: student.chest,
-                        sector: student.sector,
-                        category: student.category,
-                        regularProgs: student.regularProgs || [],
-                        generalProgs: student.generalProgs || [],
-                        isFromExcel: true
-                    };
-                });
-            } else {
-                // Parse manually typed names
-                const namesText = document.getElementById('gen-card-names').value.trim();
-                if (!namesText) {
-                    alert("Please enter student names or select an Excel file.");
-                    return;
+            programRows.forEach(row => {
+                const cat = row.getAttribute('data-category') || (document.getElementById('gen-card-global-category') ? document.getElementById('gen-card-global-category').value : '');
+                const prog = row.querySelector('.gen-card-program-select').value;
+                if (cat && prog) {
+                    regularProgs.push({ category: cat, program: prog });
+                    if (!sharedCategory) sharedCategory = cat;
                 }
-                if (!sector) {
-                    alert("Please enter a Sector Name.");
-                    return;
+            });
+
+            // Gather GUI general programs
+            const generalRows = document.querySelectorAll('.gen-card-general-program-row');
+            const generalProgs = [];
+            generalRows.forEach(row => {
+                const prog = row.querySelector('.gen-card-general-program-select').value;
+                if (prog) {
+                    generalProgs.push(prog);
                 }
-
-                // Gather GUI regular programs
-                const programRows = document.querySelectorAll('.gen-card-program-row');
-                const regularProgs = [];
-                programRows.forEach(row => {
-                    const cat = row.getAttribute('data-category') || (document.getElementById('gen-card-global-category') ? document.getElementById('gen-card-global-category').value : '');
-                    const prog = row.querySelector('.gen-card-program-select').value;
-                    if (cat && prog) {
-                        regularProgs.push({ category: cat, program: prog });
-                        if (!sharedCategory) sharedCategory = cat;
-                    }
-                });
-
-                // Gather GUI general programs
-                const generalRows = document.querySelectorAll('.gen-card-general-program-row');
-                const generalProgs = [];
-                generalRows.forEach(row => {
-                    const prog = row.querySelector('.gen-card-general-program-select').value;
-                    if (prog) {
-                        generalProgs.push(prog);
-                    }
-                });
-
-                // Parse names from textbox
-                const lines = namesText.split('\n').map(n => n.trim()).filter(Boolean);
-                lines.forEach((line) => {
-                    // Try splitting by hyphen, colon, or pipe to check for manually entered chest number
-                    const parts = line.split(/[-|:]/);
-                    let chest = '';
-                    let name = '';
-                    if (parts.length >= 2) {
-                        chest = parts.pop().trim();
-                        name = parts.join('-').trim();
-                    } else {
-                        const commaParts = line.split(',');
-                        if (commaParts.length >= 2) {
-                            const last = commaParts[commaParts.length - 1].trim();
-                            if (/^[A-Za-z0-9\s.]+$/.test(last) && (/\d/.test(last) || last.length <= 6)) {
-                                chest = commaParts.pop().trim();
-                                name = commaParts.join(',').trim();
-                            } else {
-                                name = line;
-                            }
-                        } else {
-                            // Check if line ends with a number
-                            const numMatch = line.match(/(.+?)\s+(\d+[A-Za-z]?|[A-Za-z]?\d+)$/);
-                            if (numMatch) {
-                                name = numMatch[1].trim();
-                                chest = numMatch[2].trim();
-                            } else {
-                                name = line;
-                            }
-                        }
-                    }
-
-                    parsedStudents.push({
-                        name,
-                        chest,
-                        sector: sector,
-                        category: '',
-                        regularProgs: regularProgs,
-                        generalProgs: generalProgs,
-                        isFromExcel: false
-                    });
-                });
-            }
-
-            if (parsedStudents.length === 0) {
-                alert("Please enter or import at least one student.");
-                return;
-            }
+            });
 
             const container = document.getElementById('generated-cards-container');
-            container.innerHTML = '<div style="color: #666; font-size: 0.9rem; text-align: center; width: 100%; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Generating cards and saving to database...</div>';
+            container.innerHTML = '<div style="color: #666; font-size: 0.9rem; text-align: center; width: 100%; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Generating card and saving to database...</div>';
 
-            // Group parsedStudents by chest number (or name + sector if empty) to merge programs
-            const uniqueStudents = {};
-            parsedStudents.forEach(student => {
-                const key = student.chest ? student.chest.trim() : (student.name + '|' + student.sector);
-                if (!uniqueStudents[key]) {
-                    uniqueStudents[key] = {
-                        name: student.name,
-                        chest: student.chest,
-                        sector: student.sector,
-                        category: student.category,
-                        regularProgs: [],
-                        generalProgs: [],
-                        isFromExcel: student.isFromExcel
-                    };
-                }
-                const existing = uniqueStudents[key];
-                
-                // Merge regular programs
-                student.regularProgs.forEach(p => {
-                    const exists = existing.regularProgs.some(rp => rp.program.toLowerCase().trim() === p.program.toLowerCase().trim());
-                    if (!exists) {
-                        existing.regularProgs.push(p);
-                    }
-                });
-                
-                // Merge general programs
-                student.generalProgs.forEach(p => {
-                    if (!existing.generalProgs.includes(p)) {
-                        existing.generalProgs.push(p);
-                    }
-                });
+            // Merge programs and prepare data row
+            const sProgsParamVal = regularProgs.map(p => `${p.category}: ${p.program}`).join('|');
+            const sProgsParam = sProgsParamVal ? `&progs=${encodeURIComponent(sProgsParamVal)}` : '';
 
-                // Update category if existing doesn't have it
-                if (student.category && (!existing.category || existing.category === 'GEN' || existing.category === '')) {
-                    existing.category = student.category;
-                }
-            });
-            parsedStudents = Object.values(uniqueStudents);
+            const sGenProgsParamVal = generalProgs.join('|');
+            const sGenProgsParam = sGenProgsParamVal ? `&genprogs=${encodeURIComponent(sGenProgsParamVal)}` : '';
 
-            const insertRows = [];
-            parsedStudents.forEach(student => {
-                // Determine programs for this student
-                let studentRegularProgs = student.regularProgs;
-                let studentGeneralProgs = student.generalProgs;
-                let studentCategory = student.category || sharedCategory || null;
+            const chestParam = chest ? `&chestno=${encodeURIComponent(chest)}` : '';
+            const cardUrl = `${baseUrl.replace(/\/$/, '')}?name=${encodeURIComponent(name)}&sector=${encodeURIComponent(sector)}${sProgsParam}${sGenProgsParam}${chestParam}`;
 
-                const sProgsParamVal = studentRegularProgs.map(p => `${p.category}: ${p.program}`).join('|');
-                const sProgsParam = sProgsParamVal ? `&progs=${encodeURIComponent(sProgsParamVal)}` : '';
+            let prog1 = regularProgs[0] ? regularProgs[0].program : null;
+            let prog2 = regularProgs[1] ? regularProgs[1].program : null;
+            let prog3 = regularProgs[2] ? regularProgs[2].program : null;
+            let prog4 = null;
+            if (regularProgs.length > 4) {
+                prog4 = regularProgs.slice(3).map(p => p.program).join(', ');
+            } else if (regularProgs.length === 4) {
+                prog4 = regularProgs[3].program;
+            }
 
-                const sGenProgsParamVal = studentGeneralProgs.join('|');
-                const sGenProgsParam = sGenProgsParamVal ? `&genprogs=${encodeURIComponent(sGenProgsParamVal)}` : '';
-
-                const chestParam = student.chest ? `&chestno=${encodeURIComponent(student.chest)}` : '';
-                const cardUrl = `${baseUrl.replace(/\/$/, '')}/registration.html?name=${encodeURIComponent(student.name)}&sector=${encodeURIComponent(student.sector)}${sProgsParam}${sGenProgsParam}${chestParam}`;
-
-                let prog1 = studentRegularProgs[0] ? studentRegularProgs[0].program : null;
-                let prog2 = studentRegularProgs[1] ? studentRegularProgs[1].program : null;
-                let prog3 = studentRegularProgs[2] ? studentRegularProgs[2].program : null;
-                let prog4 = null;
-                if (studentRegularProgs.length > 4) {
-                    prog4 = studentRegularProgs.slice(3).map(p => p.program).join(', ');
-                } else if (studentRegularProgs.length === 4) {
-                    prog4 = studentRegularProgs[3].program;
-                }
-
-                const dbRow = {
-                    name: student.name,
-                    sector: student.sector,
-                    category: studentCategory,
-                    'program 1': prog1,
-                    'program 2': prog2,
-                    'program 3': prog3,
-                    'program 4': prog4,
-                    generals: sGenProgsParamVal || null,
-                    url: cardUrl,
-                    'chest no.': student.chest || null,
-                    time: new Date().toISOString()
-                };
-                insertRows.push(dbRow);
-            });
+            const dbRow = {
+                name: name,
+                sector: sector,
+                category: sharedCategory || null,
+                'program 1': prog1,
+                'program 2': prog2,
+                'program 3': prog3,
+                'program 4': prog4,
+                generals: sGenProgsParamVal || null,
+                url: cardUrl,
+                'chest no.': chest || null,
+                time: new Date().toISOString()
+            };
 
             try {
                 const { data, error } = await supabaseClient
                     .from('registred')
-                    .insert(insertRows)
+                    .insert([dbRow])
                     .select();
 
                 if (error) throw error;
 
                 container.innerHTML = '';
-                const renderedData = insertRows;
-                renderedData.forEach((row, idx) => {
-                    const cardId = `id-card-gen-${idx}`;
-                    const correctUrl = row.url;
-                    
-                    const cardHtml = document.createElement('div');
-                    cardHtml.className = 'id-card';
-                    cardHtml.style = 'width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;';
-                    cardHtml.innerHTML = `
-                        <!-- Left Side: Info -->
-                        <div style="flex: 2; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
-                            <h3 style="margin: 0; font-size: 1.2rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Sahithyolsav 2026</h3>
-                            <h1 style="margin: 0.75rem 0; font-size: 2.4rem; color: #2b6cb0; word-break: break-word; font-weight: 700;">${row.name}</h1>
-                            
-                            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
-                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 1.5rem;">${row['chest no.'] || 'N/A'}</strong></h3>
-                            </div>
+                const cardId = `id-card-gen-single`;
+                const correctUrl = dbRow.url;
+                
+                const cardHtml = document.createElement('div');
+                cardHtml.className = 'id-card';
+                cardHtml.style = 'width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;';
+                cardHtml.innerHTML = `
+                    <!-- Left Side: Info -->
+                    <div style="flex: 2; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
+                        <h3 style="margin: 0; font-size: 1.2rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Sahithyolsav 2026</h3>
+                        <h1 style="margin: 0.75rem 0; font-size: 2.4rem; color: #2b6cb0; word-break: break-word; font-weight: 700;">${dbRow.name}</h1>
+                        
+                        <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                            <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Sector: <strong>${dbRow.sector || 'N/A'}</strong></h3>
+                            <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 1.5rem;">${dbRow['chest no.'] || 'N/A'}</strong></h3>
                         </div>
-                        <!-- Right Side: QR -->
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; background: white;">
-                            <div id="qr-${cardId}" style="width: 150px; height: 150px; margin-bottom: 1rem;"></div>
-                            <p style="margin: 0; font-size: 0.75rem; color: #718096; text-align: center; font-weight: bold;">SCAN TO VERIFY</p>
-                        </div>
-                    `;
-                    container.appendChild(cardHtml);
+                    </div>
+                    <!-- Right Side: QR -->
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; background: white;">
+                        <div id="qr-${cardId}" style="width: 150px; height: 150px; margin-bottom: 1rem;"></div>
+                        <p style="margin: 0; font-size: 0.75rem; color: #718096; text-align: center; font-weight: bold;">SCAN TO VERIFY</p>
+                    </div>
+                `;
+                container.appendChild(cardHtml);
 
-                    new QRCode(document.getElementById(`qr-${cardId}`), {
-                        text: correctUrl,
-                        width: 150,
-                        height: 150,
-                        colorDark: "#1a202c",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
+                new QRCode(document.getElementById(`qr-${cardId}`), {
+                    text: correctUrl,
+                    width: 150,
+                    height: 150,
+                    colorDark: "#1a202c",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
                 });
 
-                document.getElementById('gen-card-names').value = '';
+                document.getElementById('gen-card-name').value = '';
+                document.getElementById('gen-card-chest').value = '';
+                document.getElementById('gen-card-sector').value = '';
                 document.getElementById('gen-card-programs-list').innerHTML = '';
                 document.getElementById('gen-card-general-programs-list').innerHTML = '';
 
-                // Reset Excel Import state
-                window.genCardExcelStudents = null;
-                const fileInput = document.getElementById('gen-card-excel');
-                if (fileInput) fileInput.value = '';
-                const infoSpan = document.getElementById('gen-card-excel-info');
-                if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
-
-                // Hide Excel preview table
-                const previewContainer = document.getElementById('excel-preview-container');
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
-
                 loadCardHistory();
-                alert(`Successfully generated ${insertRows.length} ID card(s) and saved to database!`);
+                alert(`Successfully generated ID card and saved to database!`);
 
             } catch (err) {
-                console.error("Error generating ID cards:", err);
-                alert("Failed to generate ID cards: " + err.message);
-                container.innerHTML = '<div style="color: #ef4444; font-size: 0.9rem; text-align: center; width: 100%; padding: 2rem;">Failed to generate cards.</div>';
+                console.error("Error generating ID card:", err);
+                alert("Failed to generate ID card: " + err.message);
+                container.innerHTML = '<div style="color: #ef4444; font-size: 0.9rem; text-align: center; width: 100%; padding: 2rem;">Failed to generate card.</div>';
             }
         }
 
@@ -2442,11 +2347,29 @@
             return null;
         }
 
-        async function handleGenCardExcelUpload(event) {
+        window.allotmentExcelStudents = null;
+
+        function clearAllotmentPreview() {
+            window.allotmentExcelStudents = null;
+            const fileInput = document.getElementById('allotment-excel-file');
+            if (fileInput) fileInput.value = '';
+            const infoSpan = document.getElementById('allotment-excel-info');
+            if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
+            
+            const previewContainer = document.getElementById('allotment-preview-container');
+            if (previewContainer) {
+                previewContainer.style.display = 'none';
+                previewContainer.innerHTML = '';
+            }
+            const uploadBtn = document.getElementById('allotment-upload-btn');
+            if (uploadBtn) uploadBtn.style.display = 'none';
+        }
+
+        async function handleAllotmentExcelUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            const infoSpan = document.getElementById('gen-card-excel-info');
+            const infoSpan = document.getElementById('allotment-excel-info');
             infoSpan.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Reading file: ${file.name}...`;
 
             const reader = new FileReader();
@@ -2477,7 +2400,7 @@
                         throw new Error("Could not find a 'Team Name' or 'Sector' column in the Excel file.");
                     }
 
-                    // Process Excel rows and group by Chest Number (Registration Number)
+                    // Process Excel rows and group by Chest Number
                     const groupedStudents = {};
                     const generalProgramsSet = new Set((currentData.categoryPrograms && currentData.categoryPrograms["GEN"]) || []);
 
@@ -2549,25 +2472,14 @@
                         throw new Error("No valid student records found in the Excel file.");
                     }
 
-                    // Autofill the card generation inputs!
-                    const sectors = [...new Set(studentsArrayLoaded.map(s => s.sector))];
-                    if (sectors.length === 1) {
-                        document.getElementById('gen-card-sector').value = sectors[0];
-                    } else {
-                        document.getElementById('gen-card-sector').value = "Multiple Sectors (from Excel)";
-                    }
-
-                    // Save parsed Excel students globally
-                    window.genCardExcelStudents = studentsArrayLoaded;
+                    window.allotmentExcelStudents = studentsArrayLoaded;
 
                     infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArrayLoaded.length} student(s) from Excel.</span>`;
                     
-                    // Show a preview in the names textarea
-                    const namesPreview = studentsArrayLoaded.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
-                    document.getElementById('gen-card-names').value = namesPreview;
+                    renderAllotmentPreview();
 
-                    // Render preview table
-                    renderExcelPreview();
+                    const uploadBtn = document.getElementById('allotment-upload-btn');
+                    if (uploadBtn) uploadBtn.style.display = 'inline-block';
 
                 } catch (err) {
                     console.error("Excel import error:", err);
@@ -2579,11 +2491,11 @@
             reader.readAsArrayBuffer(file);
         }
 
-        function renderExcelPreview() {
-            const container = document.getElementById('excel-preview-container');
+        function renderAllotmentPreview() {
+            const container = document.getElementById('allotment-preview-container');
             if (!container) return;
 
-            if (!window.genCardExcelStudents || window.genCardExcelStudents.length === 0) {
+            if (!window.allotmentExcelStudents || window.allotmentExcelStudents.length === 0) {
                 container.style.display = 'none';
                 container.innerHTML = '';
                 return;
@@ -2594,9 +2506,9 @@
             let tableHtml = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                     <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #2d3748; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa fa-list-alt" style="color: #3182ce;"></i> Imported Students Preview (${window.genCardExcelStudents.length})
+                        <i class="fa fa-list-alt" style="color: #3182ce;"></i> Imported Students Preview (${window.allotmentExcelStudents.length})
                     </h3>
-                    <button class="btn btn-delete" type="button" onclick="clearExcelPreview()" style="background: #e53e3e; color: white; padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; height: auto; margin-bottom: 0;">
+                    <button class="btn btn-delete" type="button" onclick="clearAllotmentPreview()" style="background: #e53e3e; color: white; padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; height: auto; margin-bottom: 0;">
                         <i class="fa fa-times"></i> Clear Import
                     </button>
                 </div>
@@ -2608,7 +2520,7 @@
                                 <th style="padding: 0.75rem 1rem;">Chest No</th>
                                 <th style="padding: 0.75rem 1rem;">Sector</th>
                                 <th style="padding: 0.75rem 1rem;">Category</th>
-                                <th style="padding: 0.75rem 1rem;">Programs</th>
+                                <th style="padding: 0.75rem 1rem;">Regular Programs</th>
                                 <th style="padding: 0.75rem 1rem;">General Programs</th>
                                 <th style="padding: 0.75rem 1rem; text-align: center; width: 80px;">Actions</th>
                             </tr>
@@ -2616,7 +2528,7 @@
                         <tbody>
             `;
 
-            window.genCardExcelStudents.forEach((student, index) => {
+            window.allotmentExcelStudents.forEach((student, index) => {
                 const nameText = student.name || 'N/A';
                 const chestText = student.chest || 'N/A';
                 const chestStyle = chestText === 'N/A' ? 'color: #ef4444; font-weight: bold;' : 'font-weight: bold; color: #2d3748;';
@@ -2624,11 +2536,11 @@
                 const categoryText = student.category || 'N/A';
                 
                 const regularProgramsText = student.regularProgs && student.regularProgs.length > 0 
-                    ? student.regularProgs.map(p => p.program).join(', ') 
+                    ? student.regularProgs.map(p => `${p.category}: ${p.program}`).join(', ') 
                     : 'N/A';
                     
                 const generalProgramsText = student.generalProgs && student.generalProgs.length > 0 
-                    ? student.generalProgs.join('|') 
+                    ? student.generalProgs.join(', ') 
                     : 'N/A';
 
                 tableHtml += `
@@ -2640,7 +2552,7 @@
                         <td style="padding: 0.75rem 1rem; color: #4a5568; line-height: 1.4;">${regularProgramsText}</td>
                         <td style="padding: 0.75rem 1rem; color: #4a5568; line-height: 1.4;">${generalProgramsText}</td>
                         <td style="padding: 0.75rem 1rem; text-align: center;">
-                            <button type="button" onclick="deleteExcelPreviewRow(${index})" style="background: #f1f5f9; border: none; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#ef4444';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569';" title="Delete Student Row">
+                            <button type="button" onclick="deleteAllotmentPreviewRow(${index})" style="background: #f1f5f9; border: none; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#ef4444';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569';" title="Delete Student Row">
                                 <i class="fa fa-trash"></i>
                             </button>
                         </td>
@@ -2656,55 +2568,94 @@
             container.innerHTML = tableHtml;
         }
 
-        function deleteExcelPreviewRow(index) {
-            if (window.genCardExcelStudents && window.genCardExcelStudents[index]) {
-                window.genCardExcelStudents.splice(index, 1);
-                renderExcelPreview();
-                
-                // Keep the names textarea in sync
-                const namesPreview = window.genCardExcelStudents.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
-                document.getElementById('gen-card-names').value = namesPreview;
+        function deleteAllotmentPreviewRow(index) {
+            if (window.allotmentExcelStudents && window.allotmentExcelStudents[index]) {
+                window.allotmentExcelStudents.splice(index, 1);
+                renderAllotmentPreview();
                 
                 // Update loaded info message
-                const infoSpan = document.getElementById('gen-card-excel-info');
+                const infoSpan = document.getElementById('allotment-excel-info');
                 if (infoSpan) {
-                    if (window.genCardExcelStudents.length > 0) {
-                        infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${window.genCardExcelStudents.length} student(s) from Excel.</span>`;
+                    if (window.allotmentExcelStudents.length > 0) {
+                        infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${window.allotmentExcelStudents.length} student(s) from Excel.</span>`;
                     } else {
-                        infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
+                        clearAllotmentPreview();
                     }
                 }
             }
         }
 
-        function clearExcelPreview() {
-            window.genCardExcelStudents = null;
-            const fileInput = document.getElementById('gen-card-excel');
-            if (fileInput) fileInput.value = '';
-            const infoSpan = document.getElementById('gen-card-excel-info');
-            if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
-            document.getElementById('gen-card-names').value = '';
-            
-            const container = document.getElementById('excel-preview-container');
-            if (container) {
-                container.style.display = 'none';
-                container.innerHTML = '';
+        async function uploadAllotmentList() {
+            if (!window.allotmentExcelStudents || window.allotmentExcelStudents.length === 0) {
+                alert("No allotment list loaded.");
+                return;
             }
-        }
 
-        function clearExcelPreviewOnInput() {
-            if (window.genCardExcelStudents && window.genCardExcelStudents.length > 0) {
-                window.genCardExcelStudents = null;
-                const fileInput = document.getElementById('gen-card-excel');
-                if (fileInput) fileInput.value = '';
-                const infoSpan = document.getElementById('gen-card-excel-info');
-                if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
-                
-                const container = document.getElementById('excel-preview-container');
-                if (container) {
-                    container.style.display = 'none';
-                    container.innerHTML = '';
+            const btn = document.getElementById('allotment-upload-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading to Database...';
+            btn.disabled = true;
+
+            const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'registration.html');
+
+            const insertRows = [];
+            window.allotmentExcelStudents.forEach(student => {
+                let studentRegularProgs = student.regularProgs;
+                let studentGeneralProgs = student.generalProgs;
+                let studentCategory = student.category || null;
+
+                const sProgsParamVal = studentRegularProgs.map(p => `${p.category}: ${p.program}`).join('|');
+                const sProgsParam = sProgsParamVal ? `&progs=${encodeURIComponent(sProgsParamVal)}` : '';
+
+                const sGenProgsParamVal = studentGeneralProgs.join('|');
+                const sGenProgsParam = sGenProgsParamVal ? `&genprogs=${encodeURIComponent(sGenProgsParamVal)}` : '';
+
+                const chestParam = student.chest ? `&chestno=${encodeURIComponent(student.chest)}` : '';
+                const cardUrl = `${baseUrl.replace(/\/$/, '')}?name=${encodeURIComponent(student.name)}&sector=${encodeURIComponent(student.sector)}${sProgsParam}${sGenProgsParam}${chestParam}`;
+
+                let prog1 = studentRegularProgs[0] ? studentRegularProgs[0].program : null;
+                let prog2 = studentRegularProgs[1] ? studentRegularProgs[1].program : null;
+                let prog3 = studentRegularProgs[2] ? studentRegularProgs[2].program : null;
+                let prog4 = null;
+                if (studentRegularProgs.length > 4) {
+                    prog4 = studentRegularProgs.slice(3).map(p => p.program).join(', ');
+                } else if (studentRegularProgs.length === 4) {
+                    prog4 = studentRegularProgs[3].program;
                 }
+
+                const dbRow = {
+                    name: student.name,
+                    sector: student.sector,
+                    category: studentCategory,
+                    'program 1': prog1,
+                    'program 2': prog2,
+                    'program 3': prog3,
+                    'program 4': prog4,
+                    generals: sGenProgsParamVal || null,
+                    url: cardUrl,
+                    'chest no.': student.chest || null,
+                    time: new Date().toISOString()
+                };
+                insertRows.push(dbRow);
+            });
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('registred')
+                    .insert(insertRows)
+                    .select();
+
+                if (error) throw error;
+
+                clearAllotmentPreview();
+                alert(`Successfully uploaded ${insertRows.length} allotment student(s) to database!`);
+
+            } catch (err) {
+                console.error("Error uploading allotment list:", err);
+                alert("Failed to upload allotment list: " + err.message);
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
             }
         }
 
