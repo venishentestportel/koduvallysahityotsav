@@ -2065,21 +2065,34 @@
                     const cardId = `print-qr-${row.id || i}`;
                     const card = document.createElement('div');
                     // Style matching 3.4 x 2.1 inches (Standard CR80 size)
-                    card.style.cssText = 'width: 3.4in; height: 2.1in; border: 1px solid #000; box-sizing: border-box; display: flex; overflow: hidden; background: white; border-radius: 8px; break-inside: avoid; page-break-inside: avoid;';
+                    card.style.cssText = 'width: 3.4in; height: 2.1in; border: 1px solid #cbd5e1; box-sizing: border-box; display: flex; overflow: hidden; background: white; border-radius: 8px; break-inside: avoid; page-break-inside: avoid; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact;';
                     card.innerHTML = `
-                        <!-- Left Side: Info -->
-                        <div style="flex: 2; padding: 0.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px dashed #cbd5e0; background: #f8fafc;">
-                            <h3 style="margin: 0; font-size: 0.45rem; color: #718096; font-weight: 600; text-transform: uppercase;">Sahithyolsav 2026</h3>
-                            <h1 style="margin: 0.2rem 0; font-size: 0.85rem; color: #2b6cb0; word-break: break-word; font-weight: 700; line-height: 1.1;">${row.name || 'Unknown'}</h1>
-                            <div style="margin-top: 0.2rem; border-top: 1px solid #e2e8f0; padding-top: 0.2rem;">
-                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
-                                <h3 style="margin: 0; font-size: 0.55rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 0.7rem;">${row['chest no.'] || 'N/A'}</strong></h3>
-                            </div>
+                        <!-- Background Image -->
+                        <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" />
+                        
+                        <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
+                        <div style="position: absolute; bottom: 28px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 10px; box-sizing: border-box;">
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #ffffff; line-height: 1.1; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;">${row.name || 'Unknown'}</div>
                         </div>
-                        <!-- Right Side: QR -->
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.2rem; background: white;">
-                            <div id="${cardId}" style="width: 125px; height: 125px; margin-bottom: 0.2rem;"></div>
-                            <p style="margin: 0; font-size: 0.35rem; color: #718096; text-align: center; font-weight: bold;">SCAN TO VERIFY</p>
+
+                        <!-- Details (Right 42%) -->
+                        <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 10px 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
+                            
+                            <!-- Sector (Top) -->
+                            <div style="width: 100%; text-align: center; margin-top: 2px;">
+                                <div style="font-size: 0.68rem; font-weight: 700; color: #0f172a; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.sector || 'N/A'}</div>
+                            </div>
+
+                            <!-- QR Code (Middle) -->
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 4px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <div id="${cardId}" style="width: 62px; height: 62px;"></div>
+                            </div>
+
+                            <!-- Chest No (Bottom) -->
+                            <div style="width: 100%; text-align: center; margin-bottom: 2px;">
+                                <div style="font-size: 0.35rem; font-weight: 700; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1px; line-height: 1;">Chest No</div>
+                                <div style="font-size: 1.1rem; font-weight: 900; color: #dc2626; line-height: 1;">${row['chest no.'] || 'N/A'}</div>
+                            </div>
                         </div>
                     `;
                     printContainer.appendChild(card);
@@ -2087,9 +2100,9 @@
                     try {
                         new QRCode(document.getElementById(cardId), {
                             text: row.url,
-                            width: 125,
-                            height: 125,
-                            colorDark: "#1a202c",
+                            width: 62,
+                            height: 62,
+                            colorDark: "#000000",
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
                         });
