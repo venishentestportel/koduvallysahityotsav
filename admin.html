@@ -3546,7 +3546,7 @@
 
         function openGeneratedCardView(row) {
             document.getElementById('gen-card-name').innerText = row.name || 'Unknown Student';
-            document.getElementById('gen-card-sector').innerText = row.sector || 'N/A';
+            document.getElementById('gen-card-preview-sector').innerText = row.sector || 'N/A';
             document.getElementById('gen-card-chest').innerText = row['chest no.'] || 'N/A';
 
             const qrContainer = document.getElementById('gen-card-qr');
@@ -3589,7 +3589,7 @@
                     <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" />
                     
                     <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
-                    <div style="position: absolute; bottom: 35px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; box-sizing: border-box;">
+                    <div style="position: absolute; bottom: 55px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; box-sizing: border-box;">
                         <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;">${row.name}</div>
                     </div>
 
@@ -6605,7 +6605,7 @@
                         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none;" />
 
                     <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
-                    <div style="position: absolute; bottom: 25px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 15px; box-sizing: border-box;">
+                    <div style="position: absolute; bottom: 45px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 15px; box-sizing: border-box;">
                         <div id="gen-card-name" style="font-size: 2.1rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;">Name</div>
                     </div>
 
@@ -6615,7 +6615,7 @@
 
                         <!-- Sector (Top) -->
                         <div style="width: 100%; text-align: center; margin-top: 5px;">
-                            <div id="gen-card-sector" style="font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Sector</div>
+                            <div id="gen-card-preview-sector" style="font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Sector</div>
                         </div>
 
                         <!-- QR Code (Middle) -->
