@@ -1981,10 +1981,20 @@
 
             data.forEach(row => {
                 const programs = [];
-                if (row['program 1']) programs.push(row['program 1']);
-                if (row['program 2']) programs.push(row['program 2']);
-                if (row['program 3']) programs.push(row['program 3']);
-                if (row['program 4']) programs.push(row['program 4']);
+                const addProgram = (pVal) => {
+                    if (!pVal) return;
+                    if (pVal.includes(',')) {
+                        pVal.split(',').map(x => x.trim()).forEach(x => {
+                            if (x) programs.push(x);
+                        });
+                    } else {
+                        programs.push(pVal);
+                    }
+                };
+                addProgram(row['program 1']);
+                addProgram(row['program 2']);
+                addProgram(row['program 3']);
+                addProgram(row['program 4']);
 
                 html += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -2257,20 +2267,51 @@
             const container = document.getElementById('generated-cards-container');
             container.innerHTML = '<div style="color: #666; font-size: 0.9rem; text-align: center; width: 100%; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Generating cards and saving to database...</div>';
 
+            // Group parsedStudents by chest number (or name + sector if empty) to merge programs
+            const uniqueStudents = {};
+            parsedStudents.forEach(student => {
+                const key = student.chest ? student.chest.trim() : (student.name + '|' + student.sector);
+                if (!uniqueStudents[key]) {
+                    uniqueStudents[key] = {
+                        name: student.name,
+                        chest: student.chest,
+                        sector: student.sector,
+                        category: student.category,
+                        regularProgs: [],
+                        generalProgs: [],
+                        isFromExcel: student.isFromExcel
+                    };
+                }
+                const existing = uniqueStudents[key];
+                
+                // Merge regular programs
+                student.regularProgs.forEach(p => {
+                    const exists = existing.regularProgs.some(rp => rp.program.toLowerCase().trim() === p.program.toLowerCase().trim());
+                    if (!exists) {
+                        existing.regularProgs.push(p);
+                    }
+                });
+                
+                // Merge general programs
+                student.generalProgs.forEach(p => {
+                    if (!existing.generalProgs.includes(p)) {
+                        existing.generalProgs.push(p);
+                    }
+                });
+
+                // Update category if existing doesn't have it
+                if (student.category && (!existing.category || existing.category === 'GEN' || existing.category === '')) {
+                    existing.category = student.category;
+                }
+            });
+            parsedStudents = Object.values(uniqueStudents);
+
             const insertRows = [];
             parsedStudents.forEach(student => {
                 // Determine programs for this student
-                let studentRegularProgs = [];
-                let studentGeneralProgs = [];
+                let studentRegularProgs = student.regularProgs;
+                let studentGeneralProgs = student.generalProgs;
                 let studentCategory = student.category || sharedCategory || null;
-
-                if (student.isFromExcel) {
-                    studentRegularProgs = student.regularProgs;
-                    studentGeneralProgs = student.generalProgs;
-                } else {
-                    studentRegularProgs = student.regularProgs; // from GUI selections
-                    studentGeneralProgs = student.generalProgs; // from GUI selections
-                }
 
                 const sProgsParamVal = studentRegularProgs.map(p => `${p.category}: ${p.program}`).join('|');
                 const sProgsParam = sProgsParamVal ? `&progs=${encodeURIComponent(sProgsParamVal)}` : '';
@@ -2281,14 +2322,24 @@
                 const chestParam = student.chest ? `&chestno=${encodeURIComponent(student.chest)}` : '';
                 const cardUrl = `${baseUrl.replace(/\/$/, '')}/registration.html?name=${encodeURIComponent(student.name)}&sector=${encodeURIComponent(student.sector)}${sProgsParam}${sGenProgsParam}${chestParam}`;
 
+                let prog1 = studentRegularProgs[0] ? studentRegularProgs[0].program : null;
+                let prog2 = studentRegularProgs[1] ? studentRegularProgs[1].program : null;
+                let prog3 = studentRegularProgs[2] ? studentRegularProgs[2].program : null;
+                let prog4 = null;
+                if (studentRegularProgs.length > 4) {
+                    prog4 = studentRegularProgs.slice(3).map(p => p.program).join(', ');
+                } else if (studentRegularProgs.length === 4) {
+                    prog4 = studentRegularProgs[3].program;
+                }
+
                 const dbRow = {
                     name: student.name,
                     sector: student.sector,
                     category: studentCategory,
-                    'program 1': studentRegularProgs[0] ? studentRegularProgs[0].program : null,
-                    'program 2': studentRegularProgs[1] ? studentRegularProgs[1].program : null,
-                    'program 3': studentRegularProgs[2] ? studentRegularProgs[2].program : null,
-                    'program 4': studentRegularProgs[3] ? studentRegularProgs[3].program : null,
+                    'program 1': prog1,
+                    'program 2': prog2,
+                    'program 3': prog3,
+                    'program 4': prog4,
                     generals: sGenProgsParamVal || null,
                     url: cardUrl,
                     'chest no.': student.chest || null,
@@ -2311,52 +2362,19 @@
                     const cardId = `id-card-gen-${idx}`;
                     const correctUrl = row.url;
                     
-                    let cardPrograms = [];
-                    let cardGenerals = [];
-                    if (row.url) {
-                        try {
-                            const parsedUrl = new URL(row.url);
-                            const progsParam = parsedUrl.searchParams.get('progs');
-                            if (progsParam) {
-                                cardPrograms = progsParam.split('|');
-                            }
-                            const genProgsParam = parsedUrl.searchParams.get('genprogs');
-                            if (genProgsParam) {
-                                cardGenerals = genProgsParam.split('|');
-                            }
-                        } catch(e) {}
-                    }
-                    if (cardPrograms.length === 0 && cardGenerals.length === 0) {
-                        const cat = row.category || '';
-                        if (row['program 1']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 1']);
-                        if (row['program 2']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 2']);
-                        if (row['program 3']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 3']);
-                        if (row['program 4']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 4']);
-                        if (row.generals) {
-                            cardGenerals = row.generals.split(',').map(g => g.trim());
-                        }
-                    }
-
                     const cardHtml = document.createElement('div');
                     cardHtml.className = 'id-card';
                     cardHtml.style = 'width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;';
                     cardHtml.innerHTML = `
                         <!-- Left Side: Info -->
-                        <div style="flex: 2; padding: 2rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
+                        <div style="flex: 2; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
                             <h3 style="margin: 0; font-size: 1.2rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Sahithyolsav 2026</h3>
-                            <h1 style="margin: 0.5rem 0; font-size: 2.2rem; color: #2b6cb0; word-break: break-word; font-weight: 700;">${row.name}</h1>
-                            <h3 style="margin: 0; font-size: 1.2rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
-                            <h3 style="margin: 0; font-size: 1.2rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 1.3rem;">${row['chest no.'] || 'N/A'}</strong></h3>
+                            <h1 style="margin: 0.75rem 0; font-size: 2.4rem; color: #2b6cb0; word-break: break-word; font-weight: 700;">${row.name}</h1>
                             
-                            ${(cardPrograms.length > 0 || cardGenerals.length > 0) ? `
-                            <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.75rem; flex-grow: 1; overflow-y: auto;">
-                                <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #a0aec0; font-weight: bold;">REGISTERED PROGRAMS:</p>
-                                <ul style="margin: 0; padding-left: 1rem; font-size: 0.95rem; color: #2d3748;">
-                                    ${cardPrograms.map(p => `<li style="margin-bottom: 0.2rem;">${p}</li>`).join('')}
-                                    ${cardGenerals.map(p => `<li style="margin-bottom: 0.2rem;">GEN: ${p}</li>`).join('')}
-                                </ul>
+                            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
+                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 1.5rem;">${row['chest no.'] || 'N/A'}</strong></h3>
                             </div>
-                            ` : ''}
                         </div>
                         <!-- Right Side: QR -->
                         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; background: white;">
@@ -2449,10 +2467,7 @@
                     const nameKey = findColumnKey(firstRow, ['participant name', 'name', 'student name', 'participant', 'candidate']);
                     const teamKey = findColumnKey(firstRow, ['team name', 'team', 'sector name', 'sector', 'unit', 'unit name']);
                     const catKey = findColumnKey(firstRow, ['category', 'category colum', 'cat', 'class']);
-                    const chestKey = findColumnKey(firstRow, [
-                        'chest number', 'chest no', 'chest no.', 'chest', 'chestnumber', 'chestnumber colum',
-                        'registration number', 'registration no', 'registration no.', 'reg no', 'reg no.', 'reg number', 'register no', 'register number', 'reg. no.', 'reg.no', 'registrationnum', 'registration number colum'
-                    ]);
+                    const chestKey = findColumnKey(firstRow, ['chest number', 'chest no', 'chest no.', 'chest', 'chestnumber', 'chestnumber colum']);
                     const compKey = findColumnKey(firstRow, ['competition', 'program', 'programs', 'item', 'event', 'competition colum']);
 
                     if (!nameKey) {
@@ -2462,8 +2477,8 @@
                         throw new Error("Could not find a 'Team Name' or 'Sector' column in the Excel file.");
                     }
 
-                    // Process each Excel row separately as its own student card record, grouping by registration number/chest number
-                    const studentsGrouped = {};
+                    // Process Excel rows and group by Chest Number (Registration Number)
+                    const groupedStudents = {};
                     const generalProgramsSet = new Set((currentData.categoryPrograms && currentData.categoryPrograms["GEN"]) || []);
 
                     function resolveCategory(progName, rowCategory) {
@@ -2492,11 +2507,11 @@
 
                         if (!name) return; // skip empty rows
 
-                        // Grouping identifier: use chest number/registration number if present, otherwise fallback to name + sector
-                        const identifier = chest ? chest.toLowerCase().trim() : `${name.toLowerCase().trim()}_${team.toLowerCase().trim()}`;
+                        // Use chest number as unique key if available, otherwise name + sector
+                        const key = chest ? chest.trim() : (name + '|' + team);
 
-                        if (!studentsGrouped[identifier]) {
-                            studentsGrouped[identifier] = {
+                        if (!groupedStudents[key]) {
+                            groupedStudents[key] = {
                                 name: name,
                                 sector: team,
                                 category: category,
@@ -2506,12 +2521,7 @@
                             };
                         }
 
-                        const student = studentsGrouped[identifier];
-
-                        // Keep the longest category if multiple rows have different category strings
-                        if (category && (!student.category || student.category === 'GEN')) {
-                            student.category = category;
-                        }
+                        const student = groupedStudents[key];
 
                         if (competition) {
                             const resolvedCat = resolveCategory(competition, category);
@@ -2520,7 +2530,6 @@
                                     student.generalProgs.push(competition);
                                 }
                             } else {
-                                // Avoid duplicate programs
                                 const exists = student.regularProgs.some(p => p.program.toLowerCase().trim() === competition.toLowerCase().trim());
                                 if (!exists) {
                                     student.regularProgs.push({
@@ -2528,16 +2537,14 @@
                                         program: competition
                                     });
                                 }
-                                if (!student.category || student.category === 'GEN') {
+                                if (!student.category || student.category === 'GEN' || student.category === '') {
                                     student.category = resolvedCat;
                                 }
                             }
                         }
                     });
 
-                    const studentsArray = Object.values(studentsGrouped);
-
-                    const studentsArrayLoaded = studentsArray;
+                    const studentsArrayLoaded = Object.values(groupedStudents);
                     if (studentsArrayLoaded.length === 0) {
                         throw new Error("No valid student records found in the Excel file.");
                     }
@@ -2771,41 +2778,25 @@
             if (chestEl) chestEl.innerText = row['chest no.'] || 'N/A';
             document.getElementById('details-time').innerText = row.time ? new Date(row.time).toLocaleString() : 'N/A';
 
-            // Regularly Registered Programs & General Programs
+            // Regularly Registered Programs
             const progsContainer = document.getElementById('details-programs-container');
             progsContainer.innerHTML = '';
-            const generalsContainer = document.getElementById('details-generals-container');
-            generalsContainer.innerHTML = '';
-
-            let programs = [];
-            let generals = [];
-            const urlVal = (row.url || '').replace('registringpage.html', 'registration.html');
-            if (urlVal) {
-                try {
-                    const parsedUrl = new URL(urlVal);
-                    const progsParam = parsedUrl.searchParams.get('progs');
-                    if (progsParam) {
-                        programs = progsParam.split('|');
-                    }
-                    const genProgsParam = parsedUrl.searchParams.get('genprogs');
-                    if (genProgsParam) {
-                        generals = genProgsParam.split('|');
-                    }
-                } catch(e) {
-                    console.warn("Failed to parse URL for card details:", e);
+            const programs = [];
+            const cat = row.category || '';
+            const addProgram = (pVal) => {
+                if (!pVal) return;
+                if (pVal.includes(',')) {
+                    pVal.split(',').map(x => x.trim()).forEach(x => {
+                        if (x) programs.push((cat ? cat + ': ' : '') + x);
+                    });
+                } else {
+                    programs.push((cat ? cat + ': ' : '') + pVal);
                 }
-            }
-
-            if (programs.length === 0 && generals.length === 0) {
-                const cat = row.category || '';
-                if (row['program 1']) programs.push((cat ? cat + ': ' : '') + row['program 1']);
-                if (row['program 2']) programs.push((cat ? cat + ': ' : '') + row['program 2']);
-                if (row['program 3']) programs.push((cat ? cat + ': ' : '') + row['program 3']);
-                if (row['program 4']) programs.push((cat ? cat + ': ' : '') + row['program 4']);
-                if (row.generals) {
-                    generals = row.generals.split(',').map(g => g.trim());
-                }
-            }
+            };
+            addProgram(row['program 1']);
+            addProgram(row['program 2']);
+            addProgram(row['program 3']);
+            addProgram(row['program 4']);
 
             if (programs.length > 0) {
                 progsContainer.innerHTML = programs.map(p => `
@@ -2815,9 +2806,12 @@
                 progsContainer.innerHTML = '<span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">No regular programs registered</span>';
             }
 
-            if (generals.length > 0) {
-                generalsContainer.innerHTML = generals.map(g => `
-                    <span style="display: inline-block; background: #f3e8ff; color: #6b21a8; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #e9d5ff; margin: 2px;">${g}</span>
+            // General Programs
+            const generalsContainer = document.getElementById('details-generals-container');
+            generalsContainer.innerHTML = '';
+            if (row.generals) {
+                generalsContainer.innerHTML = row.generals.split(',').map(g => `
+                    <span style="display: inline-block; background: #f3e8ff; color: #6b21a8; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #e9d5ff; margin: 2px;">${g.trim()}</span>
                 `).join('');
             } else {
                 generalsContainer.innerHTML = '<span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">No general programs registered</span>';
@@ -2885,35 +2879,25 @@
             container.innerHTML = ''; // Clear previous
 
             const cardId = `id-card-hist-${row.id}`;
-            let programs = [];
-            let generals = [];
-            const correctUrl = (row.url || '').replace('registringpage.html', 'registration.html');
-            if (correctUrl) {
-                try {
-                    const parsedUrl = new URL(correctUrl);
-                    const progsParam = parsedUrl.searchParams.get('progs');
-                    if (progsParam) {
-                        programs = progsParam.split('|');
-                    }
-                    const genProgsParam = parsedUrl.searchParams.get('genprogs');
-                    if (genProgsParam) {
-                        generals = genProgsParam.split('|');
-                    }
-                } catch(e) {
-                    console.warn("Failed to parse URL for single print:", e);
+            const programs = [];
+            const cat = row.category || '';
+            const addProgram = (pVal) => {
+                if (!pVal) return;
+                if (pVal.includes(',')) {
+                    pVal.split(',').map(x => x.trim()).forEach(x => {
+                        if (x) programs.push((cat ? cat + ': ' : '') + x);
+                    });
+                } else {
+                    programs.push((cat ? cat + ': ' : '') + pVal);
                 }
-            }
+            };
+            addProgram(row['program 1']);
+            addProgram(row['program 2']);
+            addProgram(row['program 3']);
+            addProgram(row['program 4']);
 
-            if (programs.length === 0 && generals.length === 0) {
-                const cat = row.category || '';
-                if (row['program 1']) programs.push((cat ? cat + ': ' : '') + row['program 1']);
-                if (row['program 2']) programs.push((cat ? cat + ': ' : '') + row['program 2']);
-                if (row['program 3']) programs.push((cat ? cat + ': ' : '') + row['program 3']);
-                if (row['program 4']) programs.push((cat ? cat + ': ' : '') + row['program 4']);
-                if (row.generals) {
-                    generals = row.generals.split(',').map(g => g.trim());
-                }
-            }
+            const generals = row.generals ? row.generals.split(',').map(g => g.trim()) : [];
+            const correctUrl = (row.url || '').replace('registringpage.html', 'registration.html');
 
             const cardHtml = `
                 <div class="id-card" style="width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;">
