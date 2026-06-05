@@ -1488,10 +1488,6 @@
                                 style="margin-bottom: 0; background: #805ad5; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
                                 <i class="fa fa-file-pdf"></i> Print All Student Cards (PDF)
                             </button>
-                            <button class="btn" onclick="printSelectedStudentCards()"
-                                style="margin-bottom: 0; background: #10b981; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
-                                <i class="fa fa-check-square"></i> Print Selected Cards (PDF)
-                            </button>
                         </div>
                     </div>
 
@@ -1976,6 +1972,62 @@
             checkboxes.forEach(cb => {
                 cb.checked = master.checked;
             });
+            updateSelectionBar();
+        }
+
+        function updateSelectionBar() {
+            const checkedBoxes = document.querySelectorAll('.history-row-checkbox:checked');
+            const count = checkedBoxes.length;
+            let bar = document.getElementById('floating-selection-bar');
+            
+            if (count > 0) {
+                if (!bar) {
+                    bar = document.createElement('div');
+                    bar.id = 'floating-selection-bar';
+                    bar.style.cssText = 'position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3); z-index: 9999; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: translate(-50%, 20px); font-family: "Outfit", "Inter", sans-serif; border: 1px solid rgba(255,255,255,0.1);';
+                    document.body.appendChild(bar);
+                    // Force reflow to trigger transition
+                    bar.offsetHeight;
+                }
+                
+                bar.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background: #10b981; color: white; font-weight: bold; padding: 2px 8px; border-radius: 9999px; font-size: 0.85rem;">${count}</span>
+                        <span style="font-size: 0.95rem; font-weight: 500;">Card${count > 1 ? 's' : ''} Selected</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button onclick="printSelectedStudentCards()" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2); transition: background 0.2s;">
+                            <i class="fa fa-print"></i> Print Selected
+                        </button>
+                        <button onclick="clearSelection()" style="background: transparent; color: #94a3b8; border: 1px solid #475569; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                            Cancel
+                        </button>
+                    </div>
+                `;
+                bar.style.opacity = '1';
+                bar.style.transform = 'translate(-50%, 0)';
+            } else {
+                if (bar) {
+                    bar.style.opacity = '0';
+                    bar.style.transform = 'translate(-50%, 20px)';
+                    setTimeout(() => {
+                        if (bar && bar.parentNode) {
+                            bar.parentNode.removeChild(bar);
+                        }
+                    }, 300);
+                }
+            }
+        }
+
+        function clearSelection() {
+            const master = document.getElementById('select-all-history');
+            if (master) master.checked = false;
+            
+            const checkboxes = document.querySelectorAll('.history-row-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+            });
+            updateSelectionBar();
         }
 
         async function printSelectedStudentCards() {
@@ -2224,7 +2276,7 @@
                 html += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 0.75rem 1rem; text-align: center;">
-                            <input type="checkbox" class="history-row-checkbox" value="${row.id}" style="cursor: pointer; transform: scale(1.15);">
+                            <input type="checkbox" class="history-row-checkbox" value="${row.id}" onchange="updateSelectionBar()" style="cursor: pointer; transform: scale(1.15);">
                         </td>
                         <td style="padding: 0.75rem 1rem; font-weight: 600; color: #2d3748;">
                             <a href="#" onclick="showCardDetails(${row.id}); return false;" style="color: #3b82f6; text-decoration: none;">${row.name}</a>
