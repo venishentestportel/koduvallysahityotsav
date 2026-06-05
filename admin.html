@@ -2560,10 +2560,10 @@
                     // Save parsed Excel students globally
                     window.genCardExcelStudents = studentsArrayLoaded;
 
-                    infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArray.length} student(s) from Excel.</span>`;
+                    infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArrayLoaded.length} student(s) from Excel.</span>`;
                     
                     // Show a preview in the names textarea
-                    const namesPreview = studentsArray.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
+                    const namesPreview = studentsArrayLoaded.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
                     document.getElementById('gen-card-names').value = namesPreview;
 
                     // Render preview table
