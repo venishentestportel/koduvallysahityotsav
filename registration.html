@@ -1968,9 +1968,12 @@
             }
 
             const config = { 
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
+                fps: 15,
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                    const size = Math.floor(minEdge * 0.75); // 75% of screen width/height
+                    return { width: size, height: size };
+                }
             };
             
             const onScanSuccess = (decodedText) => {
