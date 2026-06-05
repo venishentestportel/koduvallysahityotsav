@@ -2015,12 +2015,13 @@
                 document.body.appendChild(printContainer);
 
                 // Add print styles dynamically
+                const style = document.createElement('style');
                 style.innerHTML = `
+                    @page {
+                        size: A4;
+                        margin: 0.2in;
+                    }
                     @media print {
-                        @page {
-                            size: A4;
-                            margin: 0.2in;
-                        }
                         body {
                             margin: 0;
                             padding: 0;
