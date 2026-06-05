@@ -1116,7 +1116,8 @@
                     }
                 }
 
-                // Remove Programs that have already Ended
+                // Identify Programs that have already Ended
+                let endedProgs = [];
                 if (stage && uniqueProgs.length > 0) {
                     try {
                         const tableName = stage.toLowerCase().trim();
@@ -1127,8 +1128,7 @@
                             .eq('Categories', cat);
                         
                         if (!endedErr && endedData && endedData.length > 0) {
-                            const endedProgs = endedData.map(d => d.Programs);
-                            uniqueProgs = uniqueProgs.filter(p => !endedProgs.includes(p));
+                            endedProgs = endedData.map(d => d.Programs);
                         }
                     } catch (e) {
                         console.warn("Could not check ended programs", e);
@@ -1143,7 +1143,13 @@
                 }
 
                 progSelect.innerHTML = '<option value="">-- Program --</option>' + 
-                    uniqueProgs.map(p => `<option value="${p}">${p}</option>`).join('');
+                    uniqueProgs.map(p => {
+                        const isEnded = endedProgs.includes(p);
+                        if (isEnded) {
+                            return `<option value="" disabled style="color: #a0aec0; background-color: #f7fafc;">${p} (Completed)</option>`;
+                        }
+                        return `<option value="${p}">${p}</option>`;
+                    }).join('');
 
                 // Restore saved program draft if it exists in the newly loaded list
                 const savedProg = localStorage.getItem('conductor_draft_program');
