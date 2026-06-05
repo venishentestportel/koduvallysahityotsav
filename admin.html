@@ -3555,8 +3555,8 @@
             if (urlVal) {
                 new QRCode(qrContainer, {
                     text: urlVal,
-                    width: 130,
-                    height: 130,
+                    width: 160,
+                    height: 160,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
@@ -3590,17 +3590,15 @@
                     
                     <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
                     <div style="position: absolute; bottom: 35px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; box-sizing: border-box;">
-                        <div style="font-size: 0.9rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px;">Student Name</div>
-                        <div style="font-size: 2.3rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); width: 100%;">${row.name}</div>
+                        <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;">${row.name}</div>
                     </div>
 
                     <!-- Details (Right 42%) -->
-                    <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 30px 20px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
+                    <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 25px 20px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
                         
                         <!-- Sector (Top) -->
                         <div style="width: 100%; text-align: center; margin-top: 5px;">
-                            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px;">Sector</div>
-                            <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.sector || 'N/A'}</div>
+                            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.sector || 'N/A'}</div>
                         </div>
 
                         <!-- QR Code (Middle) -->
@@ -3623,8 +3621,8 @@
             setTimeout(() => {
                 new QRCode(document.getElementById(`print-qr-${cardId}`), {
                     text: correctUrl,
-                    width: 150,
-                    height: 150,
+                    width: 180,
+                    height: 180,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
@@ -6608,8 +6606,7 @@
 
                     <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
                     <div style="position: absolute; bottom: 25px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 15px; box-sizing: border-box;">
-                        <div style="font-size: 0.75rem; font-weight: 700; color: rgba(255, 255, 255, 0.75); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px;">Student Name</div>
-                        <div id="gen-card-name" style="font-size: 1.9rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); width: 100%;">Name</div>
+                        <div id="gen-card-name" style="font-size: 2.1rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;">Name</div>
                     </div>
 
                     <!-- Content overlay (Right 42%) -->
@@ -6618,8 +6615,7 @@
 
                         <!-- Sector (Top) -->
                         <div style="width: 100%; text-align: center; margin-top: 5px;">
-                            <div style="font-size: 0.65rem; font-weight: 700; color: #64748b; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px;">Sector</div>
-                            <div id="gen-card-sector" style="font-size: 1.15rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Sector</div>
+                            <div id="gen-card-sector" style="font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Sector</div>
                         </div>
 
                         <!-- QR Code (Middle) -->
