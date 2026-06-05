@@ -1101,6 +1101,16 @@
                 loadCardHistory();
                 loadCardWhatsAppTargets();
                 populateGenCardGlobalCategory();
+                
+                // Auto populate baseurl if empty or invalid/local
+                const buInput = document.getElementById('gen-card-baseurl');
+                if (buInput && (!buInput.value || buInput.value === 'https://yourwebsite.com' || buInput.value.startsWith('file://'))) {
+                    if (window.location.origin && !window.location.origin.startsWith('file://')) {
+                        buInput.value = window.location.origin + window.location.pathname.replace('design-studio.html', 'registration.html');
+                    } else {
+                        buInput.value = 'https://venishentestportel.github.io/koduvallysahityotsav/registration.html';
+                    }
+                }
             }
         }
 
@@ -1669,7 +1679,12 @@
 
         async function generateIdCards() {
             const sector = document.getElementById('gen-card-sector').value.trim();
-            const baseUrl = document.getElementById('gen-card-baseurl').value.trim();
+            let baseUrl = document.getElementById('gen-card-baseurl').value.trim();
+
+            if (baseUrl.startsWith('file://')) {
+                baseUrl = 'https://venishentestportel.github.io/koduvallysahityotsav/registration.html';
+                document.getElementById('gen-card-baseurl').value = baseUrl;
+            }
 
             if (!baseUrl) {
                 alert("Please enter a Base Website URL.");
@@ -1800,7 +1815,14 @@
                 const sGenProgsParam = sGenProgsParamVal ? `&genprogs=${encodeURIComponent(sGenProgsParamVal)}` : '';
 
                 const chestParam = student.chest ? `&chestno=${encodeURIComponent(student.chest)}` : '';
-                const cardUrl = `${baseUrl.replace(/\/$/, '')}/registration.html?name=${encodeURIComponent(student.name)}&sector=${encodeURIComponent(student.sector)}${sProgsParam}${sGenProgsParam}${chestParam}`;
+                let targetUrl = baseUrl.trim();
+                if (targetUrl && !/^https?:\/\//i.test(targetUrl)) {
+                    targetUrl = 'https://' + targetUrl;
+                }
+                if (!targetUrl.endsWith('registration.html')) {
+                    targetUrl = targetUrl.replace(/\/$/, '') + '/registration.html';
+                }
+                const cardUrl = `${targetUrl}?name=${encodeURIComponent(student.name)}&sector=${encodeURIComponent(student.sector)}${sProgsParam}${sGenProgsParam}${chestParam}`;
 
                 const dbRow = {
                     name: student.name,
