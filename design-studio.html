@@ -1556,6 +1556,10 @@
                     @media screen {
                         #print-all-container { display: none !important; }
                     }
+                    .print-qr-code-wrapper img, .print-qr-code-wrapper canvas {
+                        width: 100% !important;
+                        height: 100% !important;
+                    }
                 `;
                 document.head.appendChild(style);
             }
@@ -1599,7 +1603,7 @@
 
                             <!-- QR Code (Middle) -->
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 2px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div id="${cardId}" style="width: 100px; height: 100px;"></div>
+                                <div id="${cardId}" class="print-qr-code-wrapper" style="width: 100px; height: 100px;"></div>
                             </div>
 
                             <!-- Chest No (Bottom) -->
@@ -1620,11 +1624,11 @@
                         }
                         new QRCode(document.getElementById(cardId), {
                             text: correctUrl,
-                            width: 100,
-                            height: 100,
+                            width: 256,
+                            height: 256,
                             colorDark: "#000000",
                             colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.L
+                            correctLevel: QRCode.CorrectLevel.M
                         });
                     } catch (e) {
                         console.error("QR Code generation error:", e);
