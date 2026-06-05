@@ -670,23 +670,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const table = document.getElementById('hero-stages-table-body');
         if (!table) return;
 
+        function getStageDisplayName(stageName) {
+            if (window.getStageDisplayName) return window.getStageDisplayName(stageName);
+            if (!stageName) return '';
+            return stageName.toLowerCase().trim().replace(/\b\w/g, c => c.toUpperCase());
+        }
+
         if (!appData.stages || appData.stages.length === 0) {
             table.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #666666; padding: 3rem 1.5rem;">No stages created yet.</td></tr>`;
             return;
-        }
-
-        function getLocalStageDisplayName(stageName) {
-            if (window.getStageDisplayName) return window.getStageDisplayName(stageName);
-            const name = stageName.toLowerCase().trim();
-            if (name === 'stage 1') return 'Stage 1: Al Farabi';
-            if (name === 'stage 2') return 'Stage 2: Al Ghazali';
-            if (name === 'stage 3') return 'Stage 3: Ibn Sina';
-            if (name === 'stage 4') return 'Stage 4: Al Khwarizmi';
-            if (name === 'stage 5') return 'Stage 5: Al Kindi';
-            if (name === 'stage 6') return 'Stage 6: Al Razi';
-            if (name === 'stage 7') return 'Stage 7: Ibn Rushd';
-            if (name === 'stage 8') return 'Stage 8: Ibn Khaldun';
-            return stageName.replace(/\b\w/g, c => c.toUpperCase());
         }
 
         table.innerHTML = appData.stages.map(s => {
@@ -708,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionHtml = `<span class="session-cell idle">Idle / End of Program</span>`;
             }
 
-            const stageTitle = getLocalStageDisplayName(s.stage);
+            const stageTitle = getStageDisplayName(s.stage);
             const dotClass = isActive ? 'status-dot active' : 'status-dot';
             const badgeClass = isActive ? 'status-badge active' : 'status-badge idle';
             const badgeText = isActive ? 'ACTIVE' : 'IDLE';

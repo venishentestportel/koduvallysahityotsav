@@ -323,16 +323,7 @@
         // Global Helper to get stage display name matching mockup
         window.getStageDisplayName = function (stageName) {
             if (!stageName) return '';
-            const name = stageName.toLowerCase().trim();
-            if (name === 'stage 1') return 'Stage 1: Al Farabi';
-            if (name === 'stage 2') return 'Stage 2: Al Ghazali';
-            if (name === 'stage 3') return 'Stage 3: Ibn Sina';
-            if (name === 'stage 4') return 'Stage 4: Al Khwarizmi';
-            if (name === 'stage 5') return 'Stage 5: Al Kindi';
-            if (name === 'stage 6') return 'Stage 6: Al Razi';
-            if (name === 'stage 7') return 'Stage 7: Ibn Rushd';
-            if (name === 'stage 8') return 'Stage 8: Ibn Khaldun';
-            return stageName.replace(/\b\w/g, c => c.toUpperCase());
+            return stageName.toLowerCase().trim().replace(/\b\w/g, c => c.toUpperCase());
         };
 
         function openTimelineModal(stageName) {

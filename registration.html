@@ -390,10 +390,8 @@
             </div>
 
             <div class="form-group">
-                <label>Current Stage Target</label>
-                <select class="form-control" id="stage-select">
-                    <option value="">Loading stages...</option>
-                </select>
+                <label>Assigned Stage</label>
+                <input type="text" class="form-control" id="stage-select" disabled style="background: #f8fafc; font-weight: bold; color: #1e293b;" placeholder="Loading stage...">
             </div>
 
             <button class="btn-register" onclick="startScanner()" style="margin-bottom: 1rem;">
@@ -633,16 +631,7 @@
 
         function getStageDisplayName(stageName) {
             if (!stageName) return '';
-            const name = stageName.toLowerCase().trim();
-            if (name === 'stage 1') return 'Stage 1: Al Farabi';
-            if (name === 'stage 2') return 'Stage 2: Al Ghazali';
-            if (name === 'stage 3') return 'Stage 3: Ibn Sina';
-            if (name === 'stage 4') return 'Stage 4: Al Khwarizmi';
-            if (name === 'stage 5') return 'Stage 5: Al Kindi';
-            if (name === 'stage 6') return 'Stage 6: Al Razi';
-            if (name === 'stage 7') return 'Stage 7: Ibn Rushd';
-            if (name === 'stage 8') return 'Stage 8: Ibn Khaldun';
-            return stageName.replace(/\b\w/g, c => c.toUpperCase());
+            return stageName.toLowerCase().trim().replace(/\b\w/g, c => c.toUpperCase());
         }
 
         async function loadStagesFromSupabase() {
@@ -696,7 +685,6 @@
                 sanitizedStages.map(s => `<option value="${s}">${getStageDisplayName(s)}</option>`).join('');
 
             if (loginSelect) loginSelect.innerHTML = optionsHtml;
-            if (stageSelect) stageSelect.innerHTML = optionsHtml;
             
             return sanitizedStages;
         }
@@ -937,7 +925,7 @@
                     
                     const savedStage = localStorage.getItem('admin_stage');
                     if (savedStage) {
-                        document.getElementById('stage-select').value = savedStage;
+                        document.getElementById('stage-select').value = getStageDisplayName(savedStage);
                         const display = document.getElementById('conductor-stage-display');
                         if (display) display.innerText = savedStage;
                     }
@@ -1054,7 +1042,7 @@
             
             // Pre-fill the stage selectors
             const stageSelect = document.getElementById('stage-select');
-            if(stageSelect) stageSelect.value = stage;
+            if(stageSelect) stageSelect.value = getStageDisplayName(stage);
             
             const display = document.getElementById('conductor-stage-display');
             if(display) display.innerText = stage;
@@ -1791,7 +1779,7 @@
                     const sector = url.searchParams.get('sector');
                     
                     if (name) {
-                        const stage = document.getElementById('stage-select').value;
+                        const stage = localStorage.getItem('admin_stage');
                         if (!stage) {
                             alert("Please select a stage before scanning.");
                             stopScanner();

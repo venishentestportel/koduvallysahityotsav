@@ -698,15 +698,14 @@
 
             try {
                 const dbCat = getDbCategory(category);
-                let query = supabaseClient.from('registred').select('*');
+                let query = supabaseClient.from('regist').select('*');
                 if (dbCat === 'GEN') {
-                    query = query.ilike('generals', `%${program}%`);
+                    query = query.ilike('general', `%${program}%`);
                 } else {
-                    query = query.eq('category', dbCat)
-                                 .or(`"program 1".eq."${program}","program 2".eq."${program}","program 3".eq."${program}","program 4".eq."${program}"`);
+                    query = query.ilike('program', `%${dbCat}:%${program}%`);
                 }
 
-                const { data: rawData, error } = await query.order('time', { ascending: true });
+                const { data: rawData, error } = await query;
 
                 if (error) throw error;
 
