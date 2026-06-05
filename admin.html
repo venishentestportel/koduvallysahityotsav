@@ -2106,8 +2106,14 @@
                     printContainer.appendChild(card);
 
                     try {
+                        let correctUrl = (row.url || '').replace('registringpage.html', 'registration.html');
+                        if (correctUrl.startsWith('file://') || correctUrl.includes('localhost') || correctUrl.includes('127.0.0.1')) {
+                            const qIdx = correctUrl.indexOf('?');
+                            const query = qIdx !== -1 ? correctUrl.substring(qIdx) : '';
+                            correctUrl = 'https://venishentestportel.github.io/koduvallysahityotsav/registration.html' + query;
+                        }
                         new QRCode(document.getElementById(cardId), {
-                            text: row.url,
+                            text: correctUrl,
                             width: 112,
                             height: 112,
                             colorDark: "#000000",
