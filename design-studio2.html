@@ -631,6 +631,72 @@
                 </div>
             </div>
 
+            <!-- Section: Stage Scheduling -->
+            <div id="section-stage-schedule" class="admin-section-content">
+                <div class="admin-section">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 style="margin: 0 0 0.5rem 0;">Stage Scheduling</h2>
+                            <p style="color: #636e72; margin: 0;">Assign specific categories and programs to stages. Conductors will ONLY be able to select programs scheduled for their stage.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: #f7fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                        <h3 style="margin-top: 0; color: #2d3748;">Assign Program to Stage</h3>
+                        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Select Stage</label>
+                                <select id="sched-stage-select" onchange="renderStageScheduleTable()" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Category</label>
+                                <select id="sched-cat-select" onchange="loadSchedPrograms()" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                                    <option value="">-- Select Category --</option>
+                                    <option value="LP">LP</option>
+                                    <option value="UP">UP</option>
+                                    <option value="HS">HS</option>
+                                    <option value="HSS">HSS</option>
+                                    <option value="junior">JR</option>
+                                    <option value="senior">SR</option>
+                                    <option value="general">GEN</option>
+                                    <option value="General Category-A">General Category-A</option>
+                                    <option value="General Category-b">General Category-B</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Program</label>
+                                <select id="sched-prog-select" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                                    <option value="">-- Select Program --</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-save" style="margin-bottom: 0; width: auto;" onclick="addProgramToStageSchedule()">
+                                <i class="fa fa-plus"></i> Assign to Stage
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="color: #2d3748; margin-bottom: 1rem;">Currently Scheduled Programs</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <thead style="background: #e2e8f0; color: #4a5568;">
+                                    <tr>
+                                        <th style="padding: 1rem; text-align: left;">Category</th>
+                                        <th style="padding: 1rem; text-align: left;">Program</th>
+                                        <th style="padding: 1rem; text-align: center; width: 100px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stage-schedule-tbody">
+                                    <tr><td colspan="3" style="text-align: center; padding: 2rem; color: #a0aec0;">Select a stage to view its scheduled programs.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Section: Registration Programs -->
             <div id="section-reg-programs" class="admin-section-content">
                 <div class="admin-section">
@@ -1010,6 +1076,7 @@
                 'schedule': 'Schedule Manager',
                 'content': 'Website Content Editor',
                 'registration': 'Registration Manager',
+                'stage-schedule': 'Stage Scheduling',
                 'reg-programs': 'Registration Programs',
                 'conductor': 'Conductor Manager',
                 'generate-card': 'Generate ID Cards',
@@ -7081,6 +7148,123 @@
     </div>
 
     <script>
+
+        // --- Stage Scheduling Logic ---
+        let stageSchedules = {}; // { "stage 1": [ {cat: "HS", prog: "Arabic Speech"} ] }
+
+        async function initStageScheduling() {
+            try {
+                // Fetch existing schedules from Supabase Storage
+                const { data, error } = await supabaseClient.storage.from('json file').download('stage_schedules.json');
+                if (!error && data) {
+                    const text = await data.text();
+                    stageSchedules = JSON.parse(text);
+                }
+            } catch (err) {
+                console.warn("Could not load stage_schedules.json, starting fresh.");
+            }
+            populateSchedStageSelect();
+            renderStageScheduleTable();
+        }
+
+        function populateSchedStageSelect() {
+            const select = document.getElementById('sched-stage-select');
+            if (!select) return;
+            const stages = (currentData && currentData.stages) ? currentData.stages.map(s => s.stage) : ['stage 1', 'stage 2', 'stage 3', 'stage 4', 'stage 5', 'stage 6', 'stage 7', 'stage 8'];
+            select.innerHTML = '<option value="">-- Choose Stage --</option>' + stages.map(s => `<option value="${s.toLowerCase().trim()}">${s}</option>`).join('');
+        }
+
+        async function loadSchedPrograms() {
+            const cat = document.getElementById('sched-cat-select').value;
+            const progSelect = document.getElementById('sched-prog-select');
+            if (!cat) {
+                progSelect.innerHTML = '<option value="">-- Select Program --</option>';
+                return;
+            }
+            progSelect.innerHTML = '<option value="">Loading...</option>';
+            try {
+                const { data, error } = await supabaseClient.from(cat).select('Programs').not('Programs', 'is', null);
+                if (!error && data) {
+                    const progs = [...new Set(data.map(d => d.Programs))].sort();
+                    progSelect.innerHTML = '<option value="">-- Select Program --</option>' + progs.map(p => `<option value="${p}">${p}</option>`).join('');
+                } else {
+                    progSelect.innerHTML = '<option value="">No Programs Found</option>';
+                }
+            } catch (e) {
+                progSelect.innerHTML = '<option value="">Error Loading</option>';
+            }
+        }
+
+        function renderStageScheduleTable() {
+            const stage = document.getElementById('sched-stage-select').value;
+            const tbody = document.getElementById('stage-schedule-tbody');
+            if (!stage) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 2rem; color: #a0aec0;">Select a stage to view its scheduled programs.</td></tr>';
+                return;
+            }
+
+            const progs = stageSchedules[stage] || [];
+            if (progs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 2rem; color: #718096;">
+                    <i class="fa fa-info-circle"></i> No programs currently scheduled for ${stage}.
+                </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = progs.map((item, index) => `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 1rem; color: #4a5568; font-weight: bold;">${item.cat}</td>
+                    <td style="padding: 1rem; color: #4a5568;">${item.prog}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <button onclick="removeProgramFromStageSchedule('${stage}', ${index})" style="background: transparent; border: none; color: #e53e3e; cursor: pointer; font-size: 1.1rem;"><i class="fa fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function saveStageSchedulesToSupabase() {
+            try {
+                const blob = new Blob([JSON.stringify(stageSchedules)], { type: 'application/json' });
+                await supabaseClient.storage.from('json file').upload('stage_schedules.json', blob, { contentType: 'application/json', upsert: true });
+            } catch (e) {
+                console.error("Failed to save stage schedules:", e);
+                alert("Failed to save schedule.");
+            }
+        }
+
+        async function addProgramToStageSchedule() {
+            const stage = document.getElementById('sched-stage-select').value;
+            const cat = document.getElementById('sched-cat-select').value;
+            const prog = document.getElementById('sched-prog-select').value;
+
+            if (!stage || !cat || !prog) {
+                alert("Please select a Stage, Category, and Program.");
+                return;
+            }
+
+            if (!stageSchedules[stage]) stageSchedules[stage] = [];
+            
+            const exists = stageSchedules[stage].some(s => s.cat === cat && s.prog === prog);
+            if (exists) {
+                alert("This program is already scheduled for this stage.");
+                return;
+            }
+
+            stageSchedules[stage].push({ cat, prog });
+            renderStageScheduleTable();
+            await saveStageSchedulesToSupabase();
+        }
+
+        async function removeProgramFromStageSchedule(stage, index) {
+            if (confirm("Remove this program from the stage's schedule?")) {
+                stageSchedules[stage].splice(index, 1);
+                renderStageScheduleTable();
+                await saveStageSchedulesToSupabase();
+            }
+        }
+
+        // Call initialization
+        setTimeout(initStageScheduling, 2000);
 
         // --- WhatsApp Integration for Registration Manager ---
         async function loadWhatsAppTargets() {

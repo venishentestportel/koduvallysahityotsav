@@ -580,6 +580,57 @@
         const SUPABASE_KEY = 'sb_publishable_Ubv4Ofl0uR9o6ct9PvI1uA_C9hglPNT';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let globalStageSchedules = null;
+        async function fetchStageSchedules() {
+            try {
+                const { data, error } = await supabaseClient.storage.from('json file').download('stage_schedules.json');
+                if (!error && data) {
+                    const text = await data.text();
+                    globalStageSchedules = JSON.parse(text);
+                } else {
+                    globalStageSchedules = {};
+                }
+            } catch (err) {
+                globalStageSchedules = {};
+            }
+        }
+
+        function applyStageScheduleRules() {
+            const stage = localStorage.getItem('admin_stage');
+            if (!stage || !globalStageSchedules) return;
+
+            const sched = globalStageSchedules[stage.toLowerCase().trim()];
+            const catSelect = document.getElementById('conductor-cat');
+            if (!catSelect) return;
+
+            // Strict enforcement: if no schedule, clear everything!
+            if (!sched || sched.length === 0) {
+                catSelect.innerHTML = '<option value="">-- No Categories Scheduled --</option>';
+                const progSelect = document.getElementById('conductor-prog');
+                if (progSelect) progSelect.innerHTML = '<option value="">-- No Programs Scheduled --</option>';
+                return;
+            }
+
+            // Extract unique categories allowed for this stage
+            const allowedCats = [...new Set(sched.map(s => s.cat))];
+            
+            const catMap = {
+                'LP': 'LP', 'UP': 'UP', 'HS': 'HS', 'HSS': 'HSS',
+                'junior': 'JR', 'senior': 'SR', 'general': 'GEN',
+                'General Category-A': 'General Category-A', 'General Category-b': 'General Category-B'
+            };
+
+            const currentVal = catSelect.value;
+            catSelect.innerHTML = '<option value="">-- Category --</option>' + 
+                allowedCats.map(c => `<option value="${c}">${catMap[c] || c}</option>`).join('');
+                
+            if (allowedCats.includes(currentVal)) {
+                catSelect.value = currentVal;
+            } else {
+                localStorage.setItem('conductor_draft_category', '');
+            }
+        }
+
         function getStageDisplayName(stageName) {
             if (!stageName) return '';
             const name = stageName.toLowerCase().trim();
@@ -651,7 +702,8 @@
         }
 
         // Load units on page load
-        window.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchStageSchedules();
             // First load stages dynamically from Supabase
             await loadStagesFromSupabase();
 
@@ -901,6 +953,9 @@
                 loadRegisteredStudentsList(activeCat, activeProg);
             }
 
+            // Apply schedules before loading draft category
+            applyStageScheduleRules();
+
             // Restore draft category and program in Conductor Dashboard
             const savedCat = localStorage.getItem('conductor_draft_category');
             if (savedCat) {
@@ -1003,6 +1058,14 @@
             
             const display = document.getElementById('conductor-stage-display');
             if(display) display.innerText = stage;
+
+            applyStageScheduleRules();
+            
+            // Re-eval current selections after schedule applied
+            const catSelect = document.getElementById('conductor-cat');
+            if (catSelect && catSelect.value) {
+                loadConductorPrograms();
+            }
         }
 
         async function loadConductorPrograms() {
@@ -1038,7 +1101,27 @@
                 }
 
                 // Filter out duplicates and sort alphabetically
-                const uniqueProgs = [...new Set(data.map(d => d.Programs))].sort();
+                let uniqueProgs = [...new Set(data.map(d => d.Programs))].sort();
+
+                // Apply Stage Schedule Filtering
+                const stage = localStorage.getItem('admin_stage');
+                if (stage && globalStageSchedules) {
+                    const sched = globalStageSchedules[stage.toLowerCase().trim()];
+                    if (!sched || sched.length === 0) {
+                        uniqueProgs = []; // STRICT Enforcement
+                    } else {
+                        // Only keep programs that are scheduled for this stage AND category
+                        const allowedProgs = sched.filter(s => s.cat === cat).map(s => s.prog);
+                        uniqueProgs = uniqueProgs.filter(p => allowedProgs.includes(p));
+                    }
+                }
+
+                if (uniqueProgs.length === 0) {
+                    progSelect.innerHTML = '<option value="">No Programs Scheduled</option>';
+                    localStorage.setItem('conductor_draft_program', '');
+                    loadConductorParticipants();
+                    return;
+                }
 
                 progSelect.innerHTML = '<option value="">-- Program --</option>' + 
                     uniqueProgs.map(p => `<option value="${p}">${p}</option>`).join('');
