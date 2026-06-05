@@ -42,7 +42,8 @@ const DEFAULT_DATA = {
         { id: 7, stage: 'stage 7' },
         { id: 8, stage: 'stage 8' }
     ],
-    stageStatuses: {}
+    stageStatuses: {},
+    stageSchedules: {}
 };
 
 let appData = { ...DEFAULT_DATA };
@@ -148,14 +149,16 @@ async function fetchSupabaseData() {
             { data: postersData, error: posterErr },
             { data: galleryData, error: galErr },
             { data: contentData, error: contentErr },
-            { data: sData, error: sErr }
+            { data: sData, error: sErr },
+            stageSchedRes
         ] = await Promise.all([
             supabaseClient.from('Mark Management').select('*').order('id'),
             supabaseClient.from('Schedule Manager').select('*').order('id'),
             supabaseClient.storage.from('Design Studio').list(),
             supabaseClient.storage.from('Gallery Manager').list(),
             supabaseClient.from('contenttext').select('*').order('id'),
-            supabaseClient.from('shediul').select('*').order('id')
+            supabaseClient.from('shediul').select('*').order('id'),
+            supabaseClient.storage.from('json file').download('stage_schedules.json').catch(err => ({ error: err }))
         ]);
 
         if (markErr) throw markErr;
@@ -207,6 +210,17 @@ async function fetchSupabaseData() {
             current: r["Current Program"] || '',
             upcoming: r["Upcoming Program"] || ''
         }));
+
+        // 3b. Stage Schedules (Stage Scheduling)
+        appData.stageSchedules = {};
+        if (stageSchedRes && !stageSchedRes.error && stageSchedRes.data) {
+            try {
+                const text = await stageSchedRes.data.text();
+                appData.stageSchedules = JSON.parse(text);
+            } catch (e) {
+                console.warn("Failed to parse stage_schedules.json:", e);
+            }
+        }
 
         // 4. Posters (Design Studio)
         appData.posters = {};

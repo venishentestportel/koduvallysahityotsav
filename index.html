@@ -401,36 +401,100 @@
         function renderScheduleList() {
             const data = getData();
             const list = document.getElementById('schedule-display-list');
-            if (!list || !data.schedule) return;
+            if (!list) return;
 
-            if (data.schedule.length === 0) {
-                list.innerHTML = `<p style="text-align:center; color:var(--pallet-text-light);">No programs scheduled at this time.</p>`;
+            const stages = data.stages || [];
+            const stageSchedules = data.stageSchedules || {};
+
+            if (stages.length === 0) {
+                list.innerHTML = `<p style="text-align:center; color:var(--pallet-text-light);">No stages configured.</p>`;
                 return;
             }
 
-            list.innerHTML = data.schedule.map(item => {
-                const upcomingList = item.upcoming ? item.upcoming.split(',').map(s => s.trim()).filter(s => s) : [];
-                let upcomingHtml = upcomingList.length > 0
-                    ? upcomingList.map((prog, idx) => `
+            list.innerHTML = stages.map(s => {
+                const stageKey = s.stage.toLowerCase().trim();
+                const scheduleList = stageSchedules[stageKey] || [];
+                const stageTitle = window.getStageDisplayName ? window.getStageDisplayName(s.stage) : s.stage;
+
+                // Determine what's current (NOW), next, and later from live stage status
+                const historyList = (data.stageHistory && data.stageHistory[s.stage]) || [];
+                const currentStatus = historyList.length > 0 ? historyList[0] : null;
+                const isActive = currentStatus && currentStatus.situation && !currentStatus.situation.toLowerCase().includes('end');
+
+                let nowText = 'Idle / End of Program';
+                let nextItem = null;
+                let laterItems = [];
+
+                if (isActive) {
+                    const currentCat = (currentStatus.Categories || '').toLowerCase().trim();
+                    const currentProg = (currentStatus.Programs || '').toLowerCase().trim();
+                    nowText = `${currentStatus.Programs} (${currentStatus.Categories})`;
+
+                    // Search for this program in the scheduleList
+                    let foundIdx = -1;
+                    for (let idx = 0; idx < scheduleList.length; idx++) {
+                        const item = scheduleList[idx];
+                        if ((item.cat || '').toLowerCase().trim() === currentCat && (item.prog || '').toLowerCase().trim() === currentProg) {
+                            foundIdx = idx;
+                            break;
+                        }
+                    }
+
+                    if (foundIdx !== -1) {
+                        nextItem = scheduleList[foundIdx + 1] || null;
+                        laterItems = scheduleList.slice(foundIdx + 2);
+                    } else {
+                        // Not found in schedule list (off-schedule program started)
+                        nextItem = scheduleList[0] || null;
+                        laterItems = scheduleList.slice(1);
+                    }
+                } else {
+                    // Stage is idle, next up is the first scheduled program
+                    nextItem = scheduleList[0] || null;
+                    laterItems = scheduleList.slice(1);
+                }
+
+                let nextHtml = '';
+                if (nextItem) {
+                    nextHtml = `
                         <div class="pallet-list-item">
-                            <span class="badge ${idx === 0 ? 'badge-primary' : 'badge-secondary'}">${idx === 0 ? 'NEXT' : 'LATER'}</span>
-                            <span class="item-text">${prog}</span>
+                            <span class="badge badge-primary">NEXT</span>
+                            <span class="item-text" style="font-weight:600;">${nextItem.prog} (${nextItem.cat})</span>
                         </div>
-                    `).join('')
-                    : `<div class="pallet-list-item"><span class="badge badge-secondary">LATER</span><span class="item-text">None</span></div>`;
+                    `;
+                } else {
+                    nextHtml = `
+                        <div class="pallet-list-item">
+                            <span class="badge badge-secondary">NEXT</span>
+                            <span class="item-text" style="color: var(--pallet-text-light);">None Scheduled</span>
+                        </div>
+                    `;
+                }
+
+                let laterHtml = '';
+                if (laterItems.length > 0) {
+                    laterHtml = laterItems.map(item => `
+                        <div class="pallet-list-item">
+                            <span class="badge badge-secondary">LATER</span>
+                            <span class="item-text">${item.prog} (${item.cat})</span>
+                        </div>
+                    `).join('');
+                }
 
                 return `
                 <div class="pallet-program-card">
-                    <h3 class="program-title">${item.stage}</h3>
+                    <h3 class="program-title">${stageTitle}</h3>
                     <div class="program-details">
                         <div class="pallet-list-item">
                             <span class="badge badge-live">NOW</span>
-                            <span class="item-text" style="font-weight:700;">${item.current}</span>
+                            <span class="item-text" style="font-weight:700; color: ${isActive ? 'var(--pallet-primary)' : 'var(--pallet-text-light)'};">${nowText}</span>
                         </div>
-                        ${upcomingHtml}
+                        ${nextHtml}
+                        ${laterHtml}
                     </div>
                 </div>
-            `}).join('');
+                `;
+            }).join('');
         }
 
         function toggleMobileMenu() {
