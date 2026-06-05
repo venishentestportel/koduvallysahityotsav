@@ -776,7 +776,13 @@
 
                                 // 2. Category check
                                 const sCat = normalize(s.category);
-                                if (activeCat !== 'GEN' && sCat && normActiveCat && sCat !== normActiveCat && sCat !== normDbCat) return false;
+                                const isGeneral = (c) => {
+                                    if (!c) return true;
+                                    const lower = c.toLowerCase().trim();
+                                    return lower === 'gen' || lower === 'general' || lower.includes('general category') || lower.includes('general-category') || lower === '';
+                                };
+                                const isCatMatch = (sCat === normActiveCat || sCat === normDbCat || isGeneral(s.category));
+                                if (activeCat !== 'GEN' && !isCatMatch) return false;
 
                                 // 3. Program check
                                 const p1 = normalize(s['program 1']);
@@ -1497,8 +1503,13 @@
                     const searchCat = cat.toLowerCase().trim();
                     const searchCatDb = catDbName.toLowerCase().trim();
                     
-                    // Match category
-                    if (sCat !== searchCat && sCat !== searchCatDb) return false;
+                    const isGeneral = (c) => {
+                        if (!c) return true;
+                        const lower = c.toLowerCase().trim();
+                        return lower === 'gen' || lower === 'general' || lower.includes('general category') || lower.includes('general-category') || lower === '';
+                    };
+                    const isCatMatch = (sCat === searchCat || sCat === searchCatDb || isGeneral(s.category));
+                    if (!isCatMatch) return false;
 
                     const p1 = normalize(s['program 1']);
                     const p2 = normalize(s['program 2']);
@@ -1628,7 +1639,13 @@
 
                         // 2. Category must match (except for GEN which is flexible)
                         const sCat = normalize(s.category);
-                        if (cat !== 'GEN' && sCat && normCat && sCat !== normCat && sCat !== normDbCat) return false;
+                        const isGeneral = (c) => {
+                            if (!c) return true;
+                            const lower = c.toLowerCase().trim();
+                            return lower === 'gen' || lower === 'general' || lower.includes('general category') || lower.includes('general-category') || lower === '';
+                        };
+                        const isCatMatch = (sCat === normCat || sCat === normDbCat || isGeneral(s.category));
+                        if (cat !== 'GEN' && !isCatMatch) return false;
 
                         // 3. Program must match
                         const p1 = normalize(s['program 1']);
@@ -2186,8 +2203,13 @@
                     const searchCat = cat.toLowerCase().trim();
                     const searchCatDb = catDbName.toLowerCase().trim();
                     
-                    // Match category
-                    if (sCat !== searchCat && sCat !== searchCatDb) return false;
+                    const isGeneral = (c) => {
+                        if (!c) return true;
+                        const lower = c.toLowerCase().trim();
+                        return lower === 'gen' || lower === 'general' || lower.includes('general category') || lower.includes('general-category') || lower === '';
+                    };
+                    const isCatMatch = (sCat === searchCat || sCat === searchCatDb || isGeneral(s.category));
+                    if (!isCatMatch) return false;
 
                     const p1 = normalize(s['program 1']);
                     const p2 = normalize(s['program 2']);
