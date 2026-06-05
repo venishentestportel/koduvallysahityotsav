@@ -1308,6 +1308,35 @@
                             <i class="fa fa-cloud-upload-alt"></i> Upload Allotment List to Database
                         </button>
                     </div>
+
+                    <!-- Database Student Records Section -->
+                    <div style="margin-top: 3rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <h3 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa fa-users" style="color: #3182ce;"></i> Database Student Records
+                                </h3>
+                                <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.85rem;">Search and view all students currently stored in the system.</p>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <div style="position: relative;">
+                                    <i class="fa fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
+                                    <input type="text" id="db-student-search" placeholder="Search chest no, category, program, sector..." oninput="filterExistingStudentList()"
+                                        style="padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.85rem; width: 320px; outline: none; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#3182ce'" onblur="this.style.borderColor='#cbd5e0'">
+                                </div>
+                                <button class="btn" onclick="loadExistingStudentList()" style="margin: 0; padding: 0.5rem 1rem; background: #edf2f7; color: #2d3748; height: auto; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                    <i class="fa fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
+                            <div id="db-students-table-container">
+                                <!-- Loads dynamically -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1551,6 +1580,7 @@
             if (tab.includes('content')) renderContentEditor();
             if (tab.includes('registration')) renderRegistrationAdmin();
             if (tab.includes('conductor')) renderConductorAdmin();
+            if (tab.includes('student-list')) loadExistingStudentList();
         });
 
         function switchTab(tab, el) {
@@ -1622,6 +1652,7 @@
             }
             if (tab === 'student-list') {
                 clearAllotmentPreview();
+                loadExistingStudentList();
             }
         }
 
@@ -3092,6 +3123,7 @@
                 }
 
                 alert(`Successfully uploaded ${insertRows.length} student record entries to the Student List database!`);
+                loadExistingStudentList();
 
             } catch (err) {
                 console.error("Error uploading allotment list:", err);
@@ -3114,10 +3146,152 @@
             const filtered = window.cardHistoryData.filter(row => {
                 const name = (row.name || '').toLowerCase();
                 const sector = (row.sector || '').toLowerCase();
-                return name.includes(query) || sector.includes(query);
+                const chest = (row['chest no.'] || '').toLowerCase();
+                const cat = (row.category || '').toLowerCase();
+                const p1 = (row['program 1'] || '').toLowerCase();
+                const p2 = (row['program 2'] || '').toLowerCase();
+                const p3 = (row['program 3'] || '').toLowerCase();
+                const p4 = (row['program 4'] || '').toLowerCase();
+                const gens = (row.generals || '').toLowerCase();
+                
+                return name.includes(query) || 
+                       sector.includes(query) || 
+                       chest.includes(query) || 
+                       cat.includes(query) || 
+                       p1.includes(query) || 
+                       p2.includes(query) || 
+                       p3.includes(query) || 
+                       p4.includes(query) || 
+                       gens.includes(query);
             });
 
             renderCardHistory(filtered);
+        }
+
+        window.existingStudentsData = [];
+
+        async function loadExistingStudentList() {
+            const container = document.getElementById('db-students-table-container');
+            if (!container) return;
+
+            container.innerHTML = '<div style="color: #666; font-size: 0.9rem; text-align: center; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Loading students from database...</div>';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('registred 2')
+                    .select('*');
+
+                if (error) throw error;
+
+                window.existingStudentsData = data || [];
+                window.existingStudentsData.sort((a, b) => {
+                    const valA = String(a['chest no.'] || '');
+                    const valB = String(b['chest no.'] || '');
+                    return valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+                });
+                // Reset search box
+                const searchBox = document.getElementById('db-student-search');
+                if (searchBox) searchBox.value = '';
+
+                renderExistingStudentList(window.existingStudentsData);
+            } catch (err) {
+                console.error("Failed to load student list:", err);
+                container.innerHTML = `<div style="color: #ef4444; font-size: 0.9rem; text-align: center; padding: 2rem;"><i class="fa fa-exclamation-circle"></i> Failed to load student list: ${err.message}</div>`;
+            }
+        }
+
+        function renderExistingStudentList(data) {
+            const container = document.getElementById('db-students-table-container');
+            if (!container) return;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="color: #666; font-size: 0.9rem; text-align: center; padding: 2rem;">No student records found.</div>';
+                return;
+            }
+
+            let tableHtml = `
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; font-family: inherit;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e0; color: #475569; font-weight: 700;">
+                            <th style="padding: 0.75rem 1rem;">Chest No</th>
+                            <th style="padding: 0.75rem 1rem;">Student Name</th>
+                            <th style="padding: 0.75rem 1rem;">Category</th>
+                            <th style="padding: 0.75rem 1rem;">Sector</th>
+                            <th style="padding: 0.75rem 1rem;">Regular Programs</th>
+                            <th style="padding: 0.75rem 1rem;">General Programs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach(row => {
+                const chestText = row['chest no.'] || 'N/A';
+                const chestStyle = chestText === 'N/A' ? 'color: #ef4444; font-weight: bold;' : 'font-weight: bold; color: #2d3748;';
+                const categoryText = row.category || 'N/A';
+                const sectorText = row.sector || 'N/A';
+                
+                const programs = [];
+                if (row['program 1']) programs.push(row['program 1']);
+                if (row['program 2']) programs.push(row['program 2']);
+                if (row['program 3']) programs.push(row['program 3']);
+                if (row['program 4']) programs.push(row['program 4']);
+                const regularProgramsText = programs.length > 0 ? programs.join(', ') : 'N/A';
+                
+                const generalProgramsText = row.generals ? row.generals.split(/[|,]/).map(g => g.trim()).filter(Boolean).join(', ') : 'N/A';
+
+                tableHtml += `
+                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        <td style="padding: 0.75rem 1rem; ${chestStyle}">${chestText}</td>
+                        <td style="padding: 0.75rem 1rem; color: #2b6cb0; font-weight: 600;">${row.name || 'N/A'}</td>
+                        <td style="padding: 0.75rem 1rem; color: #4a5568;"><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">${categoryText}</span></td>
+                        <td style="padding: 0.75rem 1rem; color: #4a5568;">${sectorText}</td>
+                        <td style="padding: 0.75rem 1rem; color: #4a5568; line-height: 1.4;">${regularProgramsText}</td>
+                        <td style="padding: 0.75rem 1rem; color: #7c3aed; line-height: 1.4; font-weight: 500;">${generalProgramsText}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHtml;
+        }
+
+        function filterExistingStudentList() {
+            const queryInput = document.getElementById('db-student-search');
+            if (!queryInput) return;
+            const query = queryInput.value.toLowerCase().trim();
+
+            if (!query) {
+                renderExistingStudentList(window.existingStudentsData);
+                return;
+            }
+
+            const filtered = window.existingStudentsData.filter(row => {
+                const name = (row.name || '').toLowerCase();
+                const sector = (row.sector || '').toLowerCase();
+                const chest = (row['chest no.'] || '').toLowerCase();
+                const cat = (row.category || '').toLowerCase();
+                const p1 = (row['program 1'] || '').toLowerCase();
+                const p2 = (row['program 2'] || '').toLowerCase();
+                const p3 = (row['program 3'] || '').toLowerCase();
+                const p4 = (row['program 4'] || '').toLowerCase();
+                const gens = (row.generals || '').toLowerCase();
+                
+                return name.includes(query) || 
+                       sector.includes(query) || 
+                       chest.includes(query) || 
+                       cat.includes(query) || 
+                       p1.includes(query) || 
+                       p2.includes(query) || 
+                       p3.includes(query) || 
+                       p4.includes(query) || 
+                       gens.includes(query);
+            });
+
+            renderExistingStudentList(filtered);
         }
 
         async function deleteCardHistoryRow(id, btn) {
