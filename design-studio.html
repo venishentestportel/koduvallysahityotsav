@@ -1687,6 +1687,9 @@
                 if (row['program 3']) programs.push(row['program 3']);
                 if (row['program 4']) programs.push(row['program 4']);
 
+                const isPrinted = getPrintedCardIds().includes(row.id);
+                const printedBadge = isPrinted ? `<span class="printed-badge" style="margin-left: 8px; display: inline-flex; align-items: center; gap: 4px; background: #def7ec; color: #03543f; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #bcf0da;"><i class="fa fa-check-circle"></i> Printed</span>` : '';
+
                 html += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 0.75rem 1rem; text-align: center;">
@@ -1694,6 +1697,7 @@
                         </td>
                         <td style="padding: 0.75rem 1rem; font-weight: 600; color: #2d3748;">
                             <a href="#" onclick="showCardDetails(${row.id}); return false;" style="color: #3b82f6; text-decoration: none;">${row.name}</a>
+                            ${printedBadge}
                         </td>
                         <td style="padding: 0.75rem 1rem; color: #c53030; font-weight: bold;">${row['chest no.'] || 'N/A'}</td>
                         <td style="padding: 0.75rem 1rem; color: #4a5568;">${row.sector || 'N/A'}</td>
@@ -2370,6 +2374,20 @@
             }
         }
 
+        function getPrintedCardIds() {
+            try {
+                return JSON.parse(localStorage.getItem('printed_card_ids') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function markCardsAsPrinted(ids) {
+            const current = getPrintedCardIds();
+            const updated = Array.from(new Set([...current, ...ids]));
+            localStorage.setItem('printed_card_ids', JSON.stringify(updated));
+        }
+
         function filterCardHistory() {
             const query = document.getElementById('card-history-search').value.toLowerCase().trim();
             if (!query) {
@@ -2403,6 +2421,10 @@
 
                 // Remove row from internal cache and re-render
                 window.cardHistoryData = window.cardHistoryData.filter(row => row.id !== id);
+
+                // Remove from printed card IDs in localStorage
+                const printedIds = getPrintedCardIds().filter(x => x !== id);
+                localStorage.setItem('printed_card_ids', JSON.stringify(printedIds));
 
                 // Re-render currently showing items (respecting any active search filter)
                 filterCardHistory();
@@ -2606,6 +2628,12 @@
                 // Trigger print
                 setTimeout(() => {
                     window.print();
+                    if (row.id) {
+                        markCardsAsPrinted([row.id]);
+                        if (window.cardHistoryData) {
+                            renderCardHistory(window.cardHistoryData);
+                        }
+                    }
                 }, 100);
             }, 50);
         }
@@ -2682,6 +2710,12 @@
                 // Trigger print
                 setTimeout(() => {
                     window.print();
+                    if (row.id) {
+                        markCardsAsPrinted([row.id]);
+                        if (window.cardHistoryData) {
+                            renderCardHistory(window.cardHistoryData);
+                        }
+                    }
                 }, 100);
             }, 50);
         }
