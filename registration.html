@@ -1228,6 +1228,41 @@
             btn.disabled = true;
 
             try {
+                // 0. Verify allotment in 'registred' table to prevent unregistered students
+                const { data: allottedData, error: allottedErr } = await supabaseClient
+                    .from('registred')
+                    .select('*')
+                    .eq('name', name);
+                
+                if (allottedErr) throw allottedErr;
+
+                let isAllotted = false;
+                const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
+                const normSearch = normalize(prog);
+                
+                if (allottedData && allottedData.length > 0) {
+                    isAllotted = allottedData.some(s => {
+                        const p1 = normalize(s['program 1']);
+                        const p2 = normalize(s['program 2']);
+                        const p3 = normalize(s['program 3']);
+                        const p4 = normalize(s['program 4']);
+                        const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                        
+                        return p1 === normSearch || p1.includes(normSearch) ||
+                               p2 === normSearch || p2.includes(normSearch) ||
+                               p3 === normSearch || p3.includes(normSearch) ||
+                               p4 === normSearch || p4.includes(normSearch) ||
+                               gens.some(g => g === normSearch || g.includes(normSearch));
+                    });
+                }
+
+                if (!isAllotted) {
+                    alert(`Verification Failed!\n\nStudent "${name}" is NOT found in the official allotted list for "${prog}".\nTheir card may be out-of-date or they were removed from this program. Registration blocked.`);
+                    btn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm Registration';
+                    btn.disabled = false;
+                    return;
+                }
+
                 // 1. Try to log check-in to stage table (if it exists)
                 if (stage) {
                     const tableName = stage.toLowerCase().trim();
@@ -1630,29 +1665,37 @@
 
         async function sendSectorNotification(studentName, sector, regularProgsText, generalProgsText, stage) {
             try {
-                const sectorVal = (sector || '').trim();
-                if (!sectorVal) return { success: false, reason: 'No sector name provided' };
-
                 const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
-                const response = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-sector-notification`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        clientId,
-                        studentName,
-                        sector: sectorVal,
-                        regularProgsText,
-                        generalProgsText,
-                        stage
-                    })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return data;
+                let targetIds = [];
+                try {
+                    const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-targets?clientId=${clientId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success) targetIds = data.targets;
+                    }
+                } catch(e) {}
+                
+                if (targetIds && targetIds.length > 0) {
+                    const progsStr = [regularProgsText, generalProgsText].filter(Boolean).join(', ');
+                    const message = `*Student Registered*\nName: ${studentName}\nSector: ${sector || 'Unknown'}\nPrograms: ${progsStr}\nStage: ${stage}`;
+                    
+                    let sentCount = 0;
+                    const promises = targetIds.map(async (chatId) => {
+                        try {
+                            const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ clientId, chatId, message })
+                            });
+                            if (res.ok) sentCount++;
+                        } catch (e) {
+                            console.error('Failed to send WhatsApp message to', chatId, e);
+                        }
+                    });
+                    await Promise.all(promises);
+                    return { success: true, sentCount: sentCount };
                 } else {
-                    const errText = await response.text();
-                    return { success: false, reason: `HTTP error ${response.status}: ${errText}` };
+                    return { success: false, reason: 'No WhatsApp targets configured.' };
                 }
             } catch (e) {
                 console.error("Error sending sector notification:", e);
