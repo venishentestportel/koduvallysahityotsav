@@ -289,9 +289,11 @@
                                 <option value="UP">UP</option>
                                 <option value="HS">HS</option>
                                 <option value="HSS">HSS</option>
-                                <option value="junior">Junior</option>
-                                <option value="senior">Senior</option>
-                                <option value="general">General</option>
+                                <option value="JR">Junior</option>
+                                <option value="SR">Senior</option>
+                                <option value="GEN">General</option>
+                                <option value="General Category-A">General Category-A</option>
+                                <option value="General Category-b">General Category-B</option>
                             </select>
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 250px;">
@@ -687,6 +689,22 @@
             }
         }
 
+        function getCategoryPrefixes(cat) {
+            const dbCat = getDbCategory(cat);
+            const mapping = {
+                'LP': ['LP', 'Lower Primary'],
+                'UP': ['UP', 'Upper Primary'],
+                'HS': ['HS', 'High School'],
+                'HSS': ['HSS', 'Higher Secondary'],
+                'JR': ['JR', 'Junior'],
+                'SR': ['SR', 'Senior'],
+                'GEN': ['GEN', 'General'],
+                'General Category-A': ['General Category-A'],
+                'General Category-b': ['General Category-b', 'General Category-B']
+            };
+            return mapping[dbCat] || [dbCat];
+        }
+
         async function loadValuationStudents() {
             const category = document.getElementById('val-cat-select').value;
             const program = document.getElementById('val-prog-select').value;
@@ -702,7 +720,9 @@
                 if (dbCat === 'GEN') {
                     query = query.ilike('general', `%${program}%`);
                 } else {
-                    query = query.ilike('program', `%${dbCat}:%${program}%`);
+                    const prefixes = getCategoryPrefixes(category);
+                    const orFilters = prefixes.map(prefix => `program.ilike.%${prefix}:%${program}%`).join(',');
+                    query = query.or(orFilters);
                 }
 
                 const { data: rawData, error } = await query;

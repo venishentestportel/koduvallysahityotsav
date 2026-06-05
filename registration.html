@@ -938,19 +938,30 @@
             const activeCat = localStorage.getItem('active_conductor_category');
             const activeProg = localStorage.getItem('active_conductor_program');
             if (activeCat && activeProg) {
-                loadRegisteredStudentsList(activeCat, activeProg);
-            }
-
-            // Apply schedules before loading draft category
-            applyStageScheduleRules();
-
-            // Restore draft category and program in Conductor Dashboard
-            const savedCat = localStorage.getItem('conductor_draft_category');
-            if (savedCat) {
                 const catSelect = document.getElementById('conductor-cat');
+                const progSelect = document.getElementById('conductor-prog');
                 if (catSelect) {
-                    catSelect.value = savedCat;
-                    loadConductorPrograms();
+                    catSelect.value = activeCat;
+                    catSelect.disabled = true;
+                }
+                if (progSelect) {
+                    progSelect.innerHTML = `<option value="${activeProg}">${activeProg}</option>`;
+                    progSelect.value = activeProg;
+                    progSelect.disabled = true;
+                }
+                loadRegisteredStudentsList(activeCat, activeProg);
+            } else {
+                // Apply schedules before loading draft category
+                applyStageScheduleRules();
+
+                // Restore draft category and program in Conductor Dashboard
+                const savedCat = localStorage.getItem('conductor_draft_category');
+                if (savedCat) {
+                    const catSelect = document.getElementById('conductor-cat');
+                    if (catSelect) {
+                        catSelect.value = savedCat;
+                        loadConductorPrograms();
+                    }
                 }
             }
         });
@@ -1232,20 +1243,33 @@
                 if (situation === 'Start Registration') {
                     localStorage.setItem('active_conductor_category', cat);
                     localStorage.setItem('active_conductor_program', prog);
+                    
+                    const catSelect = document.getElementById('conductor-cat');
+                    const progSelect = document.getElementById('conductor-prog');
+                    if (catSelect) catSelect.disabled = true;
+                    if (progSelect) progSelect.disabled = true;
+
                     if (typeof loadRegisteredStudentsList === 'function') {
                         loadRegisteredStudentsList(cat, prog);
                     }
                     switchAdminTab('reg-container');
-                } else if (situation === 'End Registration' || situation === 'End Program') {
+                } else if (situation === 'End Program') {
                     localStorage.removeItem('active_conductor_category');
                     localStorage.removeItem('active_conductor_program');
+                    
+                    const catSelect = document.getElementById('conductor-cat');
+                    const progSelect = document.getElementById('conductor-prog');
+                    if (catSelect) catSelect.disabled = false;
+                    if (progSelect) progSelect.disabled = false;
+
                     const container = document.getElementById('active-registered-list-container');
                     if (container) container.style.display = 'none';
                     
-                    if (situation === 'End Program') {
-                        // Refresh the program list to remove the ended program from the dropdown
-                        loadConductorPrograms();
-                    }
+                    // Refresh the program list to remove the ended program from the dropdown
+                    loadConductorPrograms();
+                } else if (situation === 'End Registration') {
+                    const container = document.getElementById('active-registered-list-container');
+                    if (container) container.style.display = 'none';
                 }
             } catch (err) {
                 console.error(err);
