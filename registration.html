@@ -1267,9 +1267,26 @@
                 let isAllotted = false;
                 const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
                 const normSearch = normalize(prog);
+                const normUnit = normalize(unit);
+                const normCat = normalize(cat);
+                const categoryMap = {
+                    'LP': 'Lower Primary', 'UP': 'Upper Primary', 'HS': 'High School',
+                    'HSS': 'Higher Secondary', 'JR': 'Junior', 'SR': 'Senior',
+                    'GEN': 'General', 'General Category-A': 'General Category-A', 'General Category-b': 'General Category-B'
+                };
+                const normDbCat = normalize(categoryMap[cat] || cat);
                 
                 if (allottedData && allottedData.length > 0) {
                     isAllotted = allottedData.some(s => {
+                        // 1. Sector must match exactly
+                        const sUnit = normalize(s.sector || s.unit || s.prog);
+                        if (sUnit && normUnit && sUnit !== normUnit) return false;
+
+                        // 2. Category must match (except for GEN which is flexible)
+                        const sCat = normalize(s.category);
+                        if (cat !== 'GEN' && sCat && normCat && sCat !== normCat && sCat !== normDbCat) return false;
+
+                        // 3. Program must match
                         const p1 = normalize(s['program 1']);
                         const p2 = normalize(s['program 2']);
                         const p3 = normalize(s['program 3']);
@@ -1284,8 +1301,22 @@
                     });
                 }
 
+                // Enforce that the selected program matches the active conductor's session if active
+                const activeCat = localStorage.getItem('active_conductor_category');
+                const activeProg = localStorage.getItem('active_conductor_program');
+                
+                if (activeCat && activeProg) {
+                    const normActiveProg = normalize(activeProg);
+                    if (normSearch !== normActiveProg) {
+                        alert(`Verification Failed!\n\nYou are currently running the registration for:\nProgram: ${activeProg}\n\nYou cannot register the student for a different program ("${prog}") right now. Please select the correct program.`);
+                        btn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm Registration';
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+
                 if (!isAllotted) {
-                    alert(`Verification Failed!\n\nStudent "${name}" is NOT found in the official allotted list for "${prog}".\nTheir card may be out-of-date or they were removed from this program. Registration blocked.`);
+                    alert(`Verification Failed!\n\nStudent "${name}" (Sector: ${unit}) is NOT found in the official allotted list for "${prog}".\nTheir card may be out-of-date or they were removed from this program. Registration blocked.`);
                     btn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm Registration';
                     btn.disabled = false;
                     return;
