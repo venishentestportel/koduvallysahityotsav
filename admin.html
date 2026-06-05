@@ -2093,7 +2093,7 @@
 
                             <!-- QR Code (Middle) -->
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 2px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div id="${cardId}" style="width: 120px; height: 120px;"></div>
+                                <div id="${cardId}" style="width: 112px; height: 112px;"></div>
                             </div>
 
                             <!-- Chest No (Bottom) -->
@@ -2108,8 +2108,8 @@
                     try {
                         new QRCode(document.getElementById(cardId), {
                             text: row.url,
-                            width: 120,
-                            height: 120,
+                            width: 112,
+                            height: 112,
                             colorDark: "#000000",
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
@@ -3576,8 +3576,8 @@
             if (urlVal) {
                 new QRCode(qrContainer, {
                     text: urlVal,
-                    width: 200,
-                    height: 200,
+                    width: 180,
+                    height: 180,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
@@ -3642,8 +3642,8 @@
             setTimeout(() => {
                 new QRCode(document.getElementById(`print-qr-${cardId}`), {
                     text: correctUrl,
-                    width: 210,
-                    height: 210,
+                    width: 190,
+                    height: 190,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
