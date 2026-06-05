@@ -919,6 +919,10 @@
                         style="margin-bottom: 0; background: #805ad5; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
                         <i class="fa fa-file-pdf"></i> Print All Student Cards (PDF)
                     </button>
+                    <button class="btn" onclick="printSelectedStudentCards()"
+                        style="margin-bottom: 0; background: #10b981; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
+                        <i class="fa fa-check-square"></i> Print Selected Cards (PDF)
+                    </button>
                 </div>
             </div>
 
@@ -1386,6 +1390,33 @@
             }
         }
 
+        function toggleSelectAllHistory(master) {
+            const checkboxes = document.querySelectorAll('.history-row-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = master.checked;
+            });
+        }
+
+        async function printSelectedStudentCards() {
+            if (!window.cardHistoryData || window.cardHistoryData.length === 0) {
+                alert("No history records loaded. Please refresh or generate cards first.");
+                return;
+            }
+            const checkedBoxes = document.querySelectorAll('.history-row-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                alert("Please select at least one student card from the history table below.");
+                return;
+            }
+            const selectedIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+            let idCardsData = window.cardHistoryData.filter(row => row.url && selectedIds.includes(row.id));
+            if (idCardsData.length === 0) {
+                alert("No generated ID cards found for selected rows.");
+                return;
+            }
+            
+            printHistoryCardsLayout(idCardsData);
+        }
+
         async function printAllStudentCards() {
             if (!window.cardHistoryData || window.cardHistoryData.length === 0) {
                 // Ensure data is loaded
@@ -1426,6 +1457,10 @@
                 return; // User cancelled
             }
 
+            printHistoryCardsLayout(idCardsData);
+        }
+
+        function printHistoryCardsLayout(idCardsData) {
             // Create print container
             let printContainer = document.getElementById('print-all-container');
             if (!printContainer) {
@@ -1433,12 +1468,12 @@
                 printContainer.id = 'print-all-container';
                 document.body.appendChild(printContainer);
 
-                // Add print styles dynamically
+                // Add print styles dynamically (A4 size, optimized grid for 8.5cm x 5.4cm cards)
                 const style = document.createElement('style');
                 style.innerHTML = `
                     @page {
                         size: A4;
-                        margin: 0.2in;
+                        margin: 0.5cm 1.2cm;
                     }
                     @media print {
                         body {
@@ -1453,15 +1488,15 @@
                             top: 0;
                             width: 100%;
                             display: grid !important;
-                            grid-template-columns: repeat(2, 3.4in);
-                            grid-auto-rows: 1.82in;
-                            gap: 0.05in 0.4in; /* row-gap col-gap */
+                            grid-template-columns: repeat(2, 8.5cm);
+                            grid-auto-rows: 5.4cm;
+                            gap: 0.2cm 0.6cm; /* row-gap col-gap */
                             justify-content: center;
-                            padding: 0.1in 0;
+                            padding: 0.5cm 0;
                             margin: 0;
                         }
-                        /* Page break every 12 cards (every 6 rows, but grid deals in items so every 12th item) */
-                        #print-all-container > div:nth-child(12n) {
+                        /* Page break every 10 cards (every 5 rows, A4 layout fits 10 cards) */
+                        #print-all-container > div:nth-child(10n) {
                             break-after: page;
                             page-break-after: always;
                         }
@@ -1491,33 +1526,34 @@
 
                     const cardId = `print-qr-${row.id || i}`;
                     const card = document.createElement('div');
-                    // Style matching 3.4 x 1.82 inches (to fit 12 cards per A4 page)
-                    card.style.cssText = 'width: 3.4in; height: 1.82in; border: 1px solid #cbd5e1; box-sizing: border-box; display: flex; overflow: hidden; background: white; border-radius: 8px; break-inside: avoid; page-break-inside: avoid; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact;';
+                    // Style matching exactly 8.5cm x 5.4cm (CR80 standard)
+                    card.style.cssText = 'width: 8.5cm; height: 5.4cm; border: 1px solid #cbd5e1; box-sizing: border-box; display: flex; overflow: hidden; background: white; border-radius: 6px; break-inside: avoid; page-break-inside: avoid; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact;';
                     card.innerHTML = `
                         <!-- Background Image -->
                         <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" />
                         
                         <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
-                        <div style="position: absolute; bottom: 24px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 10px; box-sizing: border-box;">
-                            <div style="font-size: 1.2rem; font-weight: 800; color: #ffffff; line-height: 1.1; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;">${row.name || 'Unknown'}</div>
+                        <div style="position: absolute; bottom: 32px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 12px; box-sizing: border-box;">
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #ffffff; line-height: 1.1; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%;">${row.name || 'Unknown'}</div>
                         </div>
 
                         <!-- Details (Right 42%) -->
-                        <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 5px 4px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
+                        <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 8px 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
                             
                             <!-- Sector (Top) -->
-                            <div style="width: 100%; text-align: center; margin-top: 1px;">
-                                <div style="font-size: 0.65rem; font-weight: 700; color: #0f172a; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.sector || 'N/A'}</div>
+                            <div style="width: 100%; text-align: center; margin-top: 2px;">
+                                <div style="font-size: 0.75rem; font-weight: 700; color: #0f172a; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.sector || 'N/A'}</div>
                             </div>
 
+                            <!-- QR Code (Middle) -->
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 2px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                 <div id="${cardId}" style="width: 116px; height: 116px;"></div>
                             </div>
 
                             <!-- Chest No (Bottom) -->
-                            <div style="width: 100%; text-align: center; margin-bottom: 1px;">
-                                <div style="font-size: 0.32rem; font-weight: 700; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1px; line-height: 1;">Chest No</div>
-                                <div style="font-size: 1.05rem; font-weight: 900; color: #dc2626; line-height: 1;">${row['chest no.'] || 'N/A'}</div>
+                            <div style="width: 100%; text-align: center; margin-bottom: 2px;">
+                                <div style="font-size: 0.4rem; font-weight: 700; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1px; line-height: 1;">Chest No</div>
+                                <div style="font-size: 1.15rem; font-weight: 900; color: #dc2626; line-height: 1;">${row['chest no.'] || 'N/A'}</div>
                             </div>
                         </div>
                     `;
@@ -1559,8 +1595,6 @@
             setTimeout(processBatch, 10);
         }
 
-
-
         function renderCardHistory(data) {
             const container = document.getElementById('card-history-table-container');
             if (!container) return;
@@ -1573,6 +1607,9 @@
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
                     <thead>
                         <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e0;">
+                            <th style="padding: 0.75rem 1rem; width: 40px; text-align: center; color: #475569; font-weight: 700;">
+                                <input type="checkbox" id="select-all-history" onclick="toggleSelectAllHistory(this)" style="cursor: pointer; transform: scale(1.15);">
+                            </th>
                             <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Student Name</th>
                             <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Chest No</th>
                             <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Sector</th>
@@ -1594,6 +1631,9 @@
 
                 html += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 0.75rem 1rem; text-align: center;">
+                            <input type="checkbox" class="history-row-checkbox" value="${row.id}" style="cursor: pointer; transform: scale(1.15);">
+                        </td>
                         <td style="padding: 0.75rem 1rem; font-weight: 600; color: #2d3748;">
                             <a href="#" onclick="showCardDetails(${row.id}); return false;" style="color: #3b82f6; text-decoration: none;">${row.name}</a>
                         </td>
