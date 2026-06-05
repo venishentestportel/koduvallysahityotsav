@@ -1995,8 +1995,15 @@
                                     category: resolvedCat,
                                     program: competition
                                 });
-                                if (!student.category || student.category === 'GEN') {
-                                    student.category = resolvedCat;
+                                const isGeneral = (cat) => {
+                                    if (!cat) return true;
+                                    const c = cat.toLowerCase().trim();
+                                    return c === 'gen' || c === 'general' || c.includes('general category') || c.includes('general-category');
+                                };
+                                if (!student.category || isGeneral(student.category) || student.category === '') {
+                                    if (!isGeneral(resolvedCat) || isGeneral(student.category)) {
+                                        student.category = resolvedCat;
+                                    }
                                 }
                             }
                         }

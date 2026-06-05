@@ -2341,9 +2341,18 @@
                     }
                 });
 
-                // Update category if existing doesn't have it
-                if (student.category && (!existing.category || existing.category === 'GEN' || existing.category === '')) {
-                    existing.category = student.category;
+                // Update category if existing doesn't have it or has a general/empty category
+                if (student.category) {
+                    const isGeneral = (cat) => {
+                        if (!cat) return true;
+                        const c = cat.toLowerCase().trim();
+                        return c === 'gen' || c === 'general' || c.includes('general category') || c.includes('general-category');
+                    };
+                    if (!existing.category || isGeneral(existing.category) || existing.category === '') {
+                        if (!isGeneral(student.category) || isGeneral(existing.category)) {
+                            existing.category = student.category;
+                        }
+                    }
                 }
             });
             parsedStudents = Object.values(uniqueStudents);
@@ -2603,8 +2612,15 @@
                                         program: competition
                                     });
                                 }
-                                if (!student.category || student.category === 'GEN' || student.category === '') {
-                                    student.category = resolvedCat;
+                                const isGeneral = (cat) => {
+                                    if (!cat) return true;
+                                    const c = cat.toLowerCase().trim();
+                                    return c === 'gen' || c === 'general' || c.includes('general category') || c.includes('general-category');
+                                };
+                                if (!student.category || isGeneral(student.category) || student.category === '') {
+                                    if (!isGeneral(resolvedCat) || isGeneral(student.category)) {
+                                        student.category = resolvedCat;
+                                    }
                                 }
                             }
                         }
@@ -2811,8 +2827,8 @@
                         throw new Error("Could not find a 'Team Name' or 'Sector' column in the Excel file.");
                     }
 
-                    // Process Excel rows and group by Chest Number
-                    const groupedStudents = {};
+                    // Process Excel rows individually without consolidation
+                    const studentsArrayLoaded = [];
                     const generalProgramsSet = new Set((currentData.categoryPrograms && currentData.categoryPrograms["GEN"]) || []);
 
                     function resolveCategory(progName, rowCategory) {
@@ -2841,44 +2857,38 @@
 
                         if (!name) return; // skip empty rows
 
-                        // Use chest number as unique key if available, otherwise name + sector
-                        const key = chest ? chest.trim() : (name + '|' + team);
+                        const resolvedCat = resolveCategory(competition, category);
+                        const isGeneral = (cat) => {
+                            if (!cat) return true;
+                            const c = cat.toLowerCase().trim();
+                            return c === 'gen' || c === 'general' || c.includes('general category') || c.includes('general-category');
+                        };
 
-                        if (!groupedStudents[key]) {
-                            groupedStudents[key] = {
-                                name: name,
-                                sector: team,
-                                category: category,
-                                chest: chest,
-                                regularProgs: [],
-                                generalProgs: []
-                            };
-                        }
+                        const resolvedStudentCat = (!isGeneral(resolvedCat)) ? resolvedCat : ((category && !isGeneral(category)) ? category : resolvedCat || 'GEN');
 
-                        const student = groupedStudents[key];
+                        const student = {
+                            name: name,
+                            sector: team,
+                            category: resolvedStudentCat,
+                            chest: chest,
+                            regularProgs: [],
+                            generalProgs: []
+                        };
 
                         if (competition) {
-                            const resolvedCat = resolveCategory(competition, category);
                             if (resolvedCat === 'GEN' || generalProgramsSet.has(competition)) {
-                                if (!student.generalProgs.includes(competition)) {
-                                    student.generalProgs.push(competition);
-                                }
+                                student.generalProgs.push(competition);
                             } else {
-                                const exists = student.regularProgs.some(p => p.program.toLowerCase().trim() === competition.toLowerCase().trim());
-                                if (!exists) {
-                                    student.regularProgs.push({
-                                        category: resolvedCat,
-                                        program: competition
-                                    });
-                                }
-                                if (!student.category || student.category === 'GEN' || student.category === '') {
-                                    student.category = resolvedCat;
-                                }
+                                student.regularProgs.push({
+                                    category: resolvedCat,
+                                    program: competition
+                                });
                             }
                         }
+
+                        studentsArrayLoaded.push(student);
                     });
 
-                    const studentsArrayLoaded = Object.values(groupedStudents);
                     if (studentsArrayLoaded.length === 0) {
                         throw new Error("No valid student records found in the Excel file.");
                     }
@@ -2886,7 +2896,7 @@
                     window.allotmentExcelStudents = studentsArrayLoaded;
                     window.allotmentExcelTotalRows = json.length;
 
-                    infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArrayLoaded.length} unique student(s) (consolidated from all ${json.length} rows) from Excel.</span>`;
+                    infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArrayLoaded.length} student record(s) from Excel.</span>`;
                     
                     renderAllotmentPreview();
 
@@ -2923,7 +2933,7 @@
             let tableHtml = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                     <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #2d3748; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa fa-list-alt" style="color: #3182ce;"></i> Imported Students Preview (${window.allotmentExcelStudents.length} unique students consolidated from ${window.allotmentExcelTotalRows || '...'} rows)
+                        <i class="fa fa-list-alt" style="color: #3182ce;"></i> Imported Students Preview (${window.allotmentExcelStudents.length} student entries)
                     </h3>
                     <button class="btn btn-delete" type="button" onclick="clearAllotmentPreview()" style="background: #e53e3e; color: white; padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; height: auto; margin-bottom: 0;">
                         <i class="fa fa-times"></i> Clear Import
@@ -2994,7 +3004,7 @@
                 const infoSpan = document.getElementById('allotment-excel-info');
                 if (infoSpan) {
                     if (window.allotmentExcelStudents.length > 0) {
-                        infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${window.allotmentExcelStudents.length} unique student(s) (consolidated from ${window.allotmentExcelTotalRows || '...'} rows) from Excel.</span>`;
+                        infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${window.allotmentExcelStudents.length} student record(s) from Excel.</span>`;
                     } else {
                         clearAllotmentPreview();
                     }
@@ -3081,7 +3091,7 @@
                     btn.style.background = '#38a169'; // Change to green
                 }
 
-                alert(`Successfully uploaded ${insertRows.length} unique student records (consolidated from all ${totalRows} rows of event entries) to the Student List database!`);
+                alert(`Successfully uploaded ${insertRows.length} student record entries to the Student List database!`);
 
             } catch (err) {
                 console.error("Error uploading allotment list:", err);

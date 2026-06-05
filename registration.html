@@ -1957,10 +1957,23 @@
             };
             
             const onScanSuccess = (decodedText) => {
+                console.log("QR Code scanned successfully. Raw text:", decodedText);
                 try {
-                    const url = new URL(decodedText);
+                    let urlString = decodedText.trim();
+                    // Handle relative URL, query parameters, or domain without protocol
+                    if (urlString.startsWith('?')) {
+                        urlString = window.location.origin + window.location.pathname + urlString;
+                    } else if (urlString.startsWith('registration.html')) {
+                        urlString = window.location.origin + '/' + urlString;
+                    } else if (!urlString.includes('://')) {
+                        urlString = 'http://' + urlString;
+                    }
+                    
+                    const url = new URL(urlString);
                     const name = url.searchParams.get('name');
                     const sector = url.searchParams.get('sector');
+                    
+                    console.log("Parsed QR data - Name:", name, "Sector:", sector);
                     
                     if (name) {
                         const stage = localStorage.getItem('admin_stage');
@@ -1984,9 +1997,12 @@
                         currentUrl.searchParams.set('admin', 'true');
                         currentUrl.searchParams.set('stage', stage);
                         window.location.href = currentUrl.toString();
+                    } else {
+                        alert("Invalid QR code: missing 'name' parameter.\nRaw text: " + decodedText);
                     }
                 } catch (e) {
-                    // Ignore, maybe not a valid URL
+                    console.error("Failed to parse scanned QR code text:", e);
+                    alert("Error parsing scanned QR code: " + e.message + "\nRaw text: " + decodedText);
                 }
             };
 
