@@ -2311,19 +2311,52 @@
                     const cardId = `id-card-gen-${idx}`;
                     const correctUrl = row.url;
                     
+                    let cardPrograms = [];
+                    let cardGenerals = [];
+                    if (row.url) {
+                        try {
+                            const parsedUrl = new URL(row.url);
+                            const progsParam = parsedUrl.searchParams.get('progs');
+                            if (progsParam) {
+                                cardPrograms = progsParam.split('|');
+                            }
+                            const genProgsParam = parsedUrl.searchParams.get('genprogs');
+                            if (genProgsParam) {
+                                cardGenerals = genProgsParam.split('|');
+                            }
+                        } catch(e) {}
+                    }
+                    if (cardPrograms.length === 0 && cardGenerals.length === 0) {
+                        const cat = row.category || '';
+                        if (row['program 1']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 1']);
+                        if (row['program 2']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 2']);
+                        if (row['program 3']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 3']);
+                        if (row['program 4']) cardPrograms.push((cat ? cat + ': ' : '') + row['program 4']);
+                        if (row.generals) {
+                            cardGenerals = row.generals.split(',').map(g => g.trim());
+                        }
+                    }
+
                     const cardHtml = document.createElement('div');
                     cardHtml.className = 'id-card';
                     cardHtml.style = 'width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;';
                     cardHtml.innerHTML = `
                         <!-- Left Side: Info -->
-                        <div style="flex: 2; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
+                        <div style="flex: 2; padding: 2rem; display: flex; flex-direction: column; justify-content: center; border-right: 2px dashed #cbd5e0; background: #f8fafc;">
                             <h3 style="margin: 0; font-size: 1.2rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Sahithyolsav 2026</h3>
-                            <h1 style="margin: 0.75rem 0; font-size: 2.4rem; color: #2b6cb0; word-break: break-word; font-weight: 700;">${row.name}</h1>
+                            <h1 style="margin: 0.5rem 0; font-size: 2.2rem; color: #2b6cb0; word-break: break-word; font-weight: 700;">${row.name}</h1>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 1.3rem;">${row['chest no.'] || 'N/A'}</strong></h3>
                             
-                            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Sector: <strong>${row.sector || 'N/A'}</strong></h3>
-                                <h3 style="margin: 0; font-size: 1.3rem; color: #4a5568; font-weight: 500;">Chest No: <strong style="color: #c53030; font-size: 1.5rem;">${row['chest no.'] || 'N/A'}</strong></h3>
+                            ${(cardPrograms.length > 0 || cardGenerals.length > 0) ? `
+                            <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.75rem; flex-grow: 1; overflow-y: auto;">
+                                <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #a0aec0; font-weight: bold;">REGISTERED PROGRAMS:</p>
+                                <ul style="margin: 0; padding-left: 1rem; font-size: 0.95rem; color: #2d3748;">
+                                    ${cardPrograms.map(p => `<li style="margin-bottom: 0.2rem;">${p}</li>`).join('')}
+                                    ${cardGenerals.map(p => `<li style="margin-bottom: 0.2rem;">GEN: ${p}</li>`).join('')}
+                                </ul>
                             </div>
+                            ` : ''}
                         </div>
                         <!-- Right Side: QR -->
                         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; background: white;">
@@ -2416,7 +2449,10 @@
                     const nameKey = findColumnKey(firstRow, ['participant name', 'name', 'student name', 'participant', 'candidate']);
                     const teamKey = findColumnKey(firstRow, ['team name', 'team', 'sector name', 'sector', 'unit', 'unit name']);
                     const catKey = findColumnKey(firstRow, ['category', 'category colum', 'cat', 'class']);
-                    const chestKey = findColumnKey(firstRow, ['chest number', 'chest no', 'chest no.', 'chest', 'chestnumber', 'chestnumber colum']);
+                    const chestKey = findColumnKey(firstRow, [
+                        'chest number', 'chest no', 'chest no.', 'chest', 'chestnumber', 'chestnumber colum',
+                        'registration number', 'registration no', 'registration no.', 'reg no', 'reg no.', 'reg number', 'register no', 'register number', 'reg. no.', 'reg.no', 'registrationnum', 'registration number colum'
+                    ]);
                     const compKey = findColumnKey(firstRow, ['competition', 'program', 'programs', 'item', 'event', 'competition colum']);
 
                     if (!nameKey) {
@@ -2426,8 +2462,8 @@
                         throw new Error("Could not find a 'Team Name' or 'Sector' column in the Excel file.");
                     }
 
-                    // Process each Excel row separately as its own student card record
-                    const studentsArray = [];
+                    // Process each Excel row separately as its own student card record, grouping by registration number/chest number
+                    const studentsGrouped = {};
                     const generalProgramsSet = new Set((currentData.categoryPrograms && currentData.categoryPrograms["GEN"]) || []);
 
                     function resolveCategory(progName, rowCategory) {
@@ -2456,32 +2492,50 @@
 
                         if (!name) return; // skip empty rows
 
-                        const student = {
-                            name: name,
-                            sector: team,
-                            category: category,
-                            chest: chest,
-                            regularProgs: [],
-                            generalProgs: []
-                        };
+                        // Grouping identifier: use chest number/registration number if present, otherwise fallback to name + sector
+                        const identifier = chest ? chest.toLowerCase().trim() : `${name.toLowerCase().trim()}_${team.toLowerCase().trim()}`;
+
+                        if (!studentsGrouped[identifier]) {
+                            studentsGrouped[identifier] = {
+                                name: name,
+                                sector: team,
+                                category: category,
+                                chest: chest,
+                                regularProgs: [],
+                                generalProgs: []
+                            };
+                        }
+
+                        const student = studentsGrouped[identifier];
+
+                        // Keep the longest category if multiple rows have different category strings
+                        if (category && (!student.category || student.category === 'GEN')) {
+                            student.category = category;
+                        }
 
                         if (competition) {
                             const resolvedCat = resolveCategory(competition, category);
                             if (resolvedCat === 'GEN' || generalProgramsSet.has(competition)) {
-                                student.generalProgs.push(competition);
+                                if (!student.generalProgs.includes(competition)) {
+                                    student.generalProgs.push(competition);
+                                }
                             } else {
-                                student.regularProgs.push({
-                                    category: resolvedCat,
-                                    program: competition
-                                });
+                                // Avoid duplicate programs
+                                const exists = student.regularProgs.some(p => p.program.toLowerCase().trim() === competition.toLowerCase().trim());
+                                if (!exists) {
+                                    student.regularProgs.push({
+                                        category: resolvedCat,
+                                        program: competition
+                                    });
+                                }
                                 if (!student.category || student.category === 'GEN') {
                                     student.category = resolvedCat;
                                 }
                             }
                         }
-
-                        studentsArray.push(student);
                     });
+
+                    const studentsArray = Object.values(studentsGrouped);
 
                     const studentsArrayLoaded = studentsArray;
                     if (studentsArrayLoaded.length === 0) {
@@ -2717,15 +2771,41 @@
             if (chestEl) chestEl.innerText = row['chest no.'] || 'N/A';
             document.getElementById('details-time').innerText = row.time ? new Date(row.time).toLocaleString() : 'N/A';
 
-            // Regularly Registered Programs
+            // Regularly Registered Programs & General Programs
             const progsContainer = document.getElementById('details-programs-container');
             progsContainer.innerHTML = '';
-            const programs = [];
-            const cat = row.category || '';
-            if (row['program 1']) programs.push((cat ? cat + ': ' : '') + row['program 1']);
-            if (row['program 2']) programs.push((cat ? cat + ': ' : '') + row['program 2']);
-            if (row['program 3']) programs.push((cat ? cat + ': ' : '') + row['program 3']);
-            if (row['program 4']) programs.push((cat ? cat + ': ' : '') + row['program 4']);
+            const generalsContainer = document.getElementById('details-generals-container');
+            generalsContainer.innerHTML = '';
+
+            let programs = [];
+            let generals = [];
+            const urlVal = (row.url || '').replace('registringpage.html', 'registration.html');
+            if (urlVal) {
+                try {
+                    const parsedUrl = new URL(urlVal);
+                    const progsParam = parsedUrl.searchParams.get('progs');
+                    if (progsParam) {
+                        programs = progsParam.split('|');
+                    }
+                    const genProgsParam = parsedUrl.searchParams.get('genprogs');
+                    if (genProgsParam) {
+                        generals = genProgsParam.split('|');
+                    }
+                } catch(e) {
+                    console.warn("Failed to parse URL for card details:", e);
+                }
+            }
+
+            if (programs.length === 0 && generals.length === 0) {
+                const cat = row.category || '';
+                if (row['program 1']) programs.push((cat ? cat + ': ' : '') + row['program 1']);
+                if (row['program 2']) programs.push((cat ? cat + ': ' : '') + row['program 2']);
+                if (row['program 3']) programs.push((cat ? cat + ': ' : '') + row['program 3']);
+                if (row['program 4']) programs.push((cat ? cat + ': ' : '') + row['program 4']);
+                if (row.generals) {
+                    generals = row.generals.split(',').map(g => g.trim());
+                }
+            }
 
             if (programs.length > 0) {
                 progsContainer.innerHTML = programs.map(p => `
@@ -2735,12 +2815,9 @@
                 progsContainer.innerHTML = '<span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">No regular programs registered</span>';
             }
 
-            // General Programs
-            const generalsContainer = document.getElementById('details-generals-container');
-            generalsContainer.innerHTML = '';
-            if (row.generals) {
-                generalsContainer.innerHTML = row.generals.split(',').map(g => `
-                    <span style="display: inline-block; background: #f3e8ff; color: #6b21a8; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #e9d5ff; margin: 2px;">${g.trim()}</span>
+            if (generals.length > 0) {
+                generalsContainer.innerHTML = generals.map(g => `
+                    <span style="display: inline-block; background: #f3e8ff; color: #6b21a8; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #e9d5ff; margin: 2px;">${g}</span>
                 `).join('');
             } else {
                 generalsContainer.innerHTML = '<span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">No general programs registered</span>';
@@ -2808,15 +2885,35 @@
             container.innerHTML = ''; // Clear previous
 
             const cardId = `id-card-hist-${row.id}`;
-            const programs = [];
-            const cat = row.category || '';
-            if (row['program 1']) programs.push((cat ? cat + ': ' : '') + row['program 1']);
-            if (row['program 2']) programs.push((cat ? cat + ': ' : '') + row['program 2']);
-            if (row['program 3']) programs.push((cat ? cat + ': ' : '') + row['program 3']);
-            if (row['program 4']) programs.push((cat ? cat + ': ' : '') + row['program 4']);
-
-            const generals = row.generals ? row.generals.split(',').map(g => g.trim()) : [];
+            let programs = [];
+            let generals = [];
             const correctUrl = (row.url || '').replace('registringpage.html', 'registration.html');
+            if (correctUrl) {
+                try {
+                    const parsedUrl = new URL(correctUrl);
+                    const progsParam = parsedUrl.searchParams.get('progs');
+                    if (progsParam) {
+                        programs = progsParam.split('|');
+                    }
+                    const genProgsParam = parsedUrl.searchParams.get('genprogs');
+                    if (genProgsParam) {
+                        generals = genProgsParam.split('|');
+                    }
+                } catch(e) {
+                    console.warn("Failed to parse URL for single print:", e);
+                }
+            }
+
+            if (programs.length === 0 && generals.length === 0) {
+                const cat = row.category || '';
+                if (row['program 1']) programs.push((cat ? cat + ': ' : '') + row['program 1']);
+                if (row['program 2']) programs.push((cat ? cat + ': ' : '') + row['program 2']);
+                if (row['program 3']) programs.push((cat ? cat + ': ' : '') + row['program 3']);
+                if (row['program 4']) programs.push((cat ? cat + ': ' : '') + row['program 4']);
+                if (row.generals) {
+                    generals = row.generals.split(',').map(g => g.trim());
+                }
+            }
 
             const cardHtml = `
                 <div class="id-card" style="width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;">
