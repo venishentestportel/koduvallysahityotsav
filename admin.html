@@ -3441,6 +3441,14 @@
                 printSingleCardFromHistory(row);
             };
 
+            // Setup View Card Action
+            const viewCardBtn = document.getElementById('modal-view-card-btn');
+            if (viewCardBtn) {
+                viewCardBtn.onclick = () => {
+                    openGeneratedCardView(row);
+                };
+            }
+
             // Show Modal
             const modal = document.getElementById('card-details-modal');
             modal.style.display = 'flex';
@@ -3450,6 +3458,100 @@
             const modal = document.getElementById('card-details-modal');
             modal.style.display = 'none';
             document.getElementById('modal-qr-code').innerHTML = '';
+        }
+
+        function openGeneratedCardView(row) {
+            document.getElementById('gen-card-name').innerText = row.name || 'Unknown Student';
+            document.getElementById('gen-card-sector').innerText = row.sector || 'N/A';
+            document.getElementById('gen-card-chest').innerText = row['chest no.'] || 'N/A';
+
+            const qrContainer = document.getElementById('gen-card-qr');
+            qrContainer.innerHTML = '';
+            const urlVal = (row.url || '').replace('registringpage.html', 'registration.html');
+            if (urlVal) {
+                new QRCode(qrContainer, {
+                    text: urlVal,
+                    width: 75,
+                    height: 75,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+
+            document.getElementById('gen-card-print-btn').onclick = () => {
+                printCustomCard(row);
+            };
+
+            document.getElementById('card-details-modal').style.display = 'none';
+            document.getElementById('generated-card-view-modal').style.display = 'flex';
+        }
+
+        function closeGeneratedCardViewModal() {
+            document.getElementById('generated-card-view-modal').style.display = 'none';
+            document.getElementById('card-details-modal').style.display = 'flex';
+        }
+
+        function printCustomCard(row) {
+            const container = document.getElementById('generated-cards-container');
+            container.innerHTML = ''; // Clear previous
+
+            const cardId = `custom-print-card-${row.id}`;
+            const correctUrl = (row.url || '').replace('registringpage.html', 'registration.html');
+
+            const cardHtml = `
+                <div class="id-card" style="width: 6.5in; height: 4.13in; border: 1px solid #cbd5e1; background: white; border-radius: 12px; position: relative; overflow: hidden; page-break-inside: avoid; margin-bottom: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                    <!-- Background Image -->
+                    <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" />
+                    
+                    <!-- Details (Right 42%) -->
+                    <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 22px 18px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
+                        
+                        <!-- Student Name -->
+                        <div style="width: 100%; text-align: center; margin-top: 5px;">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 3px;">Student Name</div>
+                            <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${row.name}</div>
+                        </div>
+
+                        <!-- Sector & Chest -->
+                        <div style="width: 100%; display: flex; justify-content: space-around; align-items: center; background: rgba(248, 250, 252, 0.95); border-radius: 8px; padding: 8px 6px; border: 1px solid #e2e8f0; backdrop-filter: blur(2px);">
+                            <div style="text-align: center; flex: 1; border-right: 1px solid #e2e8f0; padding-right: 4px;">
+                                <div style="font-size: 0.6rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">Sector</div>
+                                <div style="font-size: 1.05rem; font-weight: 800; color: #3b82f6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 105px;">${row.sector || 'N/A'}</div>
+                            </div>
+                            <div style="text-align: center; flex: 1; padding-left: 4px;">
+                                <div style="font-size: 0.6rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">Chest No</div>
+                                <div style="font-size: 1.15rem; font-weight: 900; color: #dc2626;">${row['chest no.'] || 'N/A'}</div>
+                            </div>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 5px;">
+                            <div id="print-qr-${cardId}" style="background: white; padding: 4px; border-radius: 6px; display: inline-block;"></div>
+                            <div style="font-size: 0.55rem; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">Scan to Verify</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = cardHtml;
+
+            // Initialize QR Code inside the print container card
+            setTimeout(() => {
+                new QRCode(document.getElementById(`print-qr-${cardId}`), {
+                    text: correctUrl,
+                    width: 90,
+                    height: 90,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                
+                // Trigger print
+                setTimeout(() => {
+                    window.print();
+                }, 100);
+            }, 50);
         }
 
         function copyModalUrl() {
@@ -6351,8 +6453,73 @@
                 <button onclick="closeCardDetailsModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
                     Close
                 </button>
+                <button id="modal-view-card-btn" class="btn" style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa fa-id-card"></i> See Generated Card
+                </button>
                 <button id="modal-print-btn" class="btn" style="margin: 0; background: #3b82f6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa fa-print"></i> Print ID Card
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generated Card View Modal -->
+    <div id="generated-card-view-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 2100; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
+        onclick="closeGeneratedCardViewModal()">
+        <div style="background: white; width: 95%; max-width: 650px; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);"
+            onclick="event.stopPropagation()">
+            <div
+                style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa fa-id-card" style="color: #8b5cf6;"></i> Generated Student Card
+                </h2>
+                <button onclick="closeGeneratedCardViewModal()"
+                    style="border: none; background: transparent; font-size: 1.5rem; color: #94a3b8; cursor: pointer; padding: 0.25rem; line-height: 1; transition: color 0.2s;"
+                    onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
+            </div>
+
+            <div style="padding: 2rem 1.5rem; display: flex; justify-content: center; align-items: center; background: #f1f5f9; overflow-x: auto;">
+                <div class="preview-card-wrapper" style="width: 550px; height: 350px; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.15); background: white; flex-shrink: 0;">
+                    <!-- Background image -->
+                    <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none;" />
+                    
+                    <!-- Content overlay (Right 42%) -->
+                    <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 18px 15px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
+                        
+                        <!-- Student Name -->
+                        <div style="width: 100%; text-align: center; margin-top: 5px;">
+                            <div style="font-size: 0.65rem; font-weight: 700; color: #64748b; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px;">Student Name</div>
+                            <div id="gen-card-name" style="font-size: 1.15rem; font-weight: 800; color: #0f172a; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">Name</div>
+                        </div>
+
+                        <!-- Sector & Chest No -->
+                        <div style="width: 100%; display: flex; justify-content: space-around; align-items: center; background: rgba(248, 250, 252, 0.9); border-radius: 8px; padding: 6px 4px; border: 1px solid #e2e8f0; backdrop-filter: blur(2px);">
+                            <div style="text-align: center; flex: 1; border-right: 1px solid #e2e8f0; padding-right: 2px;">
+                                <div style="font-size: 0.55rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">Sector</div>
+                                <div id="gen-card-sector" style="font-size: 0.85rem; font-weight: 800; color: #3b82f6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;">Sector</div>
+                            </div>
+                            <div style="text-align: center; flex: 1; padding-left: 2px;">
+                                <div style="font-size: 0.55rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">Chest No</div>
+                                <div id="gen-card-chest" style="font-size: 0.95rem; font-weight: 900; color: #dc2626;">Chest</div>
+                            </div>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div id="gen-card-qr" style="background: white; padding: 4px; border-radius: 6px; display: inline-block;"></div>
+                            <div style="font-size: 0.5rem; font-weight: 700; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase; margin-top: 3px;">Scan to Verify</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closeGeneratedCardViewModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+                    Back
+                </button>
+                <button id="gen-card-print-btn" class="btn" style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa fa-print"></i> Print This Card
                 </button>
             </div>
         </div>
