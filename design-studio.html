@@ -135,873 +135,922 @@
 <body style="background-color: #f7fafc; color: #2d3748; min-height: 100vh;">
 
     <!-- Client-Side Standalone Login Overlay -->
-    
+
+    </div>
+
+    <!-- Section: New Design Studio Beta -->
+    <div id="section-new-design" class="admin-section-content" style="display: none;">
+        <div
+            style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            <h2
+                style="margin: 0; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <i class="fa fa-paint-brush"></i> New Design Studio (Beta)
+            </h2>
+            <p style="margin-top: 0.5rem; opacity: 0.9;">We are upgrading the Design Studio to a professional
+                React-based editor with layers and advanced tools!</p>
+            <a href="http://localhost:5173" target="_blank"
+                style="display: inline-block; margin-top: 1rem; background: white; color: #4f46e5; padding: 0.75rem 1.5rem; border-radius: 9999px; font-weight: 600; text-decoration: none; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Open New
+                React Studio</a>
+        </div>
+    </div>
+
+    <!-- Section: Design Studio -->
+    <div id="section-design" class="admin-section-content">
+        <div class="studio-toolbar">
+            <div class="studio-row-top">
+                <button class="btn"
+                    style="background: #eef2ff !important; color: #4f46e5 !important; box-shadow: none !important;"
+                    onclick="addNewText()">
+                    <i class="fa fa-plus"></i> Add Text Box
+                </button>
+                <label class="btn"
+                    style="background: #f8fafc !important; color: #475569 !important; box-shadow: none !important;">
+                    <i class="fa fa-image"></i> Change BG
+                    <input type="file" id="bg-upload" hidden onchange="handleBgUpload(event)">
+                </label>
+                <button class="btn"
+                    style="background: #f8fafc !important; color: #475569 !important; box-shadow: none !important;"
+                    onclick="openTemplateModal()">
+                    <i class="fa fa-th-large"></i> Template Library
+                </button>
+                <button class="btn"
+                    style="background: #ecfdf5 !important; color: #059669 !important; box-shadow: none !important;"
+                    onclick="downloadPoster()">
+                    <i class="fa fa-download"></i> Download Draft
+                </button>
+                <button class="btn"
+                    style="background: #eff6ff !important; color: #2563eb !important; box-shadow: none !important;"
+                    onclick="shareCanvasPoster()">
+                    <i class="fa fa-share-alt"></i> Share
+                </button>
+                <button class="btn"
+                    style="background: #fffbeb !important; color: #d97706 !important; box-shadow: none !important;"
+                    onclick="saveTemplatePositions()">
+                    <i class="fa fa-save"></i> Save Layout
+                </button>
+                <button class="btn"
+                    style="background: #faf5ff !important; color: #9333ea !important; box-shadow: none !important;"
+                    onclick="loadTemplatePositions()">
+                    <i class="fa fa-crosshairs"></i> Load Layout
+                </button>
+                <button class="btn"
+                    style="background: #fff1f2 !important; color: #e11d48 !important; box-shadow: none !important;"
+                    onclick="openResultBrowser()">
+                    <i class="fa fa-cloud-download-alt"></i> Load Live Result
+                </button>
+                <button class="btn"
+                    style="background: #fdf4ff !important; color: #c026d3 !important; box-shadow: none !important;"
+                    onclick="loadAD()">
+                    <i class="fa fa-ad"></i> Load AD
+                </button>
+                <button class="btn"
+                    style="background: #e0e7ff !important; color: #4338ca !important; box-shadow: none !important;"
+                    onclick="openAiTemplateModal()">
+                    <i class="fa fa-robot"></i> Load AI Template
+                </button>
             </div>
-
-            <!-- Section: New Design Studio Beta -->
-            <div id="section-new-design" class="admin-section-content" style="display: none;">
-                <div
-                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                    <h2
-                        style="margin: 0; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                        <i class="fa fa-paint-brush"></i> New Design Studio (Beta)</h2>
-                    <p style="margin-top: 0.5rem; opacity: 0.9;">We are upgrading the Design Studio to a professional
-                        React-based editor with layers and advanced tools!</p>
-                    <a href="http://localhost:5173" target="_blank"
-                        style="display: inline-block; margin-top: 1rem; background: white; color: #4f46e5; padding: 0.75rem 1.5rem; border-radius: 9999px; font-weight: 600; text-decoration: none; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
-                        onmouseover="this.style.transform='scale(1.05)'"
-                        onmouseout="this.style.transform='scale(1)'">Open New React Studio</a>
-                </div>
+            <div style="font-size: 0.85rem; color: #475569; margin-top: 0.5rem;" id="active-ai-template-indicator">
+                <!-- AI Template Indicator -->
             </div>
+            <div class="studio-row-bottom">
+                <select id="publish-category" class="btn"
+                    style="background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #475569 !important; width: auto;"
+                    onchange="loadProgramsForDesignStudio()"></select>
+                <input type="text" list="publish-program-list" id="publish-program" class="btn"
+                    placeholder="Search program..."
+                    style="background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #475569 !important; text-align: left; width: 250px;">
+                <datalist id="publish-program-list"></datalist>
 
-            <!-- Section: Design Studio -->
-            <div id="section-design" class="admin-section-content">
-                <div class="studio-toolbar">
-                    <div class="studio-row-top">
-                        <button class="btn"
-                            style="background: #eef2ff !important; color: #4f46e5 !important; box-shadow: none !important;"
-                            onclick="addNewText()">
-                            <i class="fa fa-plus"></i> Add Text Box
-                        </button>
-                        <label class="btn"
-                            style="background: #f8fafc !important; color: #475569 !important; box-shadow: none !important;">
-                            <i class="fa fa-image"></i> Change BG
-                            <input type="file" id="bg-upload" hidden onchange="handleBgUpload(event)">
-                        </label>
-                        <button class="btn"
-                            style="background: #f8fafc !important; color: #475569 !important; box-shadow: none !important;"
-                            onclick="openTemplateModal()">
-                            <i class="fa fa-th-large"></i> Template Library
-                        </button>
-                        <button class="btn"
-                            style="background: #ecfdf5 !important; color: #059669 !important; box-shadow: none !important;"
-                            onclick="downloadPoster()">
-                            <i class="fa fa-download"></i> Download Draft
-                        </button>
-                        <button class="btn"
-                            style="background: #eff6ff !important; color: #2563eb !important; box-shadow: none !important;"
-                            onclick="shareCanvasPoster()">
-                            <i class="fa fa-share-alt"></i> Share
-                        </button>
-                        <button class="btn"
-                            style="background: #fffbeb !important; color: #d97706 !important; box-shadow: none !important;"
-                            onclick="saveTemplatePositions()">
-                            <i class="fa fa-save"></i> Save Layout
-                        </button>
-                        <button class="btn"
-                            style="background: #faf5ff !important; color: #9333ea !important; box-shadow: none !important;"
-                            onclick="loadTemplatePositions()">
-                            <i class="fa fa-crosshairs"></i> Load Layout
-                        </button>
-                        <button class="btn"
-                            style="background: #fff1f2 !important; color: #e11d48 !important; box-shadow: none !important;"
-                            onclick="openResultBrowser()">
-                            <i class="fa fa-cloud-download-alt"></i> Load Live Result
-                        </button>
-                        <button class="btn"
-                            style="background: #fdf4ff !important; color: #c026d3 !important; box-shadow: none !important;"
-                            onclick="loadAD()">
-                            <i class="fa fa-ad"></i> Load AD
-                        </button>
-                        <button class="btn"
-                            style="background: #e0e7ff !important; color: #4338ca !important; box-shadow: none !important;"
-                            onclick="openAiTemplateModal()">
-                            <i class="fa fa-robot"></i> Load AI Template
-                        </button>
-                    </div>
-                    <div style="font-size: 0.85rem; color: #475569; margin-top: 0.5rem;"
-                        id="active-ai-template-indicator">
-                        <!-- AI Template Indicator -->
-                    </div>
-                    <div class="studio-row-bottom">
-                        <select id="publish-category" class="btn"
-                            style="background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #475569 !important; width: auto;"
-                            onchange="loadProgramsForDesignStudio()"></select>
-                        <input type="text" list="publish-program-list" id="publish-program" class="btn"
-                            placeholder="Search program..."
-                            style="background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #475569 !important; text-align: left; width: 250px;">
-                        <datalist id="publish-program-list"></datalist>
-
-                        <div style="margin-left: auto; display: flex; gap: 1rem; align-items: center;">
-                            <button class="btn"
-                                style="background: #a855f7 !important; color: white !important; box-shadow: none !important;"
-                                onclick="saveToResults()">
-                                <i class="fa fa-paper-plane"></i> Publish Result Poster
-                            </button>
-                            <button id="resume-bulk-btn" class="btn"
-                                style="background: #ef4444 !important; color: white !important; box-shadow: none !important; display: none;"
-                                onclick="showBulkPublishDialog()">
-                                <i class="fa fa-layer-group"></i> Resume Bulk Publish
-                            </button>
-                            <button id="bulk-update-ok-btn" class="btn"
-                                style="background: #22c55e !important; color: white !important; box-shadow: none !important; display: none;"
-                                onclick="saveBulkPosterEdit()">
-                                <i class="fa fa-check-circle"></i> OK (Update Preview)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="design-studio-container">
-                    <div class="canvas-area">
-                        <div id="design-canvas" style="width: 600px; height: 400px;">
-                            <img id="canvas-bg" src="" style="display: none;">
-                        </div>
-                    </div>
-                    <div class="properties-panel">
-                        <h2>Text Properties</h2>
-                        <div id="no-selection-msg" style="color: #666; text-align: center;">Select a text element to
-                            edit</div>
-                        <div id="prop-controls" style="display: none;">
-                            <div class="prop-group">
-                                <label>Text Content</label>
-                                <textarea id="prop-text" rows="2"
-                                    style="padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 6px; resize: vertical; font-family: inherit; font-size: 0.9rem;"
-                                    oninput="updateSelectedText('innerText', this.value)"></textarea>
-                            </div>
-                            <div class="prop-group">
-                                <label>Text Color</label>
-                                <input type="color" id="prop-color" oninput="updateSelectedText('color', this.value)">
-                            </div>
-                            <div class="prop-group">
-                                <label>Font Size (px)</label>
-                                <input type="number" id="prop-size" min="10" max="200"
-                                    oninput="updateSelectedText('fontSize', this.value + 'px')">
-                            </div>
-                            <div class="prop-group">
-                                <label>Font Family</label>
-                                <select id="prop-font" onchange="updateSelectedText('fontFamily', this.value)">
-                                    <option value="'Outfit', sans-serif">Outfit</option>
-                                    <option value="'Playfair Display', serif">Playfair Display</option>
-                                    <option value="'Arial', sans-serif">Arial</option>
-                                    <option value="'Times New Roman', serif">Times New Roman</option>
-                                    <option value="'Courier New', monospace">Courier New</option>
-                                </select>
-                                <label class="btn"
-                                    style="background:#edf2f7; color:#4a5568; margin-top:0.5rem; text-align:center; padding: 0.5rem; font-size: 0.85rem; cursor:pointer;">
-                                    <i class="fa fa-upload"></i> Upload Custom Font (*.ttf/*.otf)
-                                    <input type="file" id="font-upload" hidden accept=".ttf,.otf,.woff"
-                                        onchange="handleFontUpload(event)">
-                                </label>
-                            </div>
-                            <button class="btn btn-delete" style="margin-top: 1rem;" onclick="deleteSelectedText()">
-                                <i class="fa fa-trash"></i> Delete Text
-                            </button>
-                        </div>
-
-                        <!-- Section: WhatsApp Sharing -->
-                        <div
-                            style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 1.2rem; display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
-                            <h4
-                                style="margin: 0; color: #2e7d32; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 1rem;">
-                                <span style="display: flex; align-items: center; gap: 6px;"><i
-                                        class="fab fa-whatsapp"></i> WhatsApp Share</span>
-                                <span id="ds-wa-client-indicator"
-                                    style="font-size: 0.75rem; background: #c8e6c9; padding: 2px 6px; border-radius: 4px; color: #2e7d32; font-weight: bold;">default</span>
-                            </h4>
-
-                            <!-- Not Linked Warning -->
-                            <div id="ds-wa-not-linked-warning"
-                                style="background: white; border: 1px solid #ffcdd2; border-radius: 8px; padding: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center;">
-                                <div
-                                    style="font-size: 0.85rem; color: #d32f2f; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                                    <i class="fa fa-exclamation-circle"></i> WhatsApp not linked
-                                </div>
-                                <p style="font-size: 0.75rem; color: #666; margin: 0;">Link your WhatsApp account in the
-                                    Sync panel first.</p>
-                                <button class="btn"
-                                    style="background: #128c7e !important; color: white !important; font-size: 0.75rem; padding: 4px 10px;"
-                                    onclick="goToWhatsAppSync()">
-                                    Go to WhatsApp Sync
-                                </button>
-                            </div>
-
-                            <!-- Targets Container (Visible only when connected) -->
-                            <div id="ds-wa-controls-area" style="display: none; flex-direction: column; gap: 8px;">
-                                <p style="font-size: 0.8rem; color: #2e7d32; margin: 0;">Select contacts/groups to send
-                                    poster:</p>
-                                <div id="ds-whatsapp-targets-container"
-                                    style="max-height: 150px; overflow-y: auto; background: white; border: 1px solid #c8e6c9; border-radius: 4px; padding: 0.5rem; display: flex; flex-direction: column; gap: 5px;">
-                                    <div style="color: #666; font-size: 0.8rem;">Loading contacts...</div>
-                                </div>
-                                <button id="ds-send-wa-btn" class="btn"
-                                    style="background: #2e7d32 !important; color: white !important; width: 100%; justify-content: center; font-weight: 600; box-shadow: none !important;"
-                                    onclick="sendPosterToWhatsApp(event)">
-                                    <i class="fab fa-whatsapp"></i> Sent to Whatsapp
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="admin-card" style="margin-top: 2rem;">
-                    <h2 class="premium-header">Published Results</h2>
-                    <p style="color: #636e72; margin-bottom: 1.5rem;">View and manage posters that have been published
-                        to the results page.</p>
-                    <div id="published-posters-list" class="admin-gallery-grid">
-                        <!-- Dynamic posters will load here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section: WhatsApp Sync -->
-            <div id="section-wa-sync" class="admin-section-content">
-                <div class="admin-section" style="max-width: 600px; margin: 0 auto;">
-                    <div
-                        style="background: linear-gradient(135deg, #128c7e, #075e54); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                        <h2
-                            style="margin: 0; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                            <i class="fab fa-whatsapp"></i> WhatsApp Device Sync</h2>
-                        <p style="margin-top: 0.5rem; opacity: 0.9;">Link your WhatsApp account to enable direct result
-                            poster sharing.</p>
-                    </div>
-
-                    <div class="admin-card"
-                        style="padding: 2rem; border-radius: 16px; background: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 1.5rem;">
-                        <!-- Profile Selector -->
-                        <div
-                            style="background: #f7fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
-                            <h3 style="margin: 0; font-size: 1rem; color: #2d3748; font-weight: bold;">WhatsApp Profile
-                                Name</h3>
-                            <p style="margin: 0; font-size: 0.85rem; color: #636e72;">Use a custom name to separate your
-                                WhatsApp session from other administrators.</p>
-                            <div style="display: flex; gap: 8px; margin-top: 5px;">
-                                <input type="text" id="wa-sync-client-id-input"
-                                    style="flex: 1; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem;"
-                                    placeholder="Enter your name (e.g. Ishan, Sahid)...">
-                                <button class="btn"
-                                    style="background: #128c7e !important; color: white !important; padding: 0 1.5rem; font-weight: 600; border-radius: 8px; box-shadow: none !important;"
-                                    onclick="changeSyncClientId()">Save Profile</button>
-                            </div>
-                        </div>
-
-                        <!-- Connection Status -->
-                        <div
-                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 250px; background: #fafafa; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 2rem; gap: 1rem;">
-                            <div id="wa-sync-status-badge"
-                                style="background: #edf2f7; color: #4a5568; padding: 6px 16px; border-radius: 9999px; font-weight: bold; font-size: 0.9rem;">
-                                Checking...</div>
-
-                            <div id="wa-sync-status-desc"
-                                style="color: #636e72; font-size: 0.9rem; text-align: center; max-width: 350px;">
-                                Checking connection status with backend service...
-                            </div>
-
-                            <!-- QR Code Container -->
-                            <div id="wa-sync-qr-container"
-                                style="display: none; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
-                                <div
-                                    style="background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #edf2f7;">
-                                    <img id="wa-sync-qr-image" src="" alt="WhatsApp QR Code"
-                                        style="width: 200px; height: 200px; display: block;">
-                                </div>
-                                <p
-                                    style="font-size: 0.85rem; color: #4a5568; margin-top: 0.5rem; text-align: center; font-weight: 500;">
-                                    Open WhatsApp on your phone, go to Linked Devices, and scan this code.
-                                </p>
-                            </div>
-
-                            <!-- Unlink Device Button -->
-                            <button id="wa-sync-logout-btn" class="btn"
-                                style="display: none; background: #ef4444 !important; color: white !important; font-weight: bold; padding: 0.75rem 1.5rem; border-radius: 8px; box-shadow: none !important;"
-                                onclick="logoutSyncClient()">
-                                <i class="fa fa-unlink"></i> Unlink This Device
-                            </button>
-                        </div>
-
-                        <!-- Connected Contacts Container -->
-                        <div id="wa-sync-contacts-area"
-                            style="display: none; flex-direction: column; gap: 12px; margin-top: 1.5rem; border-top: 1px solid #edf2f7; padding-top: 1.5rem;">
-                            <h3
-                                style="margin: 0; font-size: 1.1rem; color: #2d3748; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                                <i class="fa fa-address-book" style="color: #128c7e;"></i> Linked Contacts & Groups
-                            </h3>
-                            <p style="margin: 0; font-size: 0.85rem; color: #636e72;">Checked contacts will be selected
-                                as default targets in Design Studio.</p>
-
-                            <!-- Search Contacts -->
-                            <input type="text" id="wa-sync-contact-search" placeholder="Search contacts or groups..."
-                                style="width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.9rem;"
-                                oninput="filterSyncContacts()">
-
-                            <div id="wa-sync-contacts-container"
-                                style="max-height: 300px; overflow-y: auto; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
-                                <div style="color: #666; font-size: 0.85rem; text-align: center; padding: 1rem;">Loading
-                                    contacts...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section: Gallery Manager -->
-            <div id="section-gallery" class="admin-section-content">
-                <div class="admin-card">
-                    <h2 class="premium-header">Manage Gallery Images</h2>
-                    <p style="color: #636e72; margin-bottom: 1.5rem;">Upload important images to showcase on the home
-                        page. Images will be optimized for performance.</p>
-                    <div class="form-group">
-                        <label class="btn btn-add"
-                            style="display: inline-block; cursor: pointer; padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 8px;">
-                            <i class="fa fa-upload"></i> Upload New Image
-                            <input type="file" id="gallery-upload" hidden accept="image/*" multiple
-                                onchange="handleGalleryUpload(event)">
-                        </label>
-                    </div>
-                    <div id="gallery-admin-list" class="admin-gallery-grid"></div>
-                </div>
-            </div>
-
-            <!-- Section: Map Manager -->
-            <div id="section-map" class="admin-section-content">
-                <div class="admin-card">
-                    <h2 class="premium-header">Manage Festival Map</h2>
-                    <p style="color: #636e72; margin-bottom: 1.5rem;">Upload the main geographical map or layout image
-                        for the venue. This image will be visible when users click the "See Map" button.</p>
-                    <div class="form-group">
-                        <label class="btn btn-add" style="display: inline-block; cursor: pointer;">
-                            <i class="fa fa-upload"></i> Upload Map Image
-                            <input type="file" id="map-upload" hidden accept="image/*"
-                                onchange="handleMapUpload(event)">
-                        </label>
-                    </div>
-                    <div
-                        style="margin-top: 2rem; max-width: 600px; border-radius: 12px; overflow: hidden; border: 1px solid #edf2f7; background: white; padding: 1rem; text-align: center;">
-                        <h3 style="font-size: 1rem; color: #4a5568; margin-bottom: 1rem;">Current Map Preview</h3>
-                        <img id="admin-map-preview"
-                            src="https://lxbvadjjboavxwidxsnl.supabase.co/storage/v1/object/public/contect%20image/map_image.jpg"
-                            onerror="this.style.display='none'; document.getElementById('no-map-msg').style.display='block';"
-                            onload="this.style.display='block'; document.getElementById('no-map-msg').style.display='none';"
-                            style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;">
-                        <p id="no-map-msg" style="color: #a0aec0; display: none;">No map uploaded yet.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section: Schedule Manager -->
-            <div id="section-schedule" class="admin-section-content">
-                <div class="admin-section">
-                    <h2>Live Schedule Management</h2>
-                    <p style="color: #636e72; margin-bottom: 1.5rem;">Update what's happening on each stage in
-                        real-time.</p>
-
-                    <div
-                        style="border: 1px solid #f1f5f9; border-radius: 12px; background: #ffffff; overflow: hidden; margin-bottom: 1.5rem;">
-                        <div class="schedule-edit-header"
-                            style="display: grid; grid-template-columns: 150px 1fr 1fr 80px 60px; gap: 0.75rem; font-weight: 700; color: #64748b; padding: 0.6rem 1rem; background: #f8fafc; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; align-items: center; border-bottom: 1px solid #f1f5f9;">
-                            <span>Stage Name</span>
-                            <span>Running Program</span>
-                            <span>Queued Next</span>
-                            <span>Quick Add</span>
-                            <span style="text-align: center;">Action</span>
-                        </div>
-
-                        <div id="schedule-list-editor">
-                            <!-- Dynamic schedule rows load here -->
-                        </div>
-                    </div>
-
+                <div style="margin-left: auto; display: flex; gap: 1rem; align-items: center;">
                     <button class="btn"
-                        style="background: #eef2ff !important; color: #4f46e5 !important; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.75rem; font-weight: 700; margin-top: 0; display: inline-flex; align-items: center; gap: 6px;"
-                        onclick="addScheduleRow()">
-                        <i class="fa fa-plus"></i> Add New Stage
+                        style="background: #a855f7 !important; color: white !important; box-shadow: none !important;"
+                        onclick="saveToResults()">
+                        <i class="fa fa-paper-plane"></i> Publish Result Poster
+                    </button>
+                    <button id="resume-bulk-btn" class="btn"
+                        style="background: #ef4444 !important; color: white !important; box-shadow: none !important; display: none;"
+                        onclick="showBulkPublishDialog()">
+                        <i class="fa fa-layer-group"></i> Resume Bulk Publish
+                    </button>
+                    <button id="bulk-update-ok-btn" class="btn"
+                        style="background: #22c55e !important; color: white !important; box-shadow: none !important; display: none;"
+                        onclick="saveBulkPosterEdit()">
+                        <i class="fa fa-check-circle"></i> OK (Update Preview)
                     </button>
                 </div>
             </div>
-
-            <!-- Section: Content Editor -->
-            <div id="section-content" class="admin-section-content">
-                <div class="admin-section">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 300px;">
-                            <h2>Visual Content Editor</h2>
-                            <p style="color: #636e72; margin: 0;">Click any dashed box perfectly superimposed over the
-                                live website below to edit text, size, or color. Use the 'Add Floating Text' button to
-                                drag generic text boxes anywhere onto the page layout.</p>
-                        </div>
-                        <div
-                            style="display: flex; gap: 0.5rem; background: #edf2f7; padding: 0.5rem 1rem; border-radius: 8px; align-items: center; flex-wrap: wrap;">
-
-                            <!-- Text Tools -->
-                            <div id="visual-text-tools"
-                                style="display: flex; gap: 0.5rem; align-items: center; transition: opacity 0.2s;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: #4a5568;">Color:</label>
-                                <input type="color" id="visual-color" oninput="applyVisualFormat('color', this.value)"
-                                    style="border: none; padding: 0; width: 30px; height: 30px; cursor: pointer;">
-
-                                <label
-                                    style="font-size: 0.85rem; font-weight: 600; color: #4a5568; margin-left: 0.5rem;">Size:</label>
-                                <input type="number" id="visual-size" min="10" max="200"
-                                    oninput="applyVisualFormat('fontSize', this.value + 'px')"
-                                    style="width: 60px; padding: 4px; border: 1px solid #cbd5e0; border-radius: 4px;">
-
-                                <button id="visual-bold" class="btn"
-                                    style="padding: 4px 8px; font-weight: bold; border-radius: 4px; margin-left: 0.5rem; background: white; color: #4a5568; border: 1px solid #cbd5e0;"
-                                    onclick="toggleVisualFormat('fontWeight', 'bold', 'normal')">B</button>
-                                <button id="visual-italic" class="btn"
-                                    style="padding: 4px 8px; font-style: italic; font-family: serif; border-radius: 4px; background: white; color: #4a5568; border: 1px solid #cbd5e0;"
-                                    onclick="toggleVisualFormat('fontStyle', 'italic', 'normal')">I</button>
-                            </div>
-
-                            <!-- Image Tools -->
-                            <div id="visual-image-tools"
-                                style="display: none; gap: 0.5rem; align-items: center; border-left: 1px solid #cbd5e0; padding-left: 0.5rem; margin-left: 0.5rem;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: #4a5568;">Image
-                                    Width:</label>
-                                <input type="number" id="visual-img-width" min="50" max="2000"
-                                    oninput="applyVisualFormat('width', this.value + 'px')"
-                                    style="width: 80px; padding: 4px; border: 1px solid #cbd5e0; border-radius: 4px;">
-                            </div>
-
-                            <div style="width: 1px; height: 24px; background: #cbd5e0; margin: 0 0.5rem;"></div>
-
-                            <button class="btn btn-add" onclick="addFloatingTextBox()">
-                                <i class="fa fa-font"></i> Add Floating Text
-                            </button>
-
-                            <input type="file" id="visual-image-upload" accept="image/*" style="display: none;"
-                                onchange="uploadFloatingImage(this)">
-                            <button class="btn btn-add" style="background: #2b6cb0;"
-                                onclick="document.getElementById('visual-image-upload').click()">
-                                <i class="fa fa-image"></i> Add Floating Image
-                            </button>
-
-                            <!-- Delete Container -->
-                            <div id="visual-delete-container"
-                                style="display: flex; align-items: center; border-left: 1px solid #cbd5e0; padding-left: 0.5rem; margin-left: 0.5rem;">
-                                <button class="btn btn-delete"
-                                    style="padding: 6px 12px; display: flex; align-items: center; gap: 0.5rem;"
-                                    onclick="deleteSelectedVisualElement()"
-                                    title="Delete currently selected floating item">
-                                    <i class="fa fa-trash"></i> Delete Selected
-                                </button>
-                                <button class="btn btn-delete"
-                                    style="padding: 6px 12px; display: flex; align-items: center; gap: 0.5rem; background: #c53030; margin-left: 0.5rem;"
-                                    onclick="clearAllFloatingElements()" title="Delete all floating elements">
-                                    <i class="fa fa-times-circle"></i> Clear All
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        style="width: 100%; height: 700px; border: 3px solid #cbd5e0; border-radius: 12px; overflow: hidden; background: white; position: relative;">
-                        <!-- The iframe loads the main index.html but injected with mode=edit URL parameters telling the javascript to run the Visual DOM Overrides -->
-                        <iframe id="visual-editor-frame" src="about:blank"
-                            style="width: 100%; height: 100%; border: none;"></iframe>
-                    </div>
+        </div>
+        <div class="design-studio-container">
+            <div class="canvas-area">
+                <div id="design-canvas" style="width: 600px; height: 400px;">
+                    <img id="canvas-bg" src="" style="display: none;">
                 </div>
             </div>
+            <div class="properties-panel">
+                <h2>Text Properties</h2>
+                <div id="no-selection-msg" style="color: #666; text-align: center;">Select a text element to
+                    edit</div>
+                <div id="prop-controls" style="display: none;">
+                    <div class="prop-group">
+                        <label>Text Content</label>
+                        <textarea id="prop-text" rows="2"
+                            style="padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 6px; resize: vertical; font-family: inherit; font-size: 0.9rem;"
+                            oninput="updateSelectedText('innerText', this.value)"></textarea>
+                    </div>
+                    <div class="prop-group">
+                        <label>Text Color</label>
+                        <input type="color" id="prop-color" oninput="updateSelectedText('color', this.value)">
+                    </div>
+                    <div class="prop-group">
+                        <label>Font Size (px)</label>
+                        <input type="number" id="prop-size" min="10" max="200"
+                            oninput="updateSelectedText('fontSize', this.value + 'px')">
+                    </div>
+                    <div class="prop-group">
+                        <label>Font Family</label>
+                        <select id="prop-font" onchange="updateSelectedText('fontFamily', this.value)">
+                            <option value="'Outfit', sans-serif">Outfit</option>
+                            <option value="'Playfair Display', serif">Playfair Display</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                        </select>
+                        <label class="btn"
+                            style="background:#edf2f7; color:#4a5568; margin-top:0.5rem; text-align:center; padding: 0.5rem; font-size: 0.85rem; cursor:pointer;">
+                            <i class="fa fa-upload"></i> Upload Custom Font (*.ttf/*.otf)
+                            <input type="file" id="font-upload" hidden accept=".ttf,.otf,.woff"
+                                onchange="handleFontUpload(event)">
+                        </label>
+                    </div>
+                    <button class="btn btn-delete" style="margin-top: 1rem;" onclick="deleteSelectedText()">
+                        <i class="fa fa-trash"></i> Delete Text
+                    </button>
+                </div>
 
-            <!-- Section: Registration Manager -->
-            <div id="section-registration" class="admin-section-content">
-                <div class="admin-section">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <h2 style="margin: 0 0 0.5rem 0;">Registration Manager</h2>
-                            <p style="color: #636e72; margin: 0;">Manage stages and trigger real-time situations
-                                (Registration/Program status).</p>
+                <!-- Section: WhatsApp Sharing -->
+                <div
+                    style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 1.2rem; display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
+                    <h4
+                        style="margin: 0; color: #2e7d32; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 1rem;">
+                        <span style="display: flex; align-items: center; gap: 6px;"><i class="fab fa-whatsapp"></i>
+                            WhatsApp Share</span>
+                        <span id="ds-wa-client-indicator"
+                            style="font-size: 0.75rem; background: #c8e6c9; padding: 2px 6px; border-radius: 4px; color: #2e7d32; font-weight: bold;">default</span>
+                    </h4>
+
+                    <!-- Not Linked Warning -->
+                    <div id="ds-wa-not-linked-warning"
+                        style="background: white; border: 1px solid #ffcdd2; border-radius: 8px; padding: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                        <div
+                            style="font-size: 0.85rem; color: #d32f2f; font-weight: bold; display: flex; align-items: center; gap: 4px;">
+                            <i class="fa fa-exclamation-circle"></i> WhatsApp not linked
                         </div>
-                        <button class="btn" style="background: #4a5568; color: white;" onclick="openHistoryModal()">
-                            <i class="fa fa-history"></i> View History
+                        <p style="font-size: 0.75rem; color: #666; margin: 0;">Link your WhatsApp account in the
+                            Sync panel first.</p>
+                        <button class="btn"
+                            style="background: #128c7e !important; color: white !important; font-size: 0.75rem; padding: 4px 10px;"
+                            onclick="goToWhatsAppSync()">
+                            Go to WhatsApp Sync
                         </button>
                     </div>
 
-                    <div
-                        style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-                        <h4 style="margin-top:0; color: #2e7d32;"><i class="fab fa-whatsapp"></i> WhatsApp Notifications
-                        </h4>
-                        <p style="font-size: 0.9rem; color: #4caf50; margin-bottom: 10px;">Select contacts/groups to
-                            notify on stage actions:</p>
-                        <div id="whatsapp-targets-container"
+                    <!-- Targets Container (Visible only when connected) -->
+                    <div id="ds-wa-controls-area" style="display: none; flex-direction: column; gap: 8px;">
+                        <p style="font-size: 0.8rem; color: #2e7d32; margin: 0;">Select contacts/groups to send
+                            poster:</p>
+                        <div id="ds-whatsapp-targets-container"
                             style="max-height: 150px; overflow-y: auto; background: white; border: 1px solid #c8e6c9; border-radius: 4px; padding: 0.5rem; display: flex; flex-direction: column; gap: 5px;">
-                            <div style="color: #666; font-size: 0.9rem;">Loading contacts...</div>
+                            <div style="color: #666; font-size: 0.8rem;">Loading contacts...</div>
                         </div>
+                        <button id="ds-send-wa-btn" class="btn"
+                            style="background: #2e7d32 !important; color: white !important; width: 100%; justify-content: center; font-weight: 600; box-shadow: none !important;"
+                            onclick="sendPosterToWhatsApp(event)">
+                            <i class="fab fa-whatsapp"></i> Sent to Whatsapp
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="admin-card" style="margin-top: 2rem;">
+            <h2 class="premium-header">Published Results</h2>
+            <p style="color: #636e72; margin-bottom: 1.5rem;">View and manage posters that have been published
+                to the results page.</p>
+            <div id="published-posters-list" class="admin-gallery-grid">
+                <!-- Dynamic posters will load here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: WhatsApp Sync -->
+    <div id="section-wa-sync" class="admin-section-content">
+        <div class="admin-section" style="max-width: 600px; margin: 0 auto;">
+            <div
+                style="background: linear-gradient(135deg, #128c7e, #075e54); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                <h2
+                    style="margin: 0; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fab fa-whatsapp"></i> WhatsApp Device Sync
+                </h2>
+                <p style="margin-top: 0.5rem; opacity: 0.9;">Link your WhatsApp account to enable direct result
+                    poster sharing.</p>
+            </div>
+
+            <div class="admin-card"
+                style="padding: 2rem; border-radius: 16px; background: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 1.5rem;">
+                <!-- Profile Selector -->
+                <div
+                    style="background: #f7fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
+                    <h3 style="margin: 0; font-size: 1rem; color: #2d3748; font-weight: bold;">WhatsApp Profile
+                        Name</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #636e72;">Use a custom name to separate your
+                        WhatsApp session from other administrators.</p>
+                    <div style="display: flex; gap: 8px; margin-top: 5px;">
+                        <input type="text" id="wa-sync-client-id-input"
+                            style="flex: 1; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem;"
+                            placeholder="Enter your name (e.g. Ishan, Sahid)...">
+                        <button class="btn"
+                            style="background: #128c7e !important; color: white !important; padding: 0 1.5rem; font-weight: 600; border-radius: 8px; box-shadow: none !important;"
+                            onclick="changeSyncClientId()">Save Profile</button>
+                    </div>
+                </div>
+
+                <!-- Connection Status -->
+                <div
+                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 250px; background: #fafafa; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 2rem; gap: 1rem;">
+                    <div id="wa-sync-status-badge"
+                        style="background: #edf2f7; color: #4a5568; padding: 6px 16px; border-radius: 9999px; font-weight: bold; font-size: 0.9rem;">
+                        Checking...</div>
+
+                    <div id="wa-sync-status-desc"
+                        style="color: #636e72; font-size: 0.9rem; text-align: center; max-width: 350px;">
+                        Checking connection status with backend service...
                     </div>
 
-                    <div id="registration-stages-editor"
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
-                        <!-- Dynamic stages rows load here -->
+                    <!-- QR Code Container -->
+                    <div id="wa-sync-qr-container"
+                        style="display: none; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
+                        <div
+                            style="background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #edf2f7;">
+                            <img id="wa-sync-qr-image" src="" alt="WhatsApp QR Code"
+                                style="width: 200px; height: 200px; display: block;">
+                        </div>
+                        <p
+                            style="font-size: 0.85rem; color: #4a5568; margin-top: 0.5rem; text-align: center; font-weight: 500;">
+                            Open WhatsApp on your phone, go to Linked Devices, and scan this code.
+                        </p>
                     </div>
 
-                    <button class="btn btn-add" style="margin-top: 1.5rem;" onclick="addRegistrationStageRow()">
-                        <i class="fa fa-plus"></i> Create New Stage
+                    <!-- Unlink Device Button -->
+                    <button id="wa-sync-logout-btn" class="btn"
+                        style="display: none; background: #ef4444 !important; color: white !important; font-weight: bold; padding: 0.75rem 1.5rem; border-radius: 8px; box-shadow: none !important;"
+                        onclick="logoutSyncClient()">
+                        <i class="fa fa-unlink"></i> Unlink This Device
+                    </button>
+                </div>
+
+                <!-- Connected Contacts Container -->
+                <div id="wa-sync-contacts-area"
+                    style="display: none; flex-direction: column; gap: 12px; margin-top: 1.5rem; border-top: 1px solid #edf2f7; padding-top: 1.5rem;">
+                    <h3
+                        style="margin: 0; font-size: 1.1rem; color: #2d3748; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-address-book" style="color: #128c7e;"></i> Linked Contacts & Groups
+                    </h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #636e72;">Checked contacts will be selected
+                        as default targets in Design Studio.</p>
+
+                    <!-- Search Contacts -->
+                    <input type="text" id="wa-sync-contact-search" placeholder="Search contacts or groups..."
+                        style="width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.9rem;"
+                        oninput="filterSyncContacts()">
+
+                    <div id="wa-sync-contacts-container"
+                        style="max-height: 300px; overflow-y: auto; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="color: #666; font-size: 0.85rem; text-align: center; padding: 1rem;">Loading
+                            contacts...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Gallery Manager -->
+    <div id="section-gallery" class="admin-section-content">
+        <div class="admin-card">
+            <h2 class="premium-header">Manage Gallery Images</h2>
+            <p style="color: #636e72; margin-bottom: 1.5rem;">Upload important images to showcase on the home
+                page. Images will be optimized for performance.</p>
+            <div class="form-group">
+                <label class="btn btn-add"
+                    style="display: inline-block; cursor: pointer; padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 8px;">
+                    <i class="fa fa-upload"></i> Upload New Image
+                    <input type="file" id="gallery-upload" hidden accept="image/*" multiple
+                        onchange="handleGalleryUpload(event)">
+                </label>
+            </div>
+            <div id="gallery-admin-list" class="admin-gallery-grid"></div>
+        </div>
+    </div>
+
+    <!-- Section: Map Manager -->
+    <div id="section-map" class="admin-section-content">
+        <div class="admin-card">
+            <h2 class="premium-header">Manage Festival Map</h2>
+            <p style="color: #636e72; margin-bottom: 1.5rem;">Upload the main geographical map or layout image
+                for the venue. This image will be visible when users click the "See Map" button.</p>
+            <div class="form-group">
+                <label class="btn btn-add" style="display: inline-block; cursor: pointer;">
+                    <i class="fa fa-upload"></i> Upload Map Image
+                    <input type="file" id="map-upload" hidden accept="image/*" onchange="handleMapUpload(event)">
+                </label>
+            </div>
+            <div
+                style="margin-top: 2rem; max-width: 600px; border-radius: 12px; overflow: hidden; border: 1px solid #edf2f7; background: white; padding: 1rem; text-align: center;">
+                <h3 style="font-size: 1rem; color: #4a5568; margin-bottom: 1rem;">Current Map Preview</h3>
+                <img id="admin-map-preview"
+                    src="https://lxbvadjjboavxwidxsnl.supabase.co/storage/v1/object/public/contect%20image/map_image.jpg"
+                    onerror="this.style.display='none'; document.getElementById('no-map-msg').style.display='block';"
+                    onload="this.style.display='block'; document.getElementById('no-map-msg').style.display='none';"
+                    style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;">
+                <p id="no-map-msg" style="color: #a0aec0; display: none;">No map uploaded yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Schedule Manager -->
+    <div id="section-schedule" class="admin-section-content">
+        <div class="admin-section">
+            <h2>Live Schedule Management</h2>
+            <p style="color: #636e72; margin-bottom: 1.5rem;">Update what's happening on each stage in
+                real-time.</p>
+
+            <div
+                style="border: 1px solid #f1f5f9; border-radius: 12px; background: #ffffff; overflow: hidden; margin-bottom: 1.5rem;">
+                <div class="schedule-edit-header"
+                    style="display: grid; grid-template-columns: 150px 1fr 1fr 80px 60px; gap: 0.75rem; font-weight: 700; color: #64748b; padding: 0.6rem 1rem; background: #f8fafc; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; align-items: center; border-bottom: 1px solid #f1f5f9;">
+                    <span>Stage Name</span>
+                    <span>Running Program</span>
+                    <span>Queued Next</span>
+                    <span>Quick Add</span>
+                    <span style="text-align: center;">Action</span>
+                </div>
+
+                <div id="schedule-list-editor">
+                    <!-- Dynamic schedule rows load here -->
+                </div>
+            </div>
+
+            <button class="btn"
+                style="background: #eef2ff !important; color: #4f46e5 !important; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.75rem; font-weight: 700; margin-top: 0; display: inline-flex; align-items: center; gap: 6px;"
+                onclick="addScheduleRow()">
+                <i class="fa fa-plus"></i> Add New Stage
+            </button>
+        </div>
+    </div>
+
+    <!-- Section: Content Editor -->
+    <div id="section-content" class="admin-section-content">
+        <div class="admin-section">
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h2>Visual Content Editor</h2>
+                    <p style="color: #636e72; margin: 0;">Click any dashed box perfectly superimposed over the
+                        live website below to edit text, size, or color. Use the 'Add Floating Text' button to
+                        drag generic text boxes anywhere onto the page layout.</p>
+                </div>
+                <div
+                    style="display: flex; gap: 0.5rem; background: #edf2f7; padding: 0.5rem 1rem; border-radius: 8px; align-items: center; flex-wrap: wrap;">
+
+                    <!-- Text Tools -->
+                    <div id="visual-text-tools"
+                        style="display: flex; gap: 0.5rem; align-items: center; transition: opacity 0.2s;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #4a5568;">Color:</label>
+                        <input type="color" id="visual-color" oninput="applyVisualFormat('color', this.value)"
+                            style="border: none; padding: 0; width: 30px; height: 30px; cursor: pointer;">
+
+                        <label
+                            style="font-size: 0.85rem; font-weight: 600; color: #4a5568; margin-left: 0.5rem;">Size:</label>
+                        <input type="number" id="visual-size" min="10" max="200"
+                            oninput="applyVisualFormat('fontSize', this.value + 'px')"
+                            style="width: 60px; padding: 4px; border: 1px solid #cbd5e0; border-radius: 4px;">
+
+                        <button id="visual-bold" class="btn"
+                            style="padding: 4px 8px; font-weight: bold; border-radius: 4px; margin-left: 0.5rem; background: white; color: #4a5568; border: 1px solid #cbd5e0;"
+                            onclick="toggleVisualFormat('fontWeight', 'bold', 'normal')">B</button>
+                        <button id="visual-italic" class="btn"
+                            style="padding: 4px 8px; font-style: italic; font-family: serif; border-radius: 4px; background: white; color: #4a5568; border: 1px solid #cbd5e0;"
+                            onclick="toggleVisualFormat('fontStyle', 'italic', 'normal')">I</button>
+                    </div>
+
+                    <!-- Image Tools -->
+                    <div id="visual-image-tools"
+                        style="display: none; gap: 0.5rem; align-items: center; border-left: 1px solid #cbd5e0; padding-left: 0.5rem; margin-left: 0.5rem;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #4a5568;">Image
+                            Width:</label>
+                        <input type="number" id="visual-img-width" min="50" max="2000"
+                            oninput="applyVisualFormat('width', this.value + 'px')"
+                            style="width: 80px; padding: 4px; border: 1px solid #cbd5e0; border-radius: 4px;">
+                    </div>
+
+                    <div style="width: 1px; height: 24px; background: #cbd5e0; margin: 0 0.5rem;"></div>
+
+                    <button class="btn btn-add" onclick="addFloatingTextBox()">
+                        <i class="fa fa-font"></i> Add Floating Text
+                    </button>
+
+                    <input type="file" id="visual-image-upload" accept="image/*" style="display: none;"
+                        onchange="uploadFloatingImage(this)">
+                    <button class="btn btn-add" style="background: #2b6cb0;"
+                        onclick="document.getElementById('visual-image-upload').click()">
+                        <i class="fa fa-image"></i> Add Floating Image
+                    </button>
+
+                    <!-- Delete Container -->
+                    <div id="visual-delete-container"
+                        style="display: flex; align-items: center; border-left: 1px solid #cbd5e0; padding-left: 0.5rem; margin-left: 0.5rem;">
+                        <button class="btn btn-delete"
+                            style="padding: 6px 12px; display: flex; align-items: center; gap: 0.5rem;"
+                            onclick="deleteSelectedVisualElement()" title="Delete currently selected floating item">
+                            <i class="fa fa-trash"></i> Delete Selected
+                        </button>
+                        <button class="btn btn-delete"
+                            style="padding: 6px 12px; display: flex; align-items: center; gap: 0.5rem; background: #c53030; margin-left: 0.5rem;"
+                            onclick="clearAllFloatingElements()" title="Delete all floating elements">
+                            <i class="fa fa-times-circle"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                style="width: 100%; height: 700px; border: 3px solid #cbd5e0; border-radius: 12px; overflow: hidden; background: white; position: relative;">
+                <!-- The iframe loads the main index.html but injected with mode=edit URL parameters telling the javascript to run the Visual DOM Overrides -->
+                <iframe id="visual-editor-frame" src="about:blank"
+                    style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Registration Manager -->
+    <div id="section-registration" class="admin-section-content">
+        <div class="admin-section">
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="margin: 0 0 0.5rem 0;">Registration Manager</h2>
+                    <p style="color: #636e72; margin: 0;">Manage stages and trigger real-time situations
+                        (Registration/Program status).</p>
+                </div>
+                <button class="btn" style="background: #4a5568; color: white;" onclick="openHistoryModal()">
+                    <i class="fa fa-history"></i> View History
+                </button>
+            </div>
+
+            <div
+                style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                <h4 style="margin-top:0; color: #2e7d32;"><i class="fab fa-whatsapp"></i> WhatsApp Notifications
+                </h4>
+                <p style="font-size: 0.9rem; color: #4caf50; margin-bottom: 10px;">Select contacts/groups to
+                    notify on stage actions:</p>
+                <div id="whatsapp-targets-container"
+                    style="max-height: 150px; overflow-y: auto; background: white; border: 1px solid #c8e6c9; border-radius: 4px; padding: 0.5rem; display: flex; flex-direction: column; gap: 5px;">
+                    <div style="color: #666; font-size: 0.9rem;">Loading contacts...</div>
+                </div>
+            </div>
+
+            <div id="registration-stages-editor"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+                <!-- Dynamic stages rows load here -->
+            </div>
+
+            <button class="btn btn-add" style="margin-top: 1.5rem;" onclick="addRegistrationStageRow()">
+                <i class="fa fa-plus"></i> Create New Stage
+            </button>
+        </div>
+    </div>
+
+    <!-- Section: Stage Scheduling -->
+    <div id="section-stage-schedule" class="admin-section-content">
+        <div class="admin-section">
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="margin: 0 0 0.5rem 0;">Stage Scheduling</h2>
+                    <p style="color: #636e72; margin: 0;">Assign specific categories and programs to stages. Conductors
+                        will ONLY be able to select programs scheduled for their stage.</p>
+                </div>
+            </div>
+
+            <div
+                style="background: #f7fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                <h3 style="margin-top: 0; color: #2d3748;">Assign Program to Stage</h3>
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Select
+                            Stage</label>
+                        <select id="sched-stage-select" onchange="renderStageScheduleTable()"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Category</label>
+                        <select id="sched-cat-select" onchange="loadSchedPrograms()"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                            <option value="">-- Select Category --</option>
+                            <option value="LP">LP</option>
+                            <option value="UP">UP</option>
+                            <option value="HS">HS</option>
+                            <option value="HSS">HSS</option>
+                            <option value="JR">JR</option>
+                            <option value="SR">SR</option>
+                            <option value="GEN">GEN</option>
+                            <option value="General Category-A">General Category-A</option>
+                            <option value="General Category-b">General Category-B</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Program</label>
+                        <select id="sched-prog-select"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                            <option value="">-- Select Program --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-save" style="margin-bottom: 0; width: auto;"
+                        onclick="addProgramToStageSchedule()">
+                        <i class="fa fa-plus"></i> Assign to Stage
                     </button>
                 </div>
             </div>
 
-            <!-- Section: Stage Scheduling -->
-            <div id="section-stage-schedule" class="admin-section-content">
-                <div class="admin-section">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <h2 style="margin: 0 0 0.5rem 0;">Stage Scheduling</h2>
-                            <p style="color: #636e72; margin: 0;">Assign specific categories and programs to stages. Conductors will ONLY be able to select programs scheduled for their stage.</p>
-                        </div>
-                    </div>
+            <div>
+                <h3 style="color: #2d3748; margin-bottom: 1rem;">Currently Scheduled Programs</h3>
+                <div style="overflow-x: auto;">
+                    <table
+                        style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <thead style="background: #e2e8f0; color: #4a5568;">
+                            <tr>
+                                <th style="padding: 1rem; text-align: left;">Category</th>
+                                <th style="padding: 1rem; text-align: left;">Program</th>
+                                <th style="padding: 1rem; text-align: center; width: 100px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stage-schedule-tbody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; padding: 2rem; color: #a0aec0;">Select a
+                                    stage to view its scheduled programs.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div style="background: #f7fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
-                        <h3 style="margin-top: 0; color: #2d3748;">Assign Program to Stage</h3>
-                        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Select Stage</label>
-                                <select id="sched-stage-select" onchange="renderStageScheduleTable()" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
-                                    <!-- Populated dynamically -->
-                                </select>
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Category</label>
-                                <select id="sched-cat-select" onchange="loadSchedPrograms()" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
-                                    <option value="">-- Select Category --</option>
-                                    <option value="LP">LP</option>
-                                    <option value="UP">UP</option>
-                                    <option value="HS">HS</option>
-                                    <option value="HSS">HSS</option>
-                                    <option value="JR">JR</option>
-                                    <option value="SR">SR</option>
-                                    <option value="GEN">GEN</option>
-                                    <option value="General Category-A">General Category-A</option>
-                                    <option value="General Category-b">General Category-B</option>
-                                </select>
-                            </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Program</label>
-                                <select id="sched-prog-select" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
-                                    <option value="">-- Select Program --</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-save" style="margin-bottom: 0; width: auto;" onclick="addProgramToStageSchedule()">
-                                <i class="fa fa-plus"></i> Assign to Stage
-                            </button>
-                        </div>
+    <!-- Section: Registration Programs -->
+    <div id="section-reg-programs" class="admin-section-content">
+        <div class="admin-section">
+            <div style="background: #f7fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <h3 style="margin-top: 0; color: #2d3748;">Add Registration Program</h3>
+                <p style="color: #636e72; font-size: 0.9rem; margin-bottom: 1rem;">Add programs to specific
+                    category databases (LP, UP, HS, HSS, junior, senior, general).</p>
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Category
+                            Database</label>
+                        <select id="reg-prog-cat"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;"
+                            onchange="loadRegistrationPrograms()">
+                            <option value="">-- Select Category --</option>
+                            <option value="LP">LP</option>
+                            <option value="UP">UP</option>
+                            <option value="HS">HS</option>
+                            <option value="HSS">HSS</option>
+                            <option value="JR">JR</option>
+                            <option value="SR">SR</option>
+                            <option value="GEN">GEN</option>
+                        </select>
                     </div>
-
-                    <div>
-                        <h3 style="color: #2d3748; margin-bottom: 1rem;">Currently Scheduled Programs</h3>
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                <thead style="background: #e2e8f0; color: #4a5568;">
-                                    <tr>
-                                        <th style="padding: 1rem; text-align: left;">Category</th>
-                                        <th style="padding: 1rem; text-align: left;">Program</th>
-                                        <th style="padding: 1rem; text-align: center; width: 100px;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="stage-schedule-tbody">
-                                    <tr><td colspan="3" style="text-align: center; padding: 2rem; color: #a0aec0;">Select a stage to view its scheduled programs.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div style="flex: 2; min-width: 250px;">
+                        <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Program
+                            Name</label>
+                        <input type="text" id="reg-prog-name" placeholder="Enter program name..."
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box;">
                     </div>
+                    <button class="btn btn-save" style="margin-bottom: 0; width: auto;"
+                        onclick="addRegistrationProgram(this)">
+                        <i class="fa fa-save"></i> Add Program
+                    </button>
+                    <label class="btn"
+                        style="background: #38a169; color: white; margin-bottom: 0; width: auto; cursor: pointer;">
+                        <i class="fa fa-file-excel"></i> Upload Excel
+                        <input type="file" accept=".xlsx, .xls" style="display: none;"
+                            onchange="uploadRegistrationProgramsExcel(event)">
+                    </label>
                 </div>
             </div>
 
-            <!-- Section: Registration Programs -->
-            <div id="section-reg-programs" class="admin-section-content">
-                <div class="admin-section">
-                    <div style="background: #f7fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        <h3 style="margin-top: 0; color: #2d3748;">Add Registration Program</h3>
-                        <p style="color: #636e72; font-size: 0.9rem; margin-bottom: 1rem;">Add programs to specific
-                            category databases (LP, UP, HS, HSS, junior, senior, general).</p>
-                        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Category
-                                    Database</label>
-                                <select id="reg-prog-cat"
-                                    style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;"
-                                    onchange="loadRegistrationPrograms()">
-                                    <option value="">-- Select Category --</option>
-                                    <option value="LP">LP</option>
-                                    <option value="UP">UP</option>
-                                    <option value="HS">HS</option>
-                                    <option value="HSS">HSS</option>
-                                    <option value="JR">JR</option>
-                                    <option value="SR">SR</option>
-                                    <option value="GEN">GEN</option>
-                                </select>
-                            </div>
-                            <div style="flex: 2; min-width: 250px;">
-                                <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Program
-                                    Name</label>
-                                <input type="text" id="reg-prog-name" placeholder="Enter program name..."
-                                    style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box;">
-                            </div>
-                            <button class="btn btn-save" style="margin-bottom: 0; width: auto;"
-                                onclick="addRegistrationProgram(this)">
-                                <i class="fa fa-save"></i> Add Program
-                            </button>
-                            <label class="btn"
-                                style="background: #38a169; color: white; margin-bottom: 0; width: auto; cursor: pointer;">
-                                <i class="fa fa-file-excel"></i> Upload Excel
-                                <input type="file" accept=".xlsx, .xls" style="display: none;"
-                                    onchange="uploadRegistrationProgramsExcel(event)">
-                            </label>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 2rem;">
-                        <h3 style="color: #2d3748; display: flex; align-items: center; gap: 0.5rem;"><i
-                                class="fa fa-list"></i> Existing Programs</h3>
-                        <div id="existing-reg-programs-list"
-                            style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 500px; overflow-y: auto; padding-right: 0.5rem;">
-                            <div
-                                style="color: #a0aec0; font-style: italic; background: #f7fafc; padding: 1.5rem; border-radius: 8px; text-align: center; border: 2px dashed #e2e8f0;">
-                                Select a category above to view and manage its programs.</div>
-                        </div>
-                    </div>
-
-                    <hr style="margin: 3rem 0; border: none; border-top: 1px solid #e2e8f0;">
-
-                    <div style="background: #fffaf0; padding: 1.5rem; border-radius: 12px; border: 1px solid #feebc8;">
-                        <h3 style="margin-top: 0; color: #9c4221;">Add Place (Unit)</h3>
-                        <p style="color: #c05621; font-size: 0.9rem; margin-bottom: 1rem;">Add names of places to the
-                            <b>unit</b> database.
-                        </p>
-                        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 250px;">
-                                <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #9c4221;">Place
-                                    Name</label>
-                                <input type="text" id="reg-unit-name" placeholder="Enter place name..."
-                                    style="width: 100%; padding: 0.75rem; border: 1px solid #fbd38d; border-radius: 6px; box-sizing: border-box;">
-                            </div>
-                            <button class="btn btn-save" style="margin-bottom: 0; width: auto; background: #dd6b20;"
-                                onclick="addRegistrationUnit(this)">
-                                <i class="fa fa-map-marker-alt"></i> Add Place
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 2rem;">
-                        <h3 style="color: #2d3748; display: flex; align-items: center; gap: 0.5rem;"><i
-                                class="fa fa-map-pin"></i> Existing Places</h3>
-                        <div id="existing-reg-units-list"
-                            style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
-                            <!-- Loads dynamically -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section: Conductor Manager -->
-            <div id="section-conductor" class="admin-section-content">
-                <div class="admin-section">
-                    <h2>Conductor Manager</h2>
-                    <p style="color: #636e72; margin-bottom: 1.5rem;">Manage conductors, hosts, or stage managers.</p>
-
-                    <div id="conductor-list-editor">
-                        <!-- Dynamic conductor/stage rows load here -->
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- Section: Generate ID Cards -->
-            <div id="section-generate-card" class="admin-section-content">
-                <div class="admin-section">
-                    <h2 style="margin: 0 0 1rem 0; color: #2d3748;">Generate ID Cards</h2>
-
+            <div style="margin-top: 2rem;">
+                <h3 style="color: #2d3748; display: flex; align-items: center; gap: 0.5rem;"><i class="fa fa-list"></i>
+                    Existing Programs</h3>
+                <div id="existing-reg-programs-list"
+                    style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 500px; overflow-y: auto; padding-right: 0.5rem;">
                     <div
-                        style="background: #f7fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">Card Details</h3>
-                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Sector</label>
-                                <input type="text" id="gen-card-sector" placeholder="Enter Sector Name..."
-                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; height: 38px; font-size: 0.85rem;">
-
-                                <label
-                                    style="display: block; font-weight: bold; margin: 0.8rem 0 0.4rem 0; color: #4a5568; font-size: 0.8rem;">Base
-                                    Website URL (For QR)</label>
-                                <input type="text" id="gen-card-baseurl" value="https://yourwebsite.com"
-                                    placeholder="https://..."
-                                    style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-family: monospace; font-size: 0.85rem; height: 38px;">
-                            </div>
-                            <div style="flex: 2; min-width: 300px;">
-                                <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student Names (One per line, e.g. Name - ChestNo)</label>
-                                <textarea id="gen-card-names" oninput="clearExcelPreviewOnInput()"
-                                    placeholder="e.g. John Doe - 101&#10;Jane Smith - 102&#10;or just Names" rows="3"
-                                    style="width: 100%; padding: 0.5rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.85rem; height: 90px;"></textarea>
-                            </div>
-                            <div style="flex: 100%; border-top: 1px dashed #e2e8f0; padding-top: 1rem; margin-top: 0.5rem;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Or Import from Excel File</label>
-                                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                                    <input type="file" id="gen-card-excel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleGenCardExcelUpload(event)">
-                                    <button class="btn" type="button" style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('gen-card-excel').click()">
-                                        <i class="fa fa-file-excel" style="color: #38a169;"></i> Select Excel File
-                                    </button>
-                                    <span id="gen-card-excel-info" style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns: Participant Name, Team Name, Category, Chest Number, Competition</span>
-                                </div>
-                            </div>
-                            <div style="flex: 100%; margin-top: 0.5rem;">
-                                <div style="margin-bottom: 1rem;">
-                                    <label
-                                        style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Select Category</label>
-                                    <select id="gen-card-global-category" class="form-control"
-                                        style="width: 100%; max-width: 300px; height: 38px; padding: 0.45rem 0.8rem; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.85rem;"
-                                        onchange="handleGenCardGlobalCategoryChange()">
-                                        <option value="">-- Select Category --</option>
-                                    </select>
-                                </div>
-
-                                <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Attached
-                                    Categories & Programs</label>
-                                <div id="gen-card-programs-list"
-                                    style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                    <!-- Dynamic rows go here -->
-                                </div>
-                                <button class="btn"
-                                    style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; margin-bottom: 1rem; height: 38px; font-size: 0.85rem; border-radius: 6px;"
-                                    onclick="addGenCardProgramRow()">
-                                    <i class="fa fa-plus"></i> Add Program
-                                </button>
-
-                                <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Attached
-                                    General Programs (GEN Table)</label>
-                                <div id="gen-card-general-programs-list"
-                                    style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                    <!-- Dynamic general programs rows go here -->
-                                </div>
-                                <button class="btn"
-                                    style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; margin-bottom: 0; height: 38px; font-size: 0.85rem; border-radius: 6px;"
-                                    onclick="addGenCardGeneralProgramRow()">
-                                    <i class="fa fa-plus"></i> Add General Program
-                                </button>
-                            </div>
-                        </div>
-                        <!-- Excel Preview Container -->
-                        <div id="excel-preview-container" style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;"></div>
-
-                        <div style="margin-top: 1.2rem; display: flex; gap: 0.75rem;">
-                            <button class="btn btn-save" onclick="generateIdCards()"
-                                style="margin-bottom: 0; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
-                                <i class="fa fa-id-card"></i> Generate Cards
-                            </button>
-                            <button class="btn btn-delete"
-                                onclick="document.getElementById('generated-cards-container').innerHTML = '';"
-                                style="margin-bottom: 0; background: #e53e3e; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
-                                <i class="fa fa-trash"></i> Clear All
-                            </button>
-                            <button class="btn" onclick="window.print()"
-                                style="margin-bottom: 0; background: #3182ce; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
-                                <i class="fa fa-print"></i> Print Cards
-                            </button>
-                            <button class="btn" onclick="printAllStudentCards()"
-                                style="margin-bottom: 0; background: #805ad5; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
-                                <i class="fa fa-file-pdf"></i> Print All Student Cards (PDF)
-                            </button>
-                        </div>
-                    </div>
-
-
-                    <h3 style="color: #2d3748; margin-top: 2rem;">Generated Cards</h3>
-                    <div id="generated-cards-container"
-                        style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;">
-                        <!-- Generated cards will appear here -->
-                    </div>
-
-                    <!-- Card History Section -->
-                    <div style="margin-top: 3rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
-                            <div>
-                                <h3 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-                                    <i class="fa fa-history" style="color: #3b82f6;"></i> Card Generation History
-                                </h3>
-                                <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.85rem;">View and manage all previously generated student cards.</p>
-                            </div>
-                            <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                <div style="position: relative;">
-                                    <i class="fa fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
-                                    <input type="text" id="card-history-search" placeholder="Search student or sector..." oninput="filterCardHistory()"
-                                        style="padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.85rem; width: 250px; outline: none; transition: border-color 0.2s;"
-                                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e0'">
-                                </div>
-                                <button class="btn" onclick="loadCardHistory()" style="margin: 0; padding: 0.5rem 1rem; background: #edf2f7; color: #2d3748; height: auto; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem;">
-                                    <i class="fa fa-sync"></i> Refresh
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
-                            <div id="card-history-table-container">
-                                <!-- Loads dynamically -->
-                            </div>
-                        </div>
-                    </div>
+                        style="color: #a0aec0; font-style: italic; background: #f7fafc; padding: 1.5rem; border-radius: 8px; text-align: center; border: 2px dashed #e2e8f0;">
+                        Select a category above to view and manage its programs.</div>
                 </div>
             </div>
 
-            <!-- Section: WhatsApp -->
-            <div id="section-whatsapp" class="admin-section-content">
-                <div class="admin-section"
-                    style="background: #ffffff; padding: 0; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02); height: calc(100vh - 150px); overflow: hidden;">
-                    <iframe src="frontend/whatsapp/index.html"
-                        style="width: 100%; height: 100%; border: none;"></iframe>
+            <hr style="margin: 3rem 0; border: none; border-top: 1px solid #e2e8f0;">
+
+            <div style="background: #fffaf0; padding: 1.5rem; border-radius: 12px; border: 1px solid #feebc8;">
+                <h3 style="margin-top: 0; color: #9c4221;">Add Place (Unit)</h3>
+                <p style="color: #c05621; font-size: 0.9rem; margin-bottom: 1rem;">Add names of places to the
+                    <b>unit</b> database.
+                </p>
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #9c4221;">Place
+                            Name</label>
+                        <input type="text" id="reg-unit-name" placeholder="Enter place name..."
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #fbd38d; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+                    <button class="btn btn-save" style="margin-bottom: 0; width: auto; background: #dd6b20;"
+                        onclick="addRegistrationUnit(this)">
+                        <i class="fa fa-map-marker-alt"></i> Add Place
+                    </button>
                 </div>
             </div>
 
-            <!-- Section: PDF Generator -->
-            <div id="section-pdf-generator" class="admin-section-content">
-                <div class="admin-section" style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #1e293b;">Excel PDF Generator</h2>
-                            <p style="color: #64748b; font-size: 0.85rem; margin: 0.25rem 0 0 0;">Create and export result sheets in an Excel-like table format.</p>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-add" onclick="addPdfGenRow()" style="background: #3182ce !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
-                                <i class="fa fa-plus"></i> Add Row
-                            </button>
-                            <button class="btn" onclick="clearPdfGenTable()" style="background: #edf2f7 !important; color: #4a5568 !important; border: 1px solid #cbd5e0 !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
-                                <i class="fa fa-trash"></i> Clear All
-                            </button>
-                            <button class="btn" onclick="generatePdfGenPDF()" style="background: #10b981 !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
-                                <i class="fa fa-file-pdf"></i> Generate PDF
-                            </button>
-                        </div>
-                    </div>
+            <div style="margin-top: 2rem;">
+                <h3 style="color: #2d3748; display: flex; align-items: center; gap: 0.5rem;"><i
+                        class="fa fa-map-pin"></i> Existing Places</h3>
+                <div id="existing-reg-units-list"
+                    style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                    <!-- Loads dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Meta Information (Category and Program) -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Category</label>
-                            <input type="text" id="pdfgen-category" class="form-control" placeholder="e.g. HS, UP, Senior..." style="width: 100%; height: 38px !important; border-radius: 8px !important;">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Program</label>
-                            <input type="text" id="pdfgen-program" class="form-control" placeholder="e.g. Story Writing, Poem Recitation..." style="width: 100%; height: 38px !important; border-radius: 8px !important;">
-                        </div>
-                    </div>
+    <!-- Section: Conductor Manager -->
+    <div id="section-conductor" class="admin-section-content">
+        <div class="admin-section">
+            <h2>Conductor Manager</h2>
+            <p style="color: #636e72; margin-bottom: 1.5rem;">Manage conductors, hosts, or stage managers.</p>
 
-                    <!-- Spreadsheet Data Entry Table -->
-                    <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                            <thead style="background: #f1f5f9; border-bottom: 2px solid #cbd5e0;">
-                                <tr>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 60px; text-align: center;">Sl No.</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 150px; text-align: center;">Code Letter</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Student Name</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 180px;">Unit Name</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 120px; text-align: center;">Total Mark</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 80px; text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pdfgen-table-body">
-                                <!-- Dynamic rows added here -->
-                            </tbody>
-                        </table>
+            <div id="conductor-list-editor">
+                <!-- Dynamic conductor/stage rows load here -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Section: Generate ID Cards -->
+    <div id="section-generate-card" class="admin-section-content">
+        <div class="admin-section">
+            <h2 style="margin: 0 0 1rem 0; color: #2d3748;">Generate ID Cards</h2>
+
+            <div
+                style="background: #f7fafc; padding: 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">Card Details</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Sector</label>
+                        <input type="text" id="gen-card-sector" placeholder="Enter Sector Name..."
+                            style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; height: 38px; font-size: 0.85rem;">
+
+                        <label
+                            style="display: block; font-weight: bold; margin: 0.8rem 0 0.4rem 0; color: #4a5568; font-size: 0.8rem;">Base
+                            Website URL (For QR)</label>
+                        <input type="text" id="gen-card-baseurl" value="https://yourwebsite.com"
+                            placeholder="https://..."
+                            style="width: 100%; padding: 0.45rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-family: monospace; font-size: 0.85rem; height: 38px;">
                     </div>
+                    <div style="flex: 2; min-width: 300px;">
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student
+                            Names (One per line, e.g. Name - ChestNo)</label>
+                        <textarea id="gen-card-names" oninput="clearExcelPreviewOnInput()"
+                            placeholder="e.g. John Doe - 101&#10;Jane Smith - 102&#10;or just Names" rows="3"
+                            style="width: 100%; padding: 0.5rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.85rem; height: 90px;"></textarea>
+                    </div>
+                    <div style="flex: 100%; border-top: 1px dashed #e2e8f0; padding-top: 1rem; margin-top: 0.5rem;">
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Or
+                            Import from Excel File</label>
+                        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                            <input type="file" id="gen-card-excel" accept=".xlsx, .xls, .csv" style="display: none;"
+                                onchange="handleGenCardExcelUpload(event)">
+                            <button class="btn" type="button"
+                                style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;"
+                                onclick="document.getElementById('gen-card-excel').click()">
+                                <i class="fa fa-file-excel" style="color: #38a169;"></i> Select Excel File
+                            </button>
+                            <span id="gen-card-excel-info"
+                                style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns:
+                                Participant Name, Team Name, Category, Chest Number, Competition</span>
+                        </div>
+                    </div>
+                    <div style="flex: 100%; margin-top: 0.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label
+                                style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Select
+                                Category</label>
+                            <select id="gen-card-global-category" class="form-control"
+                                style="width: 100%; max-width: 300px; height: 38px; padding: 0.45rem 0.8rem; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.85rem;"
+                                onchange="handleGenCardGlobalCategoryChange()">
+                                <option value="">-- Select Category --</option>
+                            </select>
+                        </div>
+
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Attached
+                            Categories & Programs</label>
+                        <div id="gen-card-programs-list"
+                            style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <!-- Dynamic rows go here -->
+                        </div>
+                        <button class="btn"
+                            style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; margin-bottom: 1rem; height: 38px; font-size: 0.85rem; border-radius: 6px;"
+                            onclick="addGenCardProgramRow()">
+                            <i class="fa fa-plus"></i> Add Program
+                        </button>
+
+                        <label
+                            style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Attached
+                            General Programs (GEN Table)</label>
+                        <div id="gen-card-general-programs-list"
+                            style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <!-- Dynamic general programs rows go here -->
+                        </div>
+                        <button class="btn"
+                            style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; margin-bottom: 0; height: 38px; font-size: 0.85rem; border-radius: 6px;"
+                            onclick="addGenCardGeneralProgramRow()">
+                            <i class="fa fa-plus"></i> Add General Program
+                        </button>
+                    </div>
+                </div>
+                <!-- Excel Preview Container -->
+                <div id="excel-preview-container"
+                    style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;">
+                </div>
+
+                <div style="margin-top: 1.2rem; display: flex; gap: 0.75rem;">
+                    <button class="btn btn-save" onclick="generateIdCards()"
+                        style="margin-bottom: 0; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
+                        <i class="fa fa-id-card"></i> Generate Cards
+                    </button>
+                    <button class="btn btn-delete"
+                        onclick="document.getElementById('generated-cards-container').innerHTML = '';"
+                        style="margin-bottom: 0; background: #e53e3e; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
+                        <i class="fa fa-trash"></i> Clear All
+                    </button>
+                    <button class="btn" onclick="window.print()"
+                        style="margin-bottom: 0; background: #3182ce; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
+                        <i class="fa fa-print"></i> Print Cards
+                    </button>
+                    <button class="btn" onclick="printAllStudentCards()"
+                        style="margin-bottom: 0; background: #805ad5; color: white; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px;">
+                        <i class="fa fa-file-pdf"></i> Print All Student Cards (PDF)
+                    </button>
                 </div>
             </div>
 
-        </main>
+
+            <h3 style="color: #2d3748; margin-top: 2rem;">Generated Cards</h3>
+            <div id="generated-cards-container"
+                style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;">
+                <!-- Generated cards will appear here -->
+            </div>
+
+            <!-- Card History Section -->
+            <div
+                style="margin-top: 3rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <h3
+                            style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa fa-history" style="color: #3b82f6;"></i> Card Generation History
+                        </h3>
+                        <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.85rem;">View and manage all
+                            previously generated student cards.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <div style="position: relative;">
+                            <i class="fa fa-search"
+                                style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
+                            <input type="text" id="card-history-search" placeholder="Search student or sector..."
+                                oninput="filterCardHistory()"
+                                style="padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.85rem; width: 250px; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e0'">
+                        </div>
+                        <button class="btn" onclick="loadCardHistory()"
+                            style="margin: 0; padding: 0.5rem 1rem; background: #edf2f7; color: #2d3748; height: auto; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                            <i class="fa fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
+                    <div id="card-history-table-container">
+                        <!-- Loads dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: WhatsApp -->
+    <div id="section-whatsapp" class="admin-section-content">
+        <div class="admin-section"
+            style="background: #ffffff; padding: 0; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02); height: calc(100vh - 150px); overflow: hidden;">
+            <iframe src="frontend/whatsapp/index.html" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+
+    <!-- Section: PDF Generator -->
+    <div id="section-pdf-generator" class="admin-section-content">
+        <div class="admin-section"
+            style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #1e293b;">Excel PDF Generator</h2>
+                    <p style="color: #64748b; font-size: 0.85rem; margin: 0.25rem 0 0 0;">Create and export result
+                        sheets in an Excel-like table format.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-add" onclick="addPdfGenRow()"
+                        style="background: #3182ce !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
+                        <i class="fa fa-plus"></i> Add Row
+                    </button>
+                    <button class="btn" onclick="clearPdfGenTable()"
+                        style="background: #edf2f7 !important; color: #4a5568 !important; border: 1px solid #cbd5e0 !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
+                        <i class="fa fa-trash"></i> Clear All
+                    </button>
+                    <button class="btn" onclick="generatePdfGenPDF()"
+                        style="background: #10b981 !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
+                        <i class="fa fa-file-pdf"></i> Generate PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Meta Information (Category and Program) -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label
+                        style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Category</label>
+                    <input type="text" id="pdfgen-category" class="form-control" placeholder="e.g. HS, UP, Senior..."
+                        style="width: 100%; height: 38px !important; border-radius: 8px !important;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label
+                        style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Program</label>
+                    <input type="text" id="pdfgen-program" class="form-control"
+                        placeholder="e.g. Story Writing, Poem Recitation..."
+                        style="width: 100%; height: 38px !important; border-radius: 8px !important;">
+                </div>
+            </div>
+
+            <!-- Spreadsheet Data Entry Table -->
+            <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead style="background: #f1f5f9; border-bottom: 2px solid #cbd5e0;">
+                        <tr>
+                            <th
+                                style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 60px; text-align: center;">
+                                Sl No.</th>
+                            <th
+                                style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 150px; text-align: center;">
+                                Code Letter</th>
+                            <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Student Name</th>
+                            <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 180px;">Unit Name
+                            </th>
+                            <th
+                                style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 120px; text-align: center;">
+                                Total Mark</th>
+                            <th
+                                style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 80px; text-align: center;">
+                                Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pdfgen-table-body">
+                        <!-- Dynamic rows added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    </main>
     </div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -1101,7 +1150,7 @@
                 loadCardHistory();
                 loadCardWhatsAppTargets();
                 populateGenCardGlobalCategory();
-                
+
                 // Auto populate baseurl if empty or invalid/local
                 const buInput = document.getElementById('gen-card-baseurl');
                 if (buInput && (!buInput.value || buInput.value === 'https://yourwebsite.com' || buInput.value.startsWith('file://'))) {
@@ -1117,12 +1166,12 @@
         // WhatsApp Sector Notification Routing target list loading
         async function loadCardWhatsAppTargets() {
             const container = document.getElementById('card-whatsapp-targets-container');
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = '<div style="color: #666; font-size: 0.85rem; text-align: center; padding: 1rem;"><i class="fa fa-spinner fa-spin"></i> Loading WhatsApp contacts...</div>';
-            
+
             try {
                 const clientId = activeWaClientId || 'default';
-                
+
                 // Fetch WhatsApp client status
                 let isConnected = false;
                 let clientState = 'OFFLINE';
@@ -1172,11 +1221,11 @@
                     fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/chats?clientId=${clientId}`).catch(e => ({ json: () => ({ success: false }) })),
                     fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/contacts?clientId=${clientId}`).catch(e => ({ json: () => ({ success: false }) }))
                 ]);
-                
+
                 let chatsData = { success: false };
                 let contactsData = { success: false };
-                try { chatsData = await chatsRes.json(); } catch(e){}
-                try { contactsData = await contactsRes.json(); } catch(e){}
+                try { chatsData = await chatsRes.json(); } catch (e) { }
+                try { contactsData = await contactsRes.json(); } catch (e) { }
 
                 let allItems = [];
                 if (chatsData && chatsData.success) allItems = [...chatsData.chats];
@@ -1383,7 +1432,7 @@
                 printContainer = document.createElement('div');
                 printContainer.id = 'print-all-container';
                 document.body.appendChild(printContainer);
-                
+
                 // Add print styles dynamically
                 const style = document.createElement('style');
                 style.innerHTML = `
@@ -1415,7 +1464,7 @@
                 `;
                 document.head.appendChild(style);
             }
-            
+
             // Show loading overlay
             const overlay = document.createElement('div');
             overlay.style = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;';
@@ -1423,7 +1472,7 @@
             document.body.appendChild(overlay);
 
             printContainer.innerHTML = '';
-            
+
             // We use setTimeout to yield to the browser UI to avoid freezing
             let i = 0;
             function processBatch() {
@@ -1431,7 +1480,7 @@
                 const end = Math.min(i + batchSize, idCardsData.length);
                 for (; i < end; i++) {
                     const row = idCardsData[i];
-                    
+
                     const cardId = `print-qr-${row.id || i}`;
                     const card = document.createElement('div');
                     // Style matching 3.4 x 2.1 inches (Standard CR80 size)
@@ -1453,7 +1502,7 @@
                         </div>
                     `;
                     printContainer.appendChild(card);
-                    
+
                     try {
                         new QRCode(document.getElementById(cardId), {
                             text: row.url,
@@ -1463,13 +1512,13 @@
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
                         });
-                    } catch(e){
+                    } catch (e) {
                         console.error("QR Code generation error:", e);
                     }
                 }
-                
+
                 document.getElementById('pdf-progress').innerText = i + ' / ' + idCardsData.length + ' cards processed';
-                
+
                 if (i < idCardsData.length) {
                     setTimeout(processBatch, 10);
                 } else {
@@ -1480,7 +1529,7 @@
                     }, 500);
                 }
             }
-            
+
             setTimeout(processBatch, 10);
         }
 
@@ -1556,7 +1605,7 @@
             const select = document.getElementById('gen-card-global-category');
             if (!select) return;
             const currentVal = select.value;
-            select.innerHTML = '<option value="">-- Select Category --</option>' + 
+            select.innerHTML = '<option value="">-- Select Category --</option>' +
                 (currentData.categories || []).map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
         }
 
@@ -1595,7 +1644,7 @@
                 try {
                     const { data, error } = await supabaseClient.from(catVal).select('Programs').neq('Programs', null).neq('Programs', '');
                     if (error) throw error;
-                    
+
                     const seenProgs = new Set();
                     const uniqueProgs = [];
                     if (data) {
@@ -1656,7 +1705,7 @@
             try {
                 const { data, error } = await supabaseClient.from('GEN').select('Programs').neq('Programs', null).neq('Programs', '');
                 if (error) throw error;
-                
+
                 const seenProgs = new Set();
                 const uniqueProgs = [];
                 if (data) {
@@ -1853,7 +1902,7 @@
                 renderedData.forEach((row, idx) => {
                     const cardId = `id-card-gen-${idx}`;
                     const correctUrl = row.url;
-                    
+
                     const cardHtml = document.createElement('div');
                     cardHtml.className = 'id-card';
                     cardHtml.style = 'width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;';
@@ -1942,7 +1991,7 @@
             infoSpan.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Reading file: ${file.name}...`;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async function (e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -2050,7 +2099,7 @@
                     window.genCardExcelStudents = studentsArrayLoaded;
 
                     infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArray.length} student(s) from Excel.</span>`;
-                    
+
                     // Show a preview in the names textarea
                     const namesPreview = studentsArray.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
                     document.getElementById('gen-card-names').value = namesPreview;
@@ -2111,13 +2160,13 @@
                 const chestStyle = chestText === 'N/A' ? 'color: #ef4444; font-weight: bold;' : 'font-weight: bold; color: #2d3748;';
                 const sectorText = student.sector || 'N/A';
                 const categoryText = student.category || 'N/A';
-                
-                const regularProgramsText = student.regularProgs && student.regularProgs.length > 0 
-                    ? student.regularProgs.map(p => p.program).join(', ') 
+
+                const regularProgramsText = student.regularProgs && student.regularProgs.length > 0
+                    ? student.regularProgs.map(p => p.program).join(', ')
                     : 'N/A';
-                    
-                const generalProgramsText = student.generalProgs && student.generalProgs.length > 0 
-                    ? student.generalProgs.join('|') 
+
+                const generalProgramsText = student.generalProgs && student.generalProgs.length > 0
+                    ? student.generalProgs.join('|')
                     : 'N/A';
 
                 tableHtml += `
@@ -2149,11 +2198,11 @@
             if (window.genCardExcelStudents && window.genCardExcelStudents[index]) {
                 window.genCardExcelStudents.splice(index, 1);
                 renderExcelPreview();
-                
+
                 // Keep the names textarea in sync
                 const namesPreview = window.genCardExcelStudents.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
                 document.getElementById('gen-card-names').value = namesPreview;
-                
+
                 // Update loaded info message
                 const infoSpan = document.getElementById('gen-card-excel-info');
                 if (infoSpan) {
@@ -2173,7 +2222,7 @@
             const infoSpan = document.getElementById('gen-card-excel-info');
             if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
             document.getElementById('gen-card-names').value = '';
-            
+
             const container = document.getElementById('excel-preview-container');
             if (container) {
                 container.style.display = 'none';
@@ -2188,7 +2237,7 @@
                 if (fileInput) fileInput.value = '';
                 const infoSpan = document.getElementById('gen-card-excel-info');
                 if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
-                
+
                 const container = document.getElementById('excel-preview-container');
                 if (container) {
                     container.style.display = 'none';
@@ -2230,7 +2279,7 @@
 
                 // Remove row from internal cache and re-render
                 window.cardHistoryData = window.cardHistoryData.filter(row => row.id !== id);
-                
+
                 // Re-render currently showing items (respecting any active search filter)
                 filterCardHistory();
             } catch (err) {
@@ -2357,8 +2406,8 @@
             if (urlVal) {
                 new QRCode(qrContainer, {
                     text: urlVal,
-                    width: 105,
-                    height: 105,
+                    width: 130,
+                    height: 130,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
@@ -2390,10 +2439,10 @@
                     <!-- Background Image -->
                     <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" />
                     
-                    <!-- Left portion overlay (Student Name in Orange Space Bottom) -->
-                    <div style="position: absolute; bottom: 35px; left: 35px; width: 52%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif;">
+                    <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
+                    <div style="position: absolute; bottom: 35px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; box-sizing: border-box;">
                         <div style="font-size: 0.9rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px;">Student Name</div>
-                        <div style="font-size: 1.75rem; font-weight: 800; color: #ffffff; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);">${row.name}</div>
+                        <div style="font-size: 2.3rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); width: 100%;">${row.name}</div>
                     </div>
 
                     <!-- Details (Right 42%) -->
@@ -2406,14 +2455,14 @@
                         </div>
 
                         <!-- QR Code (Middle) -->
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 8px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 8px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                             <div id="print-qr-${cardId}"></div>
                         </div>
 
                         <!-- Chest No (Bottom) -->
                         <div style="width: 100%; text-align: center; margin-bottom: 5px;">
                             <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px;">Chest No</div>
-                            <div style="font-size: 1.9rem; font-weight: 900; color: #dc2626; line-height: 1;">${row['chest no.'] || 'N/A'}</div>
+                            <div style="font-size: 2.1rem; font-weight: 900; color: #dc2626; line-height: 1;">${row['chest no.'] || 'N/A'}</div>
                         </div>
                     </div>
                 </div>
@@ -2425,13 +2474,13 @@
             setTimeout(() => {
                 new QRCode(document.getElementById(`print-qr-${cardId}`), {
                     text: correctUrl,
-                    width: 120,
-                    height: 120,
+                    width: 150,
+                    height: 150,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
                 });
-                
+
                 // Trigger print
                 setTimeout(() => {
                     window.print();
@@ -2442,7 +2491,7 @@
         function copyModalUrl() {
             const urlLink = document.getElementById('details-qr-url');
             const copyBtn = document.getElementById('modal-copy-btn');
-            
+
             navigator.clipboard.writeText(urlLink.innerText).then(() => {
                 const originalHTML = copyBtn.innerHTML;
                 copyBtn.innerHTML = '<i class="fa fa-check"></i> Copied!';
@@ -2507,7 +2556,7 @@
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
                 });
-                
+
                 // Trigger print
                 setTimeout(() => {
                     window.print();
@@ -4776,7 +4825,7 @@
                     console.warn("Failed to fetch routing:", e);
                     try {
                         routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
-                    } catch (err) {}
+                    } catch (err) { }
                 }
 
                 try {
@@ -4784,11 +4833,11 @@
                         fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/chats?clientId=${clientId}`).catch(() => ({ json: () => ({ success: false }) })),
                         fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/contacts?clientId=${clientId}`).catch(() => ({ json: () => ({ success: false }) }))
                     ]);
-                    
+
                     let chatsData = { success: false };
                     let contactsData = { success: false };
-                    try { chatsData = await chatsRes.json(); } catch(e){}
-                    try { contactsData = await contactsRes.json(); } catch(e){}
+                    try { chatsData = await chatsRes.json(); } catch (e) { }
+                    try { contactsData = await contactsRes.json(); } catch (e) { }
 
                     if (chatsData && chatsData.success) whatsappTargets = [...chatsData.chats];
                     if (contactsData && contactsData.success) {
@@ -4915,7 +4964,7 @@
             } catch (e) {
                 try {
                     routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
-                } catch (err) {}
+                } catch (err) { }
             }
 
             const cleanPlace = placeName.trim().toLowerCase();
@@ -4947,7 +4996,7 @@
             });
 
             localStorage.setItem('whatsapp_sector_routing', JSON.stringify(activeRouting));
-            
+
             try {
                 await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-routing`, {
                     method: 'POST',
@@ -5038,7 +5087,7 @@
                     if (time) {
                         try {
                             formattedTime = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        } catch(e) {}
+                        } catch (e) { }
                     }
 
                     const name = student.name || 'Unknown';
@@ -5204,20 +5253,25 @@
             onclick="event.stopPropagation()">
             <div
                 style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa fa-users" style="color: #dd6b20;"></i> Registered Students: <span id="place-modal-title" style="color: #dd6b20;">Place</span>
+                <h2
+                    style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa fa-users" style="color: #dd6b20;"></i> Registered Students: <span
+                        id="place-modal-title" style="color: #dd6b20;">Place</span>
                 </h2>
                 <button onclick="closePlaceStudentsModal()"
                     style="border: none; background: transparent; font-size: 1.5rem; color: #94a3b8; cursor: pointer; padding: 0.25rem; line-height: 1; transition: color 0.2s;"
                     onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
             </div>
 
-            <div id="place-students-list-container" style="padding: 1.5rem; flex: 1; overflow-y: auto; background: #ffffff; min-height: 250px;">
+            <div id="place-students-list-container"
+                style="padding: 1.5rem; flex: 1; overflow-y: auto; background: #ffffff; min-height: 250px;">
                 <!-- Loaded dynamically -->
             </div>
 
-            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button onclick="closePlaceStudentsModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+            <div
+                style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closePlaceStudentsModal()" class="btn"
+                    style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
                     Close
                 </button>
             </div>
@@ -5258,7 +5312,8 @@
             onclick="event.stopPropagation()">
             <div
                 style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <h2
+                    style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa fa-id-card" style="color: #3b82f6;"></i> Student Card Details
                 </h2>
                 <button onclick="closeCardDetailsModal()"
@@ -5266,25 +5321,34 @@
                     onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
             </div>
 
-            <div style="padding: 1.5rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; background: #ffffff;">
+            <div
+                style="padding: 1.5rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; background: #ffffff;">
                 <!-- Main Header Details -->
-                <div style="display: flex; gap: 1rem; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 1.25rem;">
-                    <div style="background: #eff6ff; color: #3b82f6; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; border: 1px solid #dbeafe;">
+                <div
+                    style="display: flex; gap: 1rem; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 1.25rem;">
+                    <div
+                        style="background: #eff6ff; color: #3b82f6; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; border: 1px solid #dbeafe;">
                         <i class="fa fa-user"></i>
                     </div>
                     <div style="flex-grow: 1;">
-                        <h1 id="details-student-name" style="margin: 0; font-size: 1.4rem; color: #0f172a; font-weight: 700; word-break: break-word;">Student Name</h1>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.4rem; font-size: 0.85rem; color: #64748b;">
+                        <h1 id="details-student-name"
+                            style="margin: 0; font-size: 1.4rem; color: #0f172a; font-weight: 700; word-break: break-word;">
+                            Student Name</h1>
+                        <div
+                            style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.4rem; font-size: 0.85rem; color: #64748b;">
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
-                                <i class="fa fa-map-marker-alt" style="color: #ef4444;"></i> <strong id="details-sector" style="color: #334155;">Sector</strong>
+                                <i class="fa fa-map-marker-alt" style="color: #ef4444;"></i> <strong id="details-sector"
+                                    style="color: #334155;">Sector</strong>
                             </span>
                             <span style="color: #cbd5e1;">|</span>
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
-                                <i class="fa fa-tag" style="color: #eab308;"></i> Chest No: <strong id="details-chest" style="color: #334155;">N/A</strong>
+                                <i class="fa fa-tag" style="color: #eab308;"></i> Chest No: <strong id="details-chest"
+                                    style="color: #334155;">N/A</strong>
                             </span>
                             <span style="color: #cbd5e1;">|</span>
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
-                                <i class="fa fa-clock" style="color: #64748b;"></i> Generated: <span id="details-time">Time</span>
+                                <i class="fa fa-clock" style="color: #64748b;"></i> Generated: <span
+                                    id="details-time">Time</span>
                             </span>
                         </div>
                     </div>
@@ -5292,7 +5356,9 @@
 
                 <!-- Programs Container -->
                 <div>
-                    <h3 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Registered Programs</h3>
+                    <h3
+                        style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                        Registered Programs</h3>
                     <div id="details-programs-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                         <!-- Badges loaded dynamically -->
                     </div>
@@ -5300,38 +5366,56 @@
 
                 <!-- General Programs -->
                 <div>
-                    <h3 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">General Programs</h3>
+                    <h3
+                        style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                        General Programs</h3>
                     <div id="details-generals-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                         <!-- Badges loaded dynamically -->
                     </div>
                 </div>
 
                 <!-- Verification URL -->
-                <div style="background: #f8fafc; padding: 0.85rem; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 0.4rem;">
-                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                <div
+                    style="background: #f8fafc; padding: 0.85rem; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 0.4rem;">
+                    <div
+                        style="font-size: 0.8rem; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
                         <span>Verification URL</span>
-                        <button id="modal-copy-btn" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; padding: 0;" onclick="copyModalUrl()">
+                        <button id="modal-copy-btn"
+                            style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; padding: 0;"
+                            onclick="copyModalUrl()">
                             <i class="fa fa-copy"></i> Copy Link
                         </button>
                     </div>
-                    <a id="details-qr-url" href="#" target="_blank" style="color: #1e40af; text-decoration: none; word-break: break-all; font-family: monospace; font-size: 0.8rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#1e40af'">https://url.com</a>
+                    <a id="details-qr-url" href="#" target="_blank"
+                        style="color: #1e40af; text-decoration: none; word-break: break-all; font-family: monospace; font-size: 0.8rem; font-weight: 500; transition: color 0.2s;"
+                        onmouseover="this.style.color='#2563eb'"
+                        onmouseout="this.style.color='#1e40af'">https://url.com</a>
                 </div>
 
                 <!-- QR Display -->
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; border: 2px dashed #e2e8f0; padding: 1.5rem; border-radius: 12px;">
-                    <div id="modal-qr-code" style="background: white; padding: 0.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"></div>
-                    <p style="margin: 0.75rem 0 0 0; font-size: 0.8rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">Scan To Verify ID Card</p>
+                <div
+                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; border: 2px dashed #e2e8f0; padding: 1.5rem; border-radius: 12px;">
+                    <div id="modal-qr-code"
+                        style="background: white; padding: 0.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    </div>
+                    <p
+                        style="margin: 0.75rem 0 0 0; font-size: 0.8rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">
+                        Scan To Verify ID Card</p>
                 </div>
             </div>
 
-            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button onclick="closeCardDetailsModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+            <div
+                style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closeCardDetailsModal()" class="btn"
+                    style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
                     Close
                 </button>
-                <button id="modal-view-card-btn" class="btn" style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <button id="modal-view-card-btn" class="btn"
+                    style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa fa-id-card"></i> See Generated Card
                 </button>
-                <button id="modal-print-btn" class="btn" style="margin: 0; background: #3b82f6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <button id="modal-print-btn" class="btn"
+                    style="margin: 0; background: #3b82f6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa fa-print"></i> Print ID Card
                 </button>
             </div>
@@ -5346,7 +5430,8 @@
             onclick="event.stopPropagation()">
             <div
                 style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <h2
+                    style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa fa-id-card" style="color: #8b5cf6;"></i> Generated Student Card
                 </h2>
                 <button onclick="closeGeneratedCardViewModal()"
@@ -5354,20 +5439,24 @@
                     onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
             </div>
 
-            <div style="padding: 2rem 1.5rem; display: flex; justify-content: center; align-items: center; background: #f1f5f9; overflow-x: auto;">
-                <div class="preview-card-wrapper" style="width: 550px; height: 350px; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.15); background: white; flex-shrink: 0;">
+            <div
+                style="padding: 2rem 1.5rem; display: flex; justify-content: center; align-items: center; background: #f1f5f9; overflow-x: auto;">
+                <div class="preview-card-wrapper"
+                    style="width: 550px; height: 350px; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.15); background: white; flex-shrink: 0;">
                     <!-- Background image -->
-                    <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none;" />
-                    
-                    <!-- Left portion overlay (Student Name in Orange Space Bottom) -->
-                    <div style="position: absolute; bottom: 25px; left: 30px; width: 52%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif;">
+                    <img src="hero video/division.jpg"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none;" />
+
+                    <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
+                    <div style="position: absolute; bottom: 25px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 15px; box-sizing: border-box;">
                         <div style="font-size: 0.75rem; font-weight: 700; color: rgba(255, 255, 255, 0.75); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px;">Student Name</div>
-                        <div id="gen-card-name" style="font-size: 1.5rem; font-weight: 800; color: #ffffff; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);">Name</div>
+                        <div id="gen-card-name" style="font-size: 1.9rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); width: 100%;">Name</div>
                     </div>
 
                     <!-- Content overlay (Right 42%) -->
-                    <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 25px 15px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
-                        
+                    <div
+                        style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 20px 15px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
+
                         <!-- Sector (Top) -->
                         <div style="width: 100%; text-align: center; margin-top: 5px;">
                             <div style="font-size: 0.65rem; font-weight: 700; color: #64748b; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px;">Sector</div>
@@ -5388,11 +5477,14 @@
                 </div>
             </div>
 
-            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button onclick="closeGeneratedCardViewModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+            <div
+                style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closeGeneratedCardViewModal()" class="btn"
+                    style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
                     Back
                 </button>
-                <button id="gen-card-print-btn" class="btn" style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <button id="gen-card-print-btn" class="btn"
+                    style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa fa-print"></i> Print This Card
                 </button>
             </div>
@@ -5561,7 +5653,7 @@
 
         window.selectedAiTemplate = null;
 
-                        function autoPopulateTextFromAiTemplate() {
+        function autoPopulateTextFromAiTemplate() {
             const canvas = document.getElementById('design-canvas');
             if (!canvas) return;
             const existingTexts = canvas.querySelectorAll('.draggable-text');
@@ -5569,7 +5661,7 @@
 
             if (window.selectedAiTemplate && window.selectedAiTemplate.data && window.selectedAiTemplate.data.regions) {
                 let startY = 50;
-                
+
                 // Noise label filter helper
                 const noiseLabels = [
                     'manage event', 'maneg event', 'manage', 'maneg', 'event',
@@ -5582,13 +5674,13 @@
                     'compleestion results', 'completion results', 'competition results',
                     'compleestion', 'completion', 'competition', 'results', 'result'
                 ];
-                
+
                 window.selectedAiTemplate.data.regions.forEach((region, i) => {
                     if (region.label) {
                         const lblLower = region.label.toLowerCase().trim();
                         if (noiseLabels.some(n => lblLower === n)) return; // Skip noise regions
                     }
-                    
+
                     const textEl = document.createElement('div');
                     textEl.className = 'draggable-text';
                     textEl.innerText = region.label || 'Text';
@@ -6027,7 +6119,7 @@
             if (pubProg && program) pubProg.value = program;
         }
 
-                function extractPdfHeader(items, rankIdx, currentData) {
+        function extractPdfHeader(items, rankIdx, currentData) {
             let preRankItems = [];
             for (let i = Math.max(0, rankIdx - 8); i < rankIdx; i++) {
                 if (items[i] && items[i].trim() !== '') preRankItems.push(items[i].trim());
@@ -6112,11 +6204,11 @@
             return { category, program, resultNo };
         }
 
-                        let bulkPostersQueue = [];
+        let bulkPostersQueue = [];
 
         function cleanExtractedPdfText(val, isNameOrUnit = false) {
             if (typeof val !== 'string') return val;
-            
+
             // Phrases to remove (case-insensitive, as complete words or exact matches)
             const phrasesToRemove = [
                 /\bIn\s+Progress\b/gi,
@@ -6159,30 +6251,30 @@
                 /\bresults?\b/gi,
                 /[🥇🥈🥉]/g
             ];
-            
+
             let cleaned = val;
             phrasesToRemove.forEach(regex => {
                 cleaned = cleaned.replace(regex, '');
             });
-            
+
             // Extra cleaning for name and unit fields
             if (isNameOrUnit) {
                 // Remove single letter codes (A, B, C, D, etc.) when isolated by boundaries
                 cleaned = cleaned.replace(/\b[a-zA-Z]\b/g, '');
-                
+
                 // Remove all numbers (scores, chest numbers, rank numbers)
                 cleaned = cleaned.replace(/\b\d+\b/g, '');
                 cleaned = cleaned.replace(/\b\d+(st|nd|rd|th)\b/gi, '');
-                
+
                 // Strip punctuation artifacts like single dots, commas, hyphens or "..."
                 cleaned = cleaned.replace(/\b\.\.\.\b/g, '');
                 cleaned = cleaned.replace(/[.,\-\//\\#+()$~%'":*?<>{}]/g, ' ');
             }
-            
+
             return cleaned.replace(/\s+/g, ' ').trim();
         }
 
-                        async function handlePdfResultUpload(event) {
+        async function handlePdfResultUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -6218,8 +6310,8 @@
                             if (/^(1st|2nd|3rd)$/i.test(text)) {
                                 let rank = text.toLowerCase();
                                 if (!rankCounts[rank]) rankCounts[rank] = [];
-                                let name = itemsRaw[i+2] || 'Unknown Candidate';
-                                let team = itemsRaw[i+3] || 'Unknown Team';
+                                let name = itemsRaw[i + 2] || 'Unknown Candidate';
+                                let team = itemsRaw[i + 3] || 'Unknown Team';
                                 rankCounts[rank].push({ name, team });
                             }
                         }
@@ -6303,14 +6395,14 @@
 
                         // Dynamically remove winners' names and unit names from Category/Program fields if they are accidentally captured
                         const allNames = [
-                            extractedData['n1'], extractedData['n2'], extractedData['n3'], 
-                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'], 
+                            extractedData['n1'], extractedData['n2'], extractedData['n3'],
+                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'],
                             extractedData['name'], extractedData['Participant']
                         ].filter(Boolean);
-                        
+
                         const allUnits = [
-                            extractedData['p1'], extractedData['p2'], extractedData['p3'], 
-                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'], 
+                            extractedData['p1'], extractedData['p2'], extractedData['p3'],
+                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'],
                             extractedData['place'], extractedData['Team']
                         ].filter(Boolean);
 
@@ -6594,8 +6686,8 @@
                             if (/^(1st|2nd|3rd)$/i.test(text)) {
                                 let rank = text.toLowerCase();
                                 if (!rankCounts[rank]) rankCounts[rank] = [];
-                                let name = itemsRaw[i+2] || 'Unknown Candidate';
-                                let team = itemsRaw[i+3] || 'Unknown Team';
+                                let name = itemsRaw[i + 2] || 'Unknown Candidate';
+                                let team = itemsRaw[i + 3] || 'Unknown Team';
                                 rankCounts[rank].push({ name, team });
                             }
                         }
@@ -6683,14 +6775,14 @@
 
                         // Dynamically remove winners' names and unit names from Category/Program fields if they are accidentally captured
                         const allNames = [
-                            extractedData['n1'], extractedData['n2'], extractedData['n3'], 
-                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'], 
+                            extractedData['n1'], extractedData['n2'], extractedData['n3'],
+                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'],
                             extractedData['name'], extractedData['Participant']
                         ].filter(Boolean);
-                        
+
                         const allUnits = [
-                            extractedData['p1'], extractedData['p2'], extractedData['p3'], 
-                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'], 
+                            extractedData['p1'], extractedData['p2'], extractedData['p3'],
+                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'],
                             extractedData['place'], extractedData['Team']
                         ].filter(Boolean);
 
@@ -7437,7 +7529,7 @@
             }
 
             if (!stageSchedules[stage]) stageSchedules[stage] = [];
-            
+
             const exists = stageSchedules[stage].some(s => s.cat === cat && s.prog === prog);
             if (exists) {
                 alert("This program is already scheduled for this stage.");
@@ -8164,19 +8256,19 @@
         function generatePdfGenPDF() {
             const category = document.getElementById('pdfgen-category').value.trim();
             const program = document.getElementById('pdfgen-program').value.trim();
-            
+
             const tbody = document.getElementById('pdfgen-table-body');
             if (!tbody) return;
-            
+
             const rows = tbody.querySelectorAll('tr');
             const tableData = [];
-            
+
             rows.forEach((row, index) => {
                 const code = row.querySelector('.code-letter').value.trim();
                 const name = row.querySelector('.student-name').value.trim();
                 const unit = row.querySelector('.unit-name').value.trim();
                 const mark = row.querySelector('.total-mark').value.trim();
-                
+
                 if (code || name || unit || mark) {
                     tableData.push([
                         index + 1,
@@ -8187,12 +8279,12 @@
                     ]);
                 }
             });
-            
+
             if (tableData.length === 0) {
                 alert('Please enter at least one row of data.');
                 return;
             }
-            
+
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({
@@ -8200,48 +8292,48 @@
                     unit: 'mm',
                     format: 'a4'
                 });
-                
+
                 // Page Title
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(16);
                 doc.setTextColor(30, 113, 69); // Excel green
                 doc.text("KODUVELLY SAHITHOLSAV - RESULT SHEET", 14, 18);
-                
+
                 // Divider line
                 doc.setDrawColor(30, 113, 69);
                 doc.setLineWidth(0.5);
                 doc.line(14, 21, 196, 21);
-                
+
                 // Info block
                 doc.setFillColor(243, 249, 245);
                 doc.rect(14, 24, 182, 18, "F");
                 doc.setDrawColor(180, 220, 195);
                 doc.setLineWidth(0.2);
                 doc.rect(14, 24, 182, 18, "D");
-                
+
                 doc.setFontSize(10);
                 doc.setTextColor(50, 50, 50);
-                
+
                 doc.setFont("helvetica", "bold");
                 doc.text("Category:", 18, 30);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(0, 0, 0);
                 doc.text(category || "N/A", 38, 30);
-                
+
                 doc.setTextColor(50, 50, 50);
                 doc.setFont("helvetica", "bold");
                 doc.text("Program:", 18, 37);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(0, 0, 0);
                 doc.text(program || "N/A", 38, 37);
-                
+
                 doc.setTextColor(50, 50, 50);
                 doc.setFont("helvetica", "bold");
                 doc.text("Date:", 120, 30);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(0, 0, 0);
                 doc.text(new Date().toLocaleDateString(), 135, 30);
-                
+
                 doc.setTextColor(50, 50, 50);
                 doc.setFont("helvetica", "bold");
                 doc.text("Status:", 120, 37);
@@ -8290,7 +8382,7 @@
                         doc.text("Generated by Koduvelly Admin Panel PDF Generator", doc.internal.pageSize.width - 85, doc.internal.pageSize.height - 10);
                     }
                 });
-                
+
                 const fileBase = `${category || 'Category'}_${program || 'Program'}_sheet`.replace(/[\s\/\\?%*:|"<>]/g, '_');
                 doc.save(`${fileBase}.pdf`);
             } catch (err) {
@@ -8300,31 +8392,31 @@
         }
     </script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Force Design Studio tab to be active
-        document.querySelectorAll('.admin-section-content').forEach(s => s.classList.remove('active'));
-        const designTab = document.getElementById('section-design');
-        if (designTab) designTab.classList.add('active');
-        
-        // Hide global save button
-        const saveAllBtn = document.getElementById('save-all-btn-container');
-        if (saveAllBtn) saveAllBtn.style.display = 'none';
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Force Design Studio tab to be active
+            document.querySelectorAll('.admin-section-content').forEach(s => s.classList.remove('active'));
+            const designTab = document.getElementById('section-design');
+            if (designTab) designTab.classList.add('active');
 
-        // Manually load draft data since login is bypassed
-        try {
-            const draft = JSON.parse(localStorage.getItem('koduvelly_admin_draft'));
-            if (draft) {
-                if (typeof currentData !== 'undefined') currentData = draft.data;
-                if (draft.aiTemplate) window.selectedAiTemplate = draft.aiTemplate;
-            }
-        } catch(e) {}
+            // Hide global save button
+            const saveAllBtn = document.getElementById('save-all-btn-container');
+            if (saveAllBtn) saveAllBtn.style.display = 'none';
 
-        // Load design data
-        if(typeof renderPublishedPosters === 'function') renderPublishedPosters();
-        if(typeof loadTemplatePicker === 'function') loadTemplatePicker();
-    });
-</script>
+            // Manually load draft data since login is bypassed
+            try {
+                const draft = JSON.parse(localStorage.getItem('koduvelly_admin_draft'));
+                if (draft) {
+                    if (typeof currentData !== 'undefined') currentData = draft.data;
+                    if (draft.aiTemplate) window.selectedAiTemplate = draft.aiTemplate;
+                }
+            } catch (e) { }
+
+            // Load design data
+            if (typeof renderPublishedPosters === 'function') renderPublishedPosters();
+            if (typeof loadTemplatePicker === 'function') loadTemplatePicker();
+        });
+    </script>
 
 </body>
 

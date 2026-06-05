@@ -176,15 +176,15 @@
     <script>
         if (!window.WA_BACKEND_URL) {
             const hn = window.location.hostname;
-            const isLocal = hn === 'localhost' || 
-                            hn === '127.0.0.1' || 
-                            hn === '[::1]' ||
-                            hn.startsWith('192.168.') || 
-                            hn.startsWith('10.') || 
-                            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
-                            hn.endsWith('.local') ||
-                            window.location.protocol === 'file:';
-            
+            const isLocal = hn === 'localhost' ||
+                hn === '127.0.0.1' ||
+                hn === '[::1]' ||
+                hn.startsWith('192.168.') ||
+                hn.startsWith('10.') ||
+                /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+                hn.endsWith('.local') ||
+                window.location.protocol === 'file:';
+
             if (isLocal) {
                 const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
                 window.WA_BACKEND_URL = `http://${host}:3001`;
@@ -626,7 +626,8 @@
                     style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
                     <h2
                         style="margin: 0; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                        <i class="fa fa-paint-brush"></i> New Design Studio (Beta)</h2>
+                        <i class="fa fa-paint-brush"></i> New Design Studio (Beta)
+                    </h2>
                     <p style="margin-top: 0.5rem; opacity: 0.9;">We are upgrading the Design Studio to a professional
                         React-based editor with layers and advanced tools!</p>
                     <a href="http://localhost:5173" target="_blank"
@@ -832,7 +833,8 @@
                         style="background: linear-gradient(135deg, #128c7e, #075e54); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
                         <h2
                             style="margin: 0; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                            <i class="fab fa-whatsapp"></i> WhatsApp Device Sync</h2>
+                            <i class="fab fa-whatsapp"></i> WhatsApp Device Sync
+                        </h2>
                         <p style="margin-top: 0.5rem; opacity: 0.9;">Link your WhatsApp account to enable direct result
                             poster sharing.</p>
                     </div>
@@ -1116,25 +1118,33 @@
             <!-- Section: Stage Scheduling -->
             <div id="section-stage-schedule" class="admin-section-content">
                 <div class="admin-section">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                         <div>
                             <h2 style="margin: 0 0 0.5rem 0;">Stage Scheduling</h2>
-                            <p style="color: #636e72; margin: 0;">Assign specific categories and programs to stages. Conductors will ONLY be able to select programs scheduled for their stage.</p>
+                            <p style="color: #636e72; margin: 0;">Assign specific categories and programs to stages.
+                                Conductors will ONLY be able to select programs scheduled for their stage.</p>
                         </div>
                     </div>
 
-                    <div style="background: #f7fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                    <div
+                        style="background: #f7fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
                         <h3 style="margin-top: 0; color: #2d3748;">Assign Program to Stage</h3>
                         <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
                             <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Select Stage</label>
-                                <select id="sched-stage-select" onchange="renderStageScheduleTable()" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                                <label
+                                    style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Select
+                                    Stage</label>
+                                <select id="sched-stage-select" onchange="renderStageScheduleTable()"
+                                    style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
                                     <!-- Populated dynamically -->
                                 </select>
                             </div>
                             <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Category</label>
-                                <select id="sched-cat-select" onchange="loadSchedPrograms()" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                                <label
+                                    style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Category</label>
+                                <select id="sched-cat-select" onchange="loadSchedPrograms()"
+                                    style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
                                     <option value="">-- Select Category --</option>
                                     <option value="LP">LP</option>
                                     <option value="UP">UP</option>
@@ -1148,12 +1158,15 @@
                                 </select>
                             </div>
                             <div style="flex: 1; min-width: 200px;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Program</label>
-                                <select id="sched-prog-select" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                                <label
+                                    style="display: block; font-weight: bold; margin-bottom: 0.5rem; color: #4a5568;">Program</label>
+                                <select id="sched-prog-select"
+                                    style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
                                     <option value="">-- Select Program --</option>
                                 </select>
                             </div>
-                            <button class="btn btn-save" style="margin-bottom: 0; width: auto;" onclick="addProgramToStageSchedule()">
+                            <button class="btn btn-save" style="margin-bottom: 0; width: auto;"
+                                onclick="addProgramToStageSchedule()">
                                 <i class="fa fa-plus"></i> Assign to Stage
                             </button>
                         </div>
@@ -1162,7 +1175,8 @@
                     <div>
                         <h3 style="color: #2d3748; margin-bottom: 1rem;">Currently Scheduled Programs</h3>
                         <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <table
+                                style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                 <thead style="background: #e2e8f0; color: #4a5568;">
                                     <tr>
                                         <th style="padding: 1rem; text-align: left;">Category</th>
@@ -1171,7 +1185,10 @@
                                     </tr>
                                 </thead>
                                 <tbody id="stage-schedule-tbody">
-                                    <tr><td colspan="3" style="text-align: center; padding: 2rem; color: #a0aec0;">Select a stage to view its scheduled programs.</td></tr>
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; padding: 2rem; color: #a0aec0;">
+                                            Select a stage to view its scheduled programs.</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1283,55 +1300,77 @@
 
             <!-- Section: Student List -->
             <div id="section-student-list" class="admin-section-content">
-                <div class="admin-section" style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <div class="admin-section"
+                    style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
                     <h2 style="margin: 0 0 0.5rem 0; color: #2d3748;">Student List</h2>
-                    <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 1.5rem;">Import students list from Excel/CSV to populate the eligible students database (`registred 2` table).</p>
+                    <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 1.5rem;">Import students list from
+                        Excel/CSV to populate the eligible students database (`registred 2` table).</p>
 
-                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #2d3748; display: flex; align-items: center; gap: 0.5rem;">
+                    <div
+                        style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                        <h3
+                            style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #2d3748; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fa fa-file-excel" style="color: #38a169;"></i> Excel/CSV Import
                         </h3>
                         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                            <input type="file" id="allotment-excel-file" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleAllotmentExcelUpload(event)">
-                            <button class="btn" type="button" style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('allotment-excel-file').click()">
+                            <input type="file" id="allotment-excel-file" accept=".xlsx, .xls, .csv"
+                                style="display: none;" onchange="handleAllotmentExcelUpload(event)">
+                            <button class="btn" type="button"
+                                style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;"
+                                onclick="document.getElementById('allotment-excel-file').click()">
                                 <i class="fa fa-file-excel" style="color: #38a169;"></i> Select Excel File
                             </button>
-                            <span id="allotment-excel-info" style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns: Participant Name, Team Name, Category, Chest Number, Competition</span>
+                            <span id="allotment-excel-info"
+                                style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns:
+                                Participant Name, Team Name, Category, Chest Number, Competition</span>
                         </div>
                     </div>
 
                     <!-- Excel Preview Container -->
-                    <div id="allotment-preview-container" style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;"></div>
+                    <div id="allotment-preview-container"
+                        style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;">
+                    </div>
 
                     <div style="margin-top: 1.2rem; display: flex; gap: 0.75rem;">
-                        <button class="btn btn-save" id="allotment-upload-btn" onclick="uploadAllotmentList()" style="margin-bottom: 0; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; background: #3182ce; color: white; display: none;">
+                        <button class="btn btn-save" id="allotment-upload-btn" onclick="uploadAllotmentList()"
+                            style="margin-bottom: 0; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; background: #3182ce; color: white; display: none;">
                             <i class="fa fa-cloud-upload-alt"></i> Upload Allotment List to Database
                         </button>
                     </div>
 
                     <!-- Database Student Records Section -->
-                    <div style="margin-top: 3rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div
+                        style="margin-top: 3rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
                             <div>
-                                <h3 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                <h3
+                                    style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fa fa-users" style="color: #3182ce;"></i> Database Student Records
                                 </h3>
-                                <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.85rem;">Search and view all students currently stored in the system.</p>
+                                <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.85rem;">Search and view
+                                    all students currently stored in the system.</p>
                             </div>
                             <div style="display: flex; gap: 0.75rem; align-items: center;">
                                 <div style="position: relative;">
-                                    <i class="fa fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
-                                    <input type="text" id="db-student-search" placeholder="Search chest no, category, program, sector..." oninput="filterExistingStudentList()"
+                                    <i class="fa fa-search"
+                                        style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
+                                    <input type="text" id="db-student-search"
+                                        placeholder="Search chest no, category, program, sector..."
+                                        oninput="filterExistingStudentList()"
                                         style="padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.85rem; width: 320px; outline: none; transition: border-color 0.2s;"
-                                        onfocus="this.style.borderColor='#3182ce'" onblur="this.style.borderColor='#cbd5e0'">
+                                        onfocus="this.style.borderColor='#3182ce'"
+                                        onblur="this.style.borderColor='#cbd5e0'">
                                 </div>
-                                <button class="btn" onclick="loadExistingStudentList()" style="margin: 0; padding: 0.5rem 1rem; background: #edf2f7; color: #2d3748; height: auto; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                <button class="btn" onclick="loadExistingStudentList()"
+                                    style="margin: 0; padding: 0.5rem 1rem; background: #edf2f7; color: #2d3748; height: auto; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem;">
                                     <i class="fa fa-sync"></i> Refresh
                                 </button>
                             </div>
                         </div>
-                        
-                        <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
+
+                        <div
+                            style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
                             <div id="db-students-table-container">
                                 <!-- Loads dynamically -->
                             </div>
@@ -1363,25 +1402,35 @@
                             </div>
                             <div style="flex: 2; min-width: 300px;">
                                 <label
-                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student Names (One per line, e.g. Name - ChestNo)</label>
+                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Student
+                                    Names (One per line, e.g. Name - ChestNo)</label>
                                 <textarea id="gen-card-names" oninput="clearExcelPreviewOnInput()"
                                     placeholder="e.g. John Doe - 101&#10;Jane Smith - 102&#10;or just Names" rows="3"
                                     style="width: 100%; padding: 0.5rem 0.8rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.85rem; height: 90px;"></textarea>
                             </div>
-                            <div style="flex: 100%; border-top: 1px dashed #e2e8f0; padding-top: 1rem; margin-top: 0.5rem;">
-                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Or Import from Excel File</label>
+                            <div
+                                style="flex: 100%; border-top: 1px dashed #e2e8f0; padding-top: 1rem; margin-top: 0.5rem;">
+                                <label
+                                    style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Or
+                                    Import from Excel File</label>
                                 <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                                    <input type="file" id="gen-card-excel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleGenCardExcelUpload(event)">
-                                    <button class="btn" type="button" style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('gen-card-excel').click()">
+                                    <input type="file" id="gen-card-excel" accept=".xlsx, .xls, .csv"
+                                        style="display: none;" onchange="handleGenCardExcelUpload(event)">
+                                    <button class="btn" type="button"
+                                        style="background: #edf2f7; color: #2d3748; padding: 0.5rem 1.2rem; height: 38px; font-size: 0.85rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;"
+                                        onclick="document.getElementById('gen-card-excel').click()">
                                         <i class="fa fa-file-excel" style="color: #38a169;"></i> Select Excel File
                                     </button>
-                                    <span id="gen-card-excel-info" style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns: Participant Name, Team Name, Category, Chest Number, Competition</span>
+                                    <span id="gen-card-excel-info"
+                                        style="font-size: 0.8rem; color: #718096; font-style: italic;">Expected columns:
+                                        Participant Name, Team Name, Category, Chest Number, Competition</span>
                                 </div>
                             </div>
                             <div style="flex: 100%; margin-top: 0.5rem;">
                                 <div style="margin-bottom: 1rem;">
                                     <label
-                                        style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Select Category</label>
+                                        style="display: block; font-weight: bold; margin-bottom: 0.4rem; color: #4a5568; font-size: 0.8rem;">Select
+                                        Category</label>
                                     <select id="gen-card-global-category" class="form-control"
                                         style="width: 100%; max-width: 300px; height: 38px; padding: 0.45rem 0.8rem; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.85rem;"
                                         onchange="handleGenCardGlobalCategoryChange()">
@@ -1417,7 +1466,9 @@
                             </div>
                         </div>
                         <!-- Excel Preview Container -->
-                        <div id="excel-preview-container" style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;"></div>
+                        <div id="excel-preview-container"
+                            style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 1.2rem;">
+                        </div>
 
                         <div style="margin-top: 1.2rem; display: flex; gap: 0.75rem;">
                             <button class="btn btn-save" onclick="generateIdCards()"
@@ -1448,28 +1499,37 @@
                     </div>
 
                     <!-- Card History Section -->
-                    <div style="margin-top: 3rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div
+                        style="margin-top: 3rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
                             <div>
-                                <h3 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                <h3
+                                    style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fa fa-history" style="color: #3b82f6;"></i> Card Generation History
                                 </h3>
-                                <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.85rem;">View and manage all previously generated student cards.</p>
+                                <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.85rem;">View and manage
+                                    all previously generated student cards.</p>
                             </div>
                             <div style="display: flex; gap: 0.75rem; align-items: center;">
                                 <div style="position: relative;">
-                                    <i class="fa fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
-                                    <input type="text" id="card-history-search" placeholder="Search student or sector..." oninput="filterCardHistory()"
+                                    <i class="fa fa-search"
+                                        style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
+                                    <input type="text" id="card-history-search"
+                                        placeholder="Search student or sector..." oninput="filterCardHistory()"
                                         style="padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.85rem; width: 250px; outline: none; transition: border-color 0.2s;"
-                                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e0'">
+                                        onfocus="this.style.borderColor='#3b82f6'"
+                                        onblur="this.style.borderColor='#cbd5e0'">
                                 </div>
-                                <button class="btn" onclick="loadCardHistory()" style="margin: 0; padding: 0.5rem 1rem; background: #edf2f7; color: #2d3748; height: auto; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                <button class="btn" onclick="loadCardHistory()"
+                                    style="margin: 0; padding: 0.5rem 1rem; background: #edf2f7; color: #2d3748; height: auto; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.4rem;">
                                     <i class="fa fa-sync"></i> Refresh
                                 </button>
                             </div>
                         </div>
-                        
-                        <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
+
+                        <div
+                            style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
                             <div id="card-history-table-container">
                                 <!-- Loads dynamically -->
                             </div>
@@ -1489,34 +1549,48 @@
 
             <!-- Section: PDF Generator -->
             <div id="section-pdf-generator" class="admin-section-content">
-                <div class="admin-section" style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div class="admin-section"
+                    style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                         <div>
-                            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #1e293b;">Excel PDF Generator</h2>
-                            <p style="color: #64748b; font-size: 0.85rem; margin: 0.25rem 0 0 0;">Create and export result sheets in an Excel-like table format.</p>
+                            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #1e293b;">Excel PDF
+                                Generator</h2>
+                            <p style="color: #64748b; font-size: 0.85rem; margin: 0.25rem 0 0 0;">Create and export
+                                result sheets in an Excel-like table format.</p>
                         </div>
                         <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-add" onclick="addPdfGenRow()" style="background: #3182ce !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
+                            <button class="btn btn-add" onclick="addPdfGenRow()"
+                                style="background: #3182ce !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
                                 <i class="fa fa-plus"></i> Add Row
                             </button>
-                            <button class="btn" onclick="clearPdfGenTable()" style="background: #edf2f7 !important; color: #4a5568 !important; border: 1px solid #cbd5e0 !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
+                            <button class="btn" onclick="clearPdfGenTable()"
+                                style="background: #edf2f7 !important; color: #4a5568 !important; border: 1px solid #cbd5e0 !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
                                 <i class="fa fa-trash"></i> Clear All
                             </button>
-                            <button class="btn" onclick="generatePdfGenPDF()" style="background: #10b981 !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
+                            <button class="btn" onclick="generatePdfGenPDF()"
+                                style="background: #10b981 !important; color: white !important; height: 36px !important; border-radius: 8px !important; padding: 0 1rem !important;">
                                 <i class="fa fa-file-pdf"></i> Generate PDF
                             </button>
                         </div>
                     </div>
 
                     <!-- Meta Information (Category and Program) -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0;">
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Category</label>
-                            <input type="text" id="pdfgen-category" class="form-control" placeholder="e.g. HS, UP, Senior..." style="width: 100%; height: 38px !important; border-radius: 8px !important;">
+                            <label
+                                style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Category</label>
+                            <input type="text" id="pdfgen-category" class="form-control"
+                                placeholder="e.g. HS, UP, Senior..."
+                                style="width: 100%; height: 38px !important; border-radius: 8px !important;">
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Program</label>
-                            <input type="text" id="pdfgen-program" class="form-control" placeholder="e.g. Story Writing, Poem Recitation..." style="width: 100%; height: 38px !important; border-radius: 8px !important;">
+                            <label
+                                style="font-weight: 700; color: #4a5568; font-size: 0.8rem; display: block; margin-bottom: 0.5rem;">Program</label>
+                            <input type="text" id="pdfgen-program" class="form-control"
+                                placeholder="e.g. Story Writing, Poem Recitation..."
+                                style="width: 100%; height: 38px !important; border-radius: 8px !important;">
                         </div>
                     </div>
 
@@ -1525,12 +1599,22 @@
                         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
                             <thead style="background: #f1f5f9; border-bottom: 2px solid #cbd5e0;">
                                 <tr>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 60px; text-align: center;">Sl No.</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 150px; text-align: center;">Code Letter</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Student Name</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 180px;">Unit Name</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 120px; text-align: center;">Total Mark</th>
-                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 80px; text-align: center;">Action</th>
+                                    <th
+                                        style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 60px; text-align: center;">
+                                        Sl No.</th>
+                                    <th
+                                        style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 150px; text-align: center;">
+                                        Code Letter</th>
+                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700;">Student Name
+                                    </th>
+                                    <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 180px;">
+                                        Unit Name</th>
+                                    <th
+                                        style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 120px; text-align: center;">
+                                        Total Mark</th>
+                                    <th
+                                        style="padding: 0.75rem 1rem; color: #475569; font-weight: 700; width: 80px; text-align: center;">
+                                        Action</th>
                                 </tr>
                             </thead>
                             <tbody id="pdfgen-table-body">
@@ -1643,7 +1727,7 @@
                 loadCardHistory();
                 loadCardWhatsAppTargets();
                 populateGenCardGlobalCategory();
-                
+
                 // Auto populate baseurl if empty or invalid/local
                 const buInput = document.getElementById('gen-card-baseurl');
                 if (buInput && (!buInput.value || buInput.value === 'https://yourwebsite.com' || buInput.value.startsWith('file://'))) {
@@ -1663,12 +1747,12 @@
         // WhatsApp Sector Notification Routing target list loading
         async function loadCardWhatsAppTargets() {
             const container = document.getElementById('card-whatsapp-targets-container');
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = '<div style="color: #666; font-size: 0.85rem; text-align: center; padding: 1rem;"><i class="fa fa-spinner fa-spin"></i> Loading WhatsApp contacts...</div>';
-            
+
             try {
                 const clientId = activeWaClientId || 'default';
-                
+
                 // Fetch WhatsApp client status
                 let isConnected = false;
                 let clientState = 'OFFLINE';
@@ -1718,11 +1802,11 @@
                     fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/chats?clientId=${clientId}`).catch(e => ({ json: () => ({ success: false }) })),
                     fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/contacts?clientId=${clientId}`).catch(e => ({ json: () => ({ success: false }) }))
                 ]);
-                
+
                 let chatsData = { success: false };
                 let contactsData = { success: false };
-                try { chatsData = await chatsRes.json(); } catch(e){}
-                try { contactsData = await contactsRes.json(); } catch(e){}
+                try { chatsData = await chatsRes.json(); } catch (e) { }
+                try { contactsData = await contactsRes.json(); } catch (e) { }
 
                 let allItems = [];
                 if (chatsData && chatsData.success) allItems = [...chatsData.chats];
@@ -1929,7 +2013,7 @@
                 printContainer = document.createElement('div');
                 printContainer.id = 'print-all-container';
                 document.body.appendChild(printContainer);
-                
+
                 // Add print styles dynamically
                 const style = document.createElement('style');
                 style.innerHTML = `
@@ -1961,7 +2045,7 @@
                 `;
                 document.head.appendChild(style);
             }
-            
+
             // Show loading overlay
             const overlay = document.createElement('div');
             overlay.style = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;';
@@ -1969,7 +2053,7 @@
             document.body.appendChild(overlay);
 
             printContainer.innerHTML = '';
-            
+
             // We use setTimeout to yield to the browser UI to avoid freezing
             let i = 0;
             function processBatch() {
@@ -1977,7 +2061,7 @@
                 const end = Math.min(i + batchSize, idCardsData.length);
                 for (; i < end; i++) {
                     const row = idCardsData[i];
-                    
+
                     const cardId = `print-qr-${row.id || i}`;
                     const card = document.createElement('div');
                     // Style matching 3.4 x 2.1 inches (Standard CR80 size)
@@ -1999,7 +2083,7 @@
                         </div>
                     `;
                     printContainer.appendChild(card);
-                    
+
                     try {
                         new QRCode(document.getElementById(cardId), {
                             text: row.url,
@@ -2009,13 +2093,13 @@
                             colorLight: "#ffffff",
                             correctLevel: QRCode.CorrectLevel.L
                         });
-                    } catch(e){
+                    } catch (e) {
                         console.error("QR Code generation error:", e);
                     }
                 }
-                
+
                 document.getElementById('pdf-progress').innerText = i + ' / ' + idCardsData.length + ' cards processed';
-                
+
                 if (i < idCardsData.length) {
                     setTimeout(processBatch, 10);
                 } else {
@@ -2026,7 +2110,7 @@
                     }, 500);
                 }
             }
-            
+
             setTimeout(processBatch, 10);
         }
 
@@ -2112,7 +2196,7 @@
             const select = document.getElementById('gen-card-global-category');
             if (!select) return;
             const currentVal = select.value;
-            select.innerHTML = '<option value="">-- Select Category --</option>' + 
+            select.innerHTML = '<option value="">-- Select Category --</option>' +
                 (currentData.categories || []).map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
         }
 
@@ -2151,7 +2235,7 @@
                 try {
                     const { data, error } = await supabaseClient.from(catVal).select('Programs').neq('Programs', null).neq('Programs', '');
                     if (error) throw error;
-                    
+
                     const seenProgs = new Set();
                     const uniqueProgs = [];
                     if (data) {
@@ -2212,7 +2296,7 @@
             try {
                 const { data, error } = await supabaseClient.from('GEN').select('Programs').neq('Programs', null).neq('Programs', '');
                 if (error) throw error;
-                
+
                 const seenProgs = new Set();
                 const uniqueProgs = [];
                 if (data) {
@@ -2365,7 +2449,7 @@
                     };
                 }
                 const existing = uniqueStudents[key];
-                
+
                 // Merge regular programs
                 student.regularProgs.forEach(p => {
                     const exists = existing.regularProgs.some(rp => rp.program.toLowerCase().trim() === p.program.toLowerCase().trim());
@@ -2373,7 +2457,7 @@
                         existing.regularProgs.push(p);
                     }
                 });
-                
+
                 // Merge general programs
                 student.generalProgs.forEach(p => {
                     if (!existing.generalProgs.includes(p)) {
@@ -2459,7 +2543,7 @@
                 renderedData.forEach((row, idx) => {
                     const cardId = `id-card-gen-${idx}`;
                     const correctUrl = row.url;
-                    
+
                     const cardHtml = document.createElement('div');
                     cardHtml.className = 'id-card';
                     cardHtml.style = 'width: 7in; height: 4in; border: 2px solid #2d3748; background: white; border-radius: 12px; display: flex; overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; margin-bottom: 20px;';
@@ -2549,7 +2633,7 @@
             if (fileInput) fileInput.value = '';
             const infoSpan = document.getElementById('allotment-excel-info');
             if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
-            
+
             const previewContainer = document.getElementById('allotment-preview-container');
             if (previewContainer) {
                 previewContainer.style.display = 'none';
@@ -2572,7 +2656,7 @@
             infoSpan.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Reading file: ${file.name}...`;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async function (e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -2691,7 +2775,7 @@
                     window.genCardExcelTotalRows = json.length;
 
                     infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArrayLoaded.length} unique student(s) (consolidated from all ${json.length} rows) from Excel.</span>`;
-                    
+
                     // Show a preview in the names textarea
                     const namesPreview = studentsArrayLoaded.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
                     document.getElementById('gen-card-names').value = namesPreview;
@@ -2752,13 +2836,13 @@
                 const chestStyle = chestText === 'N/A' ? 'color: #ef4444; font-weight: bold;' : 'font-weight: bold; color: #2d3748;';
                 const sectorText = student.sector || 'N/A';
                 const categoryText = student.category || 'N/A';
-                
-                const regularProgramsText = student.regularProgs && student.regularProgs.length > 0 
-                    ? student.regularProgs.map(p => p.program).join(', ') 
+
+                const regularProgramsText = student.regularProgs && student.regularProgs.length > 0
+                    ? student.regularProgs.map(p => p.program).join(', ')
                     : 'N/A';
-                    
-                const generalProgramsText = student.generalProgs && student.generalProgs.length > 0 
-                    ? student.generalProgs.join('|') 
+
+                const generalProgramsText = student.generalProgs && student.generalProgs.length > 0
+                    ? student.generalProgs.join('|')
                     : 'N/A';
 
                 tableHtml += `
@@ -2790,11 +2874,11 @@
             if (window.genCardExcelStudents && window.genCardExcelStudents[index]) {
                 window.genCardExcelStudents.splice(index, 1);
                 renderExcelPreview();
-                
+
                 // Keep the names textarea in sync
                 const namesPreview = window.genCardExcelStudents.map(s => `${s.name}${s.chest ? ' - ' + s.chest : ''}`).join('\n');
                 document.getElementById('gen-card-names').value = namesPreview;
-                
+
                 // Update loaded info message
                 const infoSpan = document.getElementById('gen-card-excel-info');
                 if (infoSpan) {
@@ -2815,7 +2899,7 @@
             const infoSpan = document.getElementById('gen-card-excel-info');
             if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
             document.getElementById('gen-card-names').value = '';
-            
+
             const container = document.getElementById('excel-preview-container');
             if (container) {
                 container.style.display = 'none';
@@ -2830,7 +2914,7 @@
                 if (fileInput) fileInput.value = '';
                 const infoSpan = document.getElementById('gen-card-excel-info');
                 if (infoSpan) infoSpan.innerHTML = 'Expected columns: Participant Name, Team Name, Category, Chest Number, Competition';
-                
+
                 const container = document.getElementById('excel-preview-container');
                 if (container) {
                     container.style.display = 'none';
@@ -2847,7 +2931,7 @@
             infoSpan.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Reading file: ${file.name}...`;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async function (e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -2944,7 +3028,7 @@
                     window.allotmentExcelTotalRows = json.length;
 
                     infoSpan.innerHTML = `<span style="color: #38a169; font-weight: bold;"><i class="fa fa-check-circle"></i> Loaded ${studentsArrayLoaded.length} student record(s) from Excel.</span>`;
-                    
+
                     renderAllotmentPreview();
 
                     const uploadBtn = document.getElementById('allotment-upload-btn');
@@ -3008,13 +3092,13 @@
                 const chestStyle = chestText === 'N/A' ? 'color: #ef4444; font-weight: bold;' : 'font-weight: bold; color: #2d3748;';
                 const sectorText = student.sector || 'N/A';
                 const categoryText = student.category || 'N/A';
-                
-                const regularProgramsText = student.regularProgs && student.regularProgs.length > 0 
-                    ? student.regularProgs.map(p => `${p.category}: ${p.program}`).join(', ') 
+
+                const regularProgramsText = student.regularProgs && student.regularProgs.length > 0
+                    ? student.regularProgs.map(p => `${p.category}: ${p.program}`).join(', ')
                     : 'N/A';
-                    
-                const generalProgramsText = student.generalProgs && student.generalProgs.length > 0 
-                    ? student.generalProgs.join(', ') 
+
+                const generalProgramsText = student.generalProgs && student.generalProgs.length > 0
+                    ? student.generalProgs.join(', ')
                     : 'N/A';
 
                 tableHtml += `
@@ -3046,7 +3130,7 @@
             if (window.allotmentExcelStudents && window.allotmentExcelStudents[index]) {
                 window.allotmentExcelStudents.splice(index, 1);
                 renderAllotmentPreview();
-                
+
                 // Update loaded info message
                 const infoSpan = document.getElementById('allotment-excel-info');
                 if (infoSpan) {
@@ -3131,7 +3215,7 @@
 
                 success = true;
                 const totalRows = window.allotmentExcelTotalRows || insertRows.length;
-                
+
                 // Show success notification in infoSpan
                 const infoSpan = document.getElementById('allotment-excel-info');
                 if (infoSpan) {
@@ -3176,16 +3260,16 @@
                 const p3 = (row['program 3'] || '').toLowerCase();
                 const p4 = (row['program 4'] || '').toLowerCase();
                 const gens = (row.generals || '').toLowerCase();
-                
-                return name.includes(query) || 
-                       sector.includes(query) || 
-                       chest.includes(query) || 
-                       cat.includes(query) || 
-                       p1.includes(query) || 
-                       p2.includes(query) || 
-                       p3.includes(query) || 
-                       p4.includes(query) || 
-                       gens.includes(query);
+
+                return name.includes(query) ||
+                    sector.includes(query) ||
+                    chest.includes(query) ||
+                    cat.includes(query) ||
+                    p1.includes(query) ||
+                    p2.includes(query) ||
+                    p3.includes(query) ||
+                    p4.includes(query) ||
+                    gens.includes(query);
             });
 
             renderCardHistory(filtered);
@@ -3252,14 +3336,14 @@
                 const chestStyle = chestText === 'N/A' ? 'color: #ef4444; font-weight: bold;' : 'font-weight: bold; color: #2d3748;';
                 const categoryText = row.category || 'N/A';
                 const sectorText = row.sector || 'N/A';
-                
+
                 const programs = [];
                 if (row['program 1']) programs.push(row['program 1']);
                 if (row['program 2']) programs.push(row['program 2']);
                 if (row['program 3']) programs.push(row['program 3']);
                 if (row['program 4']) programs.push(row['program 4']);
                 const regularProgramsText = programs.length > 0 ? programs.join(', ') : 'N/A';
-                
+
                 const generalProgramsText = row.generals ? row.generals.split(/[|,]/).map(g => g.trim()).filter(Boolean).join(', ') : 'N/A';
 
                 tableHtml += `
@@ -3302,16 +3386,16 @@
                 const p3 = (row['program 3'] || '').toLowerCase();
                 const p4 = (row['program 4'] || '').toLowerCase();
                 const gens = (row.generals || '').toLowerCase();
-                
-                return name.includes(query) || 
-                       sector.includes(query) || 
-                       chest.includes(query) || 
-                       cat.includes(query) || 
-                       p1.includes(query) || 
-                       p2.includes(query) || 
-                       p3.includes(query) || 
-                       p4.includes(query) || 
-                       gens.includes(query);
+
+                return name.includes(query) ||
+                    sector.includes(query) ||
+                    chest.includes(query) ||
+                    cat.includes(query) ||
+                    p1.includes(query) ||
+                    p2.includes(query) ||
+                    p3.includes(query) ||
+                    p4.includes(query) ||
+                    gens.includes(query);
             });
 
             renderExistingStudentList(filtered);
@@ -3334,7 +3418,7 @@
 
                 // Remove row from internal cache and re-render
                 window.cardHistoryData = window.cardHistoryData.filter(row => row.id !== id);
-                
+
                 // Re-render currently showing items (respecting any active search filter)
                 filterCardHistory();
             } catch (err) {
@@ -3471,8 +3555,8 @@
             if (urlVal) {
                 new QRCode(qrContainer, {
                     text: urlVal,
-                    width: 105,
-                    height: 105,
+                    width: 130,
+                    height: 130,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
@@ -3504,10 +3588,10 @@
                     <!-- Background Image -->
                     <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;" />
                     
-                    <!-- Left portion overlay (Student Name in Orange Space Bottom) -->
-                    <div style="position: absolute; bottom: 35px; left: 35px; width: 52%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif;">
+                    <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
+                    <div style="position: absolute; bottom: 35px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; box-sizing: border-box;">
                         <div style="font-size: 0.9rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px;">Student Name</div>
-                        <div style="font-size: 1.75rem; font-weight: 800; color: #ffffff; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);">${row.name}</div>
+                        <div style="font-size: 2.3rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); width: 100%;">${row.name}</div>
                     </div>
 
                     <!-- Details (Right 42%) -->
@@ -3520,14 +3604,14 @@
                         </div>
 
                         <!-- QR Code (Middle) -->
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 8px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 8px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                             <div id="print-qr-${cardId}"></div>
                         </div>
 
                         <!-- Chest No (Bottom) -->
                         <div style="width: 100%; text-align: center; margin-bottom: 5px;">
                             <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px;">Chest No</div>
-                            <div style="font-size: 1.9rem; font-weight: 900; color: #dc2626; line-height: 1;">${row['chest no.'] || 'N/A'}</div>
+                            <div style="font-size: 2.1rem; font-weight: 900; color: #dc2626; line-height: 1;">${row['chest no.'] || 'N/A'}</div>
                         </div>
                     </div>
                 </div>
@@ -3539,13 +3623,13 @@
             setTimeout(() => {
                 new QRCode(document.getElementById(`print-qr-${cardId}`), {
                     text: correctUrl,
-                    width: 120,
-                    height: 120,
+                    width: 150,
+                    height: 150,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
                 });
-                
+
                 // Trigger print
                 setTimeout(() => {
                     window.print();
@@ -3556,7 +3640,7 @@
         function copyModalUrl() {
             const urlLink = document.getElementById('details-qr-url');
             const copyBtn = document.getElementById('modal-copy-btn');
-            
+
             navigator.clipboard.writeText(urlLink.innerText).then(() => {
                 const originalHTML = copyBtn.innerHTML;
                 copyBtn.innerHTML = '<i class="fa fa-check"></i> Copied!';
@@ -3631,7 +3715,7 @@
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
                 });
-                
+
                 // Trigger print
                 setTimeout(() => {
                     window.print();
@@ -5900,7 +5984,7 @@
                     console.warn("Failed to fetch routing:", e);
                     try {
                         routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
-                    } catch (err) {}
+                    } catch (err) { }
                 }
 
                 try {
@@ -5908,11 +5992,11 @@
                         fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/chats?clientId=${clientId}`).catch(() => ({ json: () => ({ success: false }) })),
                         fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/contacts?clientId=${clientId}`).catch(() => ({ json: () => ({ success: false }) }))
                     ]);
-                    
+
                     let chatsData = { success: false };
                     let contactsData = { success: false };
-                    try { chatsData = await chatsRes.json(); } catch(e){}
-                    try { contactsData = await contactsRes.json(); } catch(e){}
+                    try { chatsData = await chatsRes.json(); } catch (e) { }
+                    try { contactsData = await contactsRes.json(); } catch (e) { }
 
                     if (chatsData && chatsData.success) whatsappTargets = [...chatsData.chats];
                     if (contactsData && contactsData.success) {
@@ -6039,7 +6123,7 @@
             } catch (e) {
                 try {
                     routing = JSON.parse(localStorage.getItem('whatsapp_sector_routing') || '{}');
-                } catch (err) {}
+                } catch (err) { }
             }
 
             const cleanPlace = placeName.trim().toLowerCase();
@@ -6071,7 +6155,7 @@
             });
 
             localStorage.setItem('whatsapp_sector_routing', JSON.stringify(activeRouting));
-            
+
             try {
                 await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-routing`, {
                     method: 'POST',
@@ -6162,7 +6246,7 @@
                     if (time) {
                         try {
                             formattedTime = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        } catch(e) {}
+                        } catch (e) { }
                     }
 
                     const name = student.name || 'Unknown';
@@ -6328,20 +6412,25 @@
             onclick="event.stopPropagation()">
             <div
                 style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa fa-users" style="color: #dd6b20;"></i> Registered Students: <span id="place-modal-title" style="color: #dd6b20;">Place</span>
+                <h2
+                    style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa fa-users" style="color: #dd6b20;"></i> Registered Students: <span
+                        id="place-modal-title" style="color: #dd6b20;">Place</span>
                 </h2>
                 <button onclick="closePlaceStudentsModal()"
                     style="border: none; background: transparent; font-size: 1.5rem; color: #94a3b8; cursor: pointer; padding: 0.25rem; line-height: 1; transition: color 0.2s;"
                     onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
             </div>
 
-            <div id="place-students-list-container" style="padding: 1.5rem; flex: 1; overflow-y: auto; background: #ffffff; min-height: 250px;">
+            <div id="place-students-list-container"
+                style="padding: 1.5rem; flex: 1; overflow-y: auto; background: #ffffff; min-height: 250px;">
                 <!-- Loaded dynamically -->
             </div>
 
-            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button onclick="closePlaceStudentsModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+            <div
+                style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closePlaceStudentsModal()" class="btn"
+                    style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
                     Close
                 </button>
             </div>
@@ -6382,7 +6471,8 @@
             onclick="event.stopPropagation()">
             <div
                 style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <h2
+                    style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa fa-id-card" style="color: #3b82f6;"></i> Student Card Details
                 </h2>
                 <button onclick="closeCardDetailsModal()"
@@ -6390,25 +6480,34 @@
                     onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
             </div>
 
-            <div style="padding: 1.5rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; background: #ffffff;">
+            <div
+                style="padding: 1.5rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; background: #ffffff;">
                 <!-- Main Header Details -->
-                <div style="display: flex; gap: 1rem; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 1.25rem;">
-                    <div style="background: #eff6ff; color: #3b82f6; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; border: 1px solid #dbeafe;">
+                <div
+                    style="display: flex; gap: 1rem; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 1.25rem;">
+                    <div
+                        style="background: #eff6ff; color: #3b82f6; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; border: 1px solid #dbeafe;">
                         <i class="fa fa-user"></i>
                     </div>
                     <div style="flex-grow: 1;">
-                        <h1 id="details-student-name" style="margin: 0; font-size: 1.4rem; color: #0f172a; font-weight: 700; word-break: break-word;">Student Name</h1>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.4rem; font-size: 0.85rem; color: #64748b;">
+                        <h1 id="details-student-name"
+                            style="margin: 0; font-size: 1.4rem; color: #0f172a; font-weight: 700; word-break: break-word;">
+                            Student Name</h1>
+                        <div
+                            style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.4rem; font-size: 0.85rem; color: #64748b;">
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
-                                <i class="fa fa-map-marker-alt" style="color: #ef4444;"></i> <strong id="details-sector" style="color: #334155;">Sector</strong>
+                                <i class="fa fa-map-marker-alt" style="color: #ef4444;"></i> <strong id="details-sector"
+                                    style="color: #334155;">Sector</strong>
                             </span>
                             <span style="color: #cbd5e1;">|</span>
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
-                                <i class="fa fa-tag" style="color: #eab308;"></i> Chest No: <strong id="details-chest" style="color: #334155;">N/A</strong>
+                                <i class="fa fa-tag" style="color: #eab308;"></i> Chest No: <strong id="details-chest"
+                                    style="color: #334155;">N/A</strong>
                             </span>
                             <span style="color: #cbd5e1;">|</span>
                             <span style="display: flex; align-items: center; gap: 0.25rem;">
-                                <i class="fa fa-clock" style="color: #64748b;"></i> Generated: <span id="details-time">Time</span>
+                                <i class="fa fa-clock" style="color: #64748b;"></i> Generated: <span
+                                    id="details-time">Time</span>
                             </span>
                         </div>
                     </div>
@@ -6416,7 +6515,9 @@
 
                 <!-- Programs Container -->
                 <div>
-                    <h3 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Registered Programs</h3>
+                    <h3
+                        style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                        Registered Programs</h3>
                     <div id="details-programs-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                         <!-- Badges loaded dynamically -->
                     </div>
@@ -6424,38 +6525,56 @@
 
                 <!-- General Programs -->
                 <div>
-                    <h3 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">General Programs</h3>
+                    <h3
+                        style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                        General Programs</h3>
                     <div id="details-generals-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                         <!-- Badges loaded dynamically -->
                     </div>
                 </div>
 
                 <!-- Verification URL -->
-                <div style="background: #f8fafc; padding: 0.85rem; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 0.4rem;">
-                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                <div
+                    style="background: #f8fafc; padding: 0.85rem; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 0.4rem;">
+                    <div
+                        style="font-size: 0.8rem; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
                         <span>Verification URL</span>
-                        <button id="modal-copy-btn" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; padding: 0;" onclick="copyModalUrl()">
+                        <button id="modal-copy-btn"
+                            style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; padding: 0;"
+                            onclick="copyModalUrl()">
                             <i class="fa fa-copy"></i> Copy Link
                         </button>
                     </div>
-                    <a id="details-qr-url" href="#" target="_blank" style="color: #1e40af; text-decoration: none; word-break: break-all; font-family: monospace; font-size: 0.8rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#1e40af'">https://url.com</a>
+                    <a id="details-qr-url" href="#" target="_blank"
+                        style="color: #1e40af; text-decoration: none; word-break: break-all; font-family: monospace; font-size: 0.8rem; font-weight: 500; transition: color 0.2s;"
+                        onmouseover="this.style.color='#2563eb'"
+                        onmouseout="this.style.color='#1e40af'">https://url.com</a>
                 </div>
 
                 <!-- QR Display -->
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; border: 2px dashed #e2e8f0; padding: 1.5rem; border-radius: 12px;">
-                    <div id="modal-qr-code" style="background: white; padding: 0.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"></div>
-                    <p style="margin: 0.75rem 0 0 0; font-size: 0.8rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">Scan To Verify ID Card</p>
+                <div
+                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; border: 2px dashed #e2e8f0; padding: 1.5rem; border-radius: 12px;">
+                    <div id="modal-qr-code"
+                        style="background: white; padding: 0.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    </div>
+                    <p
+                        style="margin: 0.75rem 0 0 0; font-size: 0.8rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">
+                        Scan To Verify ID Card</p>
                 </div>
             </div>
 
-            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button onclick="closeCardDetailsModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+            <div
+                style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closeCardDetailsModal()" class="btn"
+                    style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
                     Close
                 </button>
-                <button id="modal-view-card-btn" class="btn" style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <button id="modal-view-card-btn" class="btn"
+                    style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa fa-id-card"></i> See Generated Card
                 </button>
-                <button id="modal-print-btn" class="btn" style="margin: 0; background: #3b82f6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <button id="modal-print-btn" class="btn"
+                    style="margin: 0; background: #3b82f6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa fa-print"></i> Print ID Card
                 </button>
             </div>
@@ -6470,7 +6589,8 @@
             onclick="event.stopPropagation()">
             <div
                 style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                <h2 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <h2
+                    style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa fa-id-card" style="color: #8b5cf6;"></i> Generated Student Card
                 </h2>
                 <button onclick="closeGeneratedCardViewModal()"
@@ -6478,20 +6598,24 @@
                     onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
             </div>
 
-            <div style="padding: 2rem 1.5rem; display: flex; justify-content: center; align-items: center; background: #f1f5f9; overflow-x: auto;">
-                <div class="preview-card-wrapper" style="width: 550px; height: 350px; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.15); background: white; flex-shrink: 0;">
+            <div
+                style="padding: 2rem 1.5rem; display: flex; justify-content: center; align-items: center; background: #f1f5f9; overflow-x: auto;">
+                <div class="preview-card-wrapper"
+                    style="width: 550px; height: 350px; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.15); background: white; flex-shrink: 0;">
                     <!-- Background image -->
-                    <img src="hero video/division.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none;" />
-                    
-                    <!-- Left portion overlay (Student Name in Orange Space Bottom) -->
-                    <div style="position: absolute; bottom: 25px; left: 30px; width: 52%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif;">
+                    <img src="hero video/division.jpg"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none;" />
+
+                    <!-- Left portion overlay (Student Name in Orange Space Bottom Center) -->
+                    <div style="position: absolute; bottom: 25px; left: 0; width: 58%; z-index: 2; font-family: 'Outfit', 'Inter', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 15px; box-sizing: border-box;">
                         <div style="font-size: 0.75rem; font-weight: 700; color: rgba(255, 255, 255, 0.75); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px;">Student Name</div>
-                        <div id="gen-card-name" style="font-size: 1.5rem; font-weight: 800; color: #ffffff; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);">Name</div>
+                        <div id="gen-card-name" style="font-size: 1.9rem; font-weight: 800; color: #ffffff; line-height: 1.2; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); width: 100%;">Name</div>
                     </div>
 
                     <!-- Content overlay (Right 42%) -->
-                    <div style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 25px 15px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
-                        
+                    <div
+                        style="position: absolute; top: 0; right: 0; width: 42%; height: 100%; z-index: 2; box-sizing: border-box; padding: 20px 15px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Outfit', 'Inter', sans-serif;">
+
                         <!-- Sector (Top) -->
                         <div style="width: 100%; text-align: center; margin-top: 5px;">
                             <div style="font-size: 0.65rem; font-weight: 700; color: #64748b; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px;">Sector</div>
@@ -6512,11 +6636,14 @@
                 </div>
             </div>
 
-            <div style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button onclick="closeGeneratedCardViewModal()" class="btn" style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
+            <div
+                style="padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closeGeneratedCardViewModal()" class="btn"
+                    style="margin: 0; background: #e2e8f0; color: #475569; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px;">
                     Back
                 </button>
-                <button id="gen-card-print-btn" class="btn" style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <button id="gen-card-print-btn" class="btn"
+                    style="margin: 0; background: #8b5cf6; color: white; padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; height: 38px; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa fa-print"></i> Print This Card
                 </button>
             </div>
@@ -6685,7 +6812,7 @@
 
         window.selectedAiTemplate = null;
 
-                        function autoPopulateTextFromAiTemplate() {
+        function autoPopulateTextFromAiTemplate() {
             const canvas = document.getElementById('design-canvas');
             if (!canvas) return;
             const existingTexts = canvas.querySelectorAll('.draggable-text');
@@ -6693,7 +6820,7 @@
 
             if (window.selectedAiTemplate && window.selectedAiTemplate.data && window.selectedAiTemplate.data.regions) {
                 let startY = 50;
-                
+
                 // Noise label filter helper
                 const noiseLabels = [
                     'manage event', 'maneg event', 'manage', 'maneg', 'event',
@@ -6706,13 +6833,13 @@
                     'compleestion results', 'completion results', 'competition results',
                     'compleestion', 'completion', 'competition', 'results', 'result'
                 ];
-                
+
                 window.selectedAiTemplate.data.regions.forEach((region, i) => {
                     if (region.label) {
                         const lblLower = region.label.toLowerCase().trim();
                         if (noiseLabels.some(n => lblLower === n)) return; // Skip noise regions
                     }
-                    
+
                     const textEl = document.createElement('div');
                     textEl.className = 'draggable-text';
                     textEl.innerText = region.label || 'Text';
@@ -7151,7 +7278,7 @@
             if (pubProg && program) pubProg.value = program;
         }
 
-                function extractPdfHeader(items, rankIdx, currentData) {
+        function extractPdfHeader(items, rankIdx, currentData) {
             let preRankItems = [];
             for (let i = Math.max(0, rankIdx - 8); i < rankIdx; i++) {
                 if (items[i] && items[i].trim() !== '') preRankItems.push(items[i].trim());
@@ -7236,11 +7363,11 @@
             return { category, program, resultNo };
         }
 
-                        let bulkPostersQueue = [];
+        let bulkPostersQueue = [];
 
         function cleanExtractedPdfText(val, isNameOrUnit = false) {
             if (typeof val !== 'string') return val;
-            
+
             // Phrases to remove (case-insensitive, as complete words or exact matches)
             const phrasesToRemove = [
                 /\bIn\s+Progress\b/gi,
@@ -7283,30 +7410,30 @@
                 /\bresults?\b/gi,
                 /[🥇🥈🥉]/g
             ];
-            
+
             let cleaned = val;
             phrasesToRemove.forEach(regex => {
                 cleaned = cleaned.replace(regex, '');
             });
-            
+
             // Extra cleaning for name and unit fields
             if (isNameOrUnit) {
                 // Remove single letter codes (A, B, C, D, etc.) when isolated by boundaries
                 cleaned = cleaned.replace(/\b[a-zA-Z]\b/g, '');
-                
+
                 // Remove all numbers (scores, chest numbers, rank numbers)
                 cleaned = cleaned.replace(/\b\d+\b/g, '');
                 cleaned = cleaned.replace(/\b\d+(st|nd|rd|th)\b/gi, '');
-                
+
                 // Strip punctuation artifacts like single dots, commas, hyphens or "..."
                 cleaned = cleaned.replace(/\b\.\.\.\b/g, '');
                 cleaned = cleaned.replace(/[.,\-\//\\#+()$~%'":*?<>{}]/g, ' ');
             }
-            
+
             return cleaned.replace(/\s+/g, ' ').trim();
         }
 
-                        async function handlePdfResultUpload(event) {
+        async function handlePdfResultUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -7342,8 +7469,8 @@
                             if (/^(1st|2nd|3rd)$/i.test(text)) {
                                 let rank = text.toLowerCase();
                                 if (!rankCounts[rank]) rankCounts[rank] = [];
-                                let name = itemsRaw[i+2] || 'Unknown Candidate';
-                                let team = itemsRaw[i+3] || 'Unknown Team';
+                                let name = itemsRaw[i + 2] || 'Unknown Candidate';
+                                let team = itemsRaw[i + 3] || 'Unknown Team';
                                 rankCounts[rank].push({ name, team });
                             }
                         }
@@ -7427,14 +7554,14 @@
 
                         // Dynamically remove winners' names and unit names from Category/Program fields if they are accidentally captured
                         const allNames = [
-                            extractedData['n1'], extractedData['n2'], extractedData['n3'], 
-                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'], 
+                            extractedData['n1'], extractedData['n2'], extractedData['n3'],
+                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'],
                             extractedData['name'], extractedData['Participant']
                         ].filter(Boolean);
-                        
+
                         const allUnits = [
-                            extractedData['p1'], extractedData['p2'], extractedData['p3'], 
-                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'], 
+                            extractedData['p1'], extractedData['p2'], extractedData['p3'],
+                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'],
                             extractedData['place'], extractedData['Team']
                         ].filter(Boolean);
 
@@ -7718,8 +7845,8 @@
                             if (/^(1st|2nd|3rd)$/i.test(text)) {
                                 let rank = text.toLowerCase();
                                 if (!rankCounts[rank]) rankCounts[rank] = [];
-                                let name = itemsRaw[i+2] || 'Unknown Candidate';
-                                let team = itemsRaw[i+3] || 'Unknown Team';
+                                let name = itemsRaw[i + 2] || 'Unknown Candidate';
+                                let team = itemsRaw[i + 3] || 'Unknown Team';
                                 rankCounts[rank].push({ name, team });
                             }
                         }
@@ -7807,14 +7934,14 @@
 
                         // Dynamically remove winners' names and unit names from Category/Program fields if they are accidentally captured
                         const allNames = [
-                            extractedData['n1'], extractedData['n2'], extractedData['n3'], 
-                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'], 
+                            extractedData['n1'], extractedData['n2'], extractedData['n3'],
+                            extractedData['1 price'], extractedData['2 price'], extractedData['3 price'],
                             extractedData['name'], extractedData['Participant']
                         ].filter(Boolean);
-                        
+
                         const allUnits = [
-                            extractedData['p1'], extractedData['p2'], extractedData['p3'], 
-                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'], 
+                            extractedData['p1'], extractedData['p2'], extractedData['p3'],
+                            extractedData['1 place'], extractedData['2 place'], extractedData['3 place'],
                             extractedData['place'], extractedData['Team']
                         ].filter(Boolean);
 
@@ -8561,7 +8688,7 @@
             }
 
             if (!stageSchedules[stage]) stageSchedules[stage] = [];
-            
+
             const exists = stageSchedules[stage].some(s => s.cat === cat && s.prog === prog);
             if (exists) {
                 alert("This program is already scheduled for this stage.");
@@ -9288,19 +9415,19 @@
         function generatePdfGenPDF() {
             const category = document.getElementById('pdfgen-category').value.trim();
             const program = document.getElementById('pdfgen-program').value.trim();
-            
+
             const tbody = document.getElementById('pdfgen-table-body');
             if (!tbody) return;
-            
+
             const rows = tbody.querySelectorAll('tr');
             const tableData = [];
-            
+
             rows.forEach((row, index) => {
                 const code = row.querySelector('.code-letter').value.trim();
                 const name = row.querySelector('.student-name').value.trim();
                 const unit = row.querySelector('.unit-name').value.trim();
                 const mark = row.querySelector('.total-mark').value.trim();
-                
+
                 if (code || name || unit || mark) {
                     tableData.push([
                         index + 1,
@@ -9311,12 +9438,12 @@
                     ]);
                 }
             });
-            
+
             if (tableData.length === 0) {
                 alert('Please enter at least one row of data.');
                 return;
             }
-            
+
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({
@@ -9324,48 +9451,48 @@
                     unit: 'mm',
                     format: 'a4'
                 });
-                
+
                 // Page Title
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(16);
                 doc.setTextColor(30, 113, 69); // Excel green
                 doc.text("KODUVELLY SAHITHOLSAV - RESULT SHEET", 14, 18);
-                
+
                 // Divider line
                 doc.setDrawColor(30, 113, 69);
                 doc.setLineWidth(0.5);
                 doc.line(14, 21, 196, 21);
-                
+
                 // Info block
                 doc.setFillColor(243, 249, 245);
                 doc.rect(14, 24, 182, 18, "F");
                 doc.setDrawColor(180, 220, 195);
                 doc.setLineWidth(0.2);
                 doc.rect(14, 24, 182, 18, "D");
-                
+
                 doc.setFontSize(10);
                 doc.setTextColor(50, 50, 50);
-                
+
                 doc.setFont("helvetica", "bold");
                 doc.text("Category:", 18, 30);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(0, 0, 0);
                 doc.text(category || "N/A", 38, 30);
-                
+
                 doc.setTextColor(50, 50, 50);
                 doc.setFont("helvetica", "bold");
                 doc.text("Program:", 18, 37);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(0, 0, 0);
                 doc.text(program || "N/A", 38, 37);
-                
+
                 doc.setTextColor(50, 50, 50);
                 doc.setFont("helvetica", "bold");
                 doc.text("Date:", 120, 30);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(0, 0, 0);
                 doc.text(new Date().toLocaleDateString(), 135, 30);
-                
+
                 doc.setTextColor(50, 50, 50);
                 doc.setFont("helvetica", "bold");
                 doc.text("Status:", 120, 37);
@@ -9414,7 +9541,7 @@
                         doc.text("Generated by Koduvelly Admin Panel PDF Generator", doc.internal.pageSize.width - 85, doc.internal.pageSize.height - 10);
                     }
                 });
-                
+
                 const fileBase = `${category || 'Category'}_${program || 'Program'}_sheet`.replace(/[\s\/\\?%*:|"<>]/g, '_');
                 doc.save(`${fileBase}.pdf`);
             } catch (err) {
