@@ -1313,7 +1313,7 @@
             container.innerHTML = '<div style="color: #666; font-size: 0.9rem; text-align: center; padding: 2rem;"><i class="fa fa-spinner fa-spin"></i> Loading card history...</div>';
             try {
                 const { data, error } = await supabaseClient
-                    .from('registred')
+                    .from('registred 2')
                     .select('*')
                     .order('id', { ascending: false });
 
@@ -1820,7 +1820,7 @@
 
             try {
                 const { data, error } = await supabaseClient
-                    .from('registred')
+                    .from('registred 2')
                     .insert(insertRows)
                     .select();
 
@@ -2193,7 +2193,7 @@
 
             try {
                 const { error } = await supabaseClient
-                    .from('registred')
+                    .from('registred 2')
                     .delete()
                     .eq('id', id);
 
@@ -2260,8 +2260,8 @@
             const generalsContainer = document.getElementById('details-generals-container');
             generalsContainer.innerHTML = '';
             if (row.generals) {
-                generalsContainer.innerHTML = row.generals.split(',').map(g => `
-                    <span style="display: inline-block; background: #f3e8ff; color: #6b21a8; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #e9d5ff; margin: 2px;">${g.trim()}</span>
+                generalsContainer.innerHTML = row.generals.split(/[|,]/).map(g => g.trim()).filter(Boolean).map(g => `
+                    <span style="display: inline-block; background: #f3e8ff; color: #6b21a8; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #e9d5ff; margin: 2px;">${g}</span>
                 `).join('');
             } else {
                 generalsContainer.innerHTML = '<span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">No general programs registered</span>';
@@ -2336,7 +2336,7 @@
             if (row['program 3']) programs.push((cat ? cat + ': ' : '') + row['program 3']);
             if (row['program 4']) programs.push((cat ? cat + ': ' : '') + row['program 4']);
 
-            const generals = row.generals ? row.generals.split(',').map(g => g.trim()) : [];
+            const generals = row.generals ? row.generals.split(/[|,]/).map(g => g.trim()).filter(Boolean) : [];
             const correctUrl = (row.url || '').replace('registringpage.html', 'registration.html');
 
             const cardHtml = `

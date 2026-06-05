@@ -711,7 +711,7 @@
                 if (activeCat && activeProg && isAdmin) {
                     try {
                         const { data: allottedData, error: allottedErr } = await supabaseClient
-                            .from('registred')
+                            .from('registred 2')
                             .select('*')
                             .eq('name', verifiedName);
 
@@ -742,13 +742,10 @@
                                 const p2 = normalize(s['program 2']);
                                 const p3 = normalize(s['program 3']);
                                 const p4 = normalize(s['program 4']);
-                                const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                                const gens = s.generals ? s.generals.split(/[|,]/).map(g => normalize(g)) : [];
                                 
-                                return p1 === normActiveProg || p1.includes(normActiveProg) ||
-                                       p2 === normActiveProg || p2.includes(normActiveProg) ||
-                                       p3 === normActiveProg || p3.includes(normActiveProg) ||
-                                       p4 === normActiveProg || p4.includes(normActiveProg) ||
-                                       gens.some(g => g === normActiveProg || g.includes(normActiveProg));
+                                const match = p => p && (p === normActiveProg || p.includes(normActiveProg) || normActiveProg.includes(p));
+                                return match(p1) || match(p2) || match(p3) || match(p4) || gens.some(g => match(g));
                             });
                         }
 
@@ -1316,9 +1313,9 @@
 
                 const catDbName = categoryMap[cat] || cat;
 
-                // Fetch ALL allotted students from registred table (in-memory filtering to avoid spaces-in-filter errors)
+                // Fetch ALL allotted students from registred 2 table (in-memory filtering to avoid spaces-in-filter errors)
                 const { data: rawData, error: allottedErr } = await supabaseClient
-                    .from('registred')
+                    .from('registred 2')
                     .select('*');
 
                 if (allottedErr) throw allottedErr;
@@ -1340,13 +1337,10 @@
                     const p2 = normalize(s['program 2']);
                     const p3 = normalize(s['program 3']);
                     const p4 = normalize(s['program 4']);
-                    const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                    const gens = s.generals ? s.generals.split(/[|,]/).map(g => normalize(g)) : [];
                     
-                    return p1 === normSearch || p1.includes(normSearch) ||
-                           p2 === normSearch || p2.includes(normSearch) ||
-                           p3 === normSearch || p3.includes(normSearch) ||
-                           p4 === normSearch || p4.includes(normSearch) ||
-                           gens.some(g => g === normSearch || g.includes(normSearch));
+                    const match = p => p && (p === normSearch || p.includes(normSearch) || normSearch.includes(p));
+                    return match(p1) || match(p2) || match(p3) || match(p4) || gens.some(g => match(g));
                 });
 
                 if (!filteredAllotted || filteredAllotted.length === 0) {
@@ -1439,9 +1433,9 @@
             btn.disabled = true;
 
             try {
-                // 0. Verify allotment in 'registred' table to prevent unregistered students
+                // 0. Verify allotment in 'registred 2' table to prevent unregistered students
                 const { data: allottedData, error: allottedErr } = await supabaseClient
-                    .from('registred')
+                    .from('registred 2')
                     .select('*')
                     .eq('name', name);
                 
@@ -1474,13 +1468,10 @@
                         const p2 = normalize(s['program 2']);
                         const p3 = normalize(s['program 3']);
                         const p4 = normalize(s['program 4']);
-                        const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                        const gens = s.generals ? s.generals.split(/[|,]/).map(g => normalize(g)) : [];
                         
-                        return p1 === normSearch || p1.includes(normSearch) ||
-                               p2 === normSearch || p2.includes(normSearch) ||
-                               p3 === normSearch || p3.includes(normSearch) ||
-                               p4 === normSearch || p4.includes(normSearch) ||
-                               gens.some(g => g === normSearch || g.includes(normSearch));
+                        const match = p => p && (p === normSearch || p.includes(normSearch) || normSearch.includes(p));
+                        return match(p1) || match(p2) || match(p3) || match(p4) || gens.some(g => match(g));
                     });
                 }
 
@@ -1679,7 +1670,7 @@
 
                 // Supabase insert accepts an array of objects
                 const { error } = await supabaseClient
-                    .from('registred')
+                    .from('registred 2')
                     .insert(uploadData);
 
                 if (error) throw error;
@@ -1704,7 +1695,9 @@
                             genProgs.push((catStr ? catStr + ': ' : '') + s.Program);
                         }
                         if (s.generals) {
-                            s.generals.split(',').forEach(g => genProgs.push(`GEN: ${g.trim()}`));
+                            s.generals.split(/[|,]/).forEach(g => {
+                                if (g.trim()) genProgs.push(`GEN: ${g.trim()}`);
+                            });
                         }
 
                         const regularProgsText = regProgs.length > 0 ? regProgs.join(', ') : '';
@@ -1986,9 +1979,9 @@
 
                 const catDbName = categoryMap[cat] || cat;
 
-                // Fetch ALL allotted students from registred
+                // Fetch ALL allotted students from registred 2
                 const { data: rawData, error: allottedErr } = await supabaseClient
-                    .from('registred')
+                    .from('registred 2')
                     .select('*');
 
                 if (allottedErr) throw allottedErr;
@@ -2017,13 +2010,10 @@
                     const p2 = normalize(s['program 2']);
                     const p3 = normalize(s['program 3']);
                     const p4 = normalize(s['program 4']);
-                    const gens = s.generals ? s.generals.split(',').map(g => normalize(g)) : [];
+                    const gens = s.generals ? s.generals.split(/[|,]/).map(g => normalize(g)) : [];
                     
-                    return p1 === normSearch || p1.includes(normSearch) ||
-                           p2 === normSearch || p2.includes(normSearch) ||
-                           p3 === normSearch || p3.includes(normSearch) ||
-                           p4 === normSearch || p4.includes(normSearch) ||
-                           gens.some(g => g === normSearch || g.includes(normSearch));
+                    const match = p => p && (p === normSearch || p.includes(normSearch) || normSearch.includes(p));
+                    return match(p1) || match(p2) || match(p3) || match(p4) || gens.some(g => match(g));
                 });
 
                 const listDiv = document.getElementById('allotted-students-list');
