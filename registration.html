@@ -700,31 +700,59 @@
                         const btnContainer = document.createElement('div');
                         btnContainer.style = 'display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;';
                         
+                        // Fetch already registered programs to prevent duplicates
+                        let alreadyRegisteredProgs = [];
+                        try {
+                            const { data: existReg, error: existErr } = await supabaseClient
+                                .from('regist')
+                                .select('program, general')
+                                .eq('name', verifiedName);
+                            if (!existErr && existReg) {
+                                existReg.forEach(r => {
+                                    if (r.program) alreadyRegisteredProgs.push(r.program.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                                    if (r.general) alreadyRegisteredProgs.push(r.general.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                                });
+                            }
+                        } catch(e) {
+                            console.warn("Could not fetch existing registrations", e);
+                        }
+                        
                         allProgs.forEach(p => {
                             const parts = p.split(':');
                             const cat = parts[0] ? parts[0].trim() : 'Unknown';
                             const progName = parts.slice(1).join(':').trim() || p;
                             
+                            const pNorm = progName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const fullNorm = p.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const isAlreadyReg = alreadyRegisteredProgs.includes(pNorm) || alreadyRegisteredProgs.includes(fullNorm);
+                            
                             const btn = document.createElement('button');
                             btn.className = 'prog-btn-admin';
-                            btn.style = 'padding: 0.8rem; border: 2px solid #cbd5e0; border-radius: 8px; background: #e2e8f0; color: #4a5568; font-weight: bold; cursor: pointer; text-align: left; width: 100%; transition: all 0.2s;';
-                            btn.innerHTML = `<span style="font-size:0.8rem; color:#718096; display:block;">${cat}</span> ${progName}`;
                             
-                            btn.onclick = () => {
-                                document.querySelectorAll('.prog-btn-admin').forEach(b => {
-                                    b.style.background = '#e2e8f0'; b.style.color = '#4a5568'; b.style.borderColor = '#cbd5e0';
-                                });
-                                btn.style.background = '#ebf8ff'; btn.style.color = '#2b6cb0'; btn.style.borderColor = '#63b3ed';
+                            if (isAlreadyReg) {
+                                btn.style = 'padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 8px; background: #f7fafc; color: #a0aec0; font-weight: bold; cursor: not-allowed; text-align: left; width: 100%; transition: all 0.2s; position: relative;';
+                                btn.innerHTML = `<span style="font-size:0.8rem; color:#cbd5e0; display:block;">${cat}</span> ${progName} <span style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); font-size:0.75rem; color:#e53e3e;"><i class="fa fa-ban"></i> Registered</span>`;
+                                btn.disabled = true;
+                            } else {
+                                btn.style = 'padding: 0.8rem; border: 2px solid #cbd5e0; border-radius: 8px; background: #e2e8f0; color: #4a5568; font-weight: bold; cursor: pointer; text-align: left; width: 100%; transition: all 0.2s;';
+                                btn.innerHTML = `<span style="font-size:0.8rem; color:#718096; display:block;">${cat}</span> ${progName}`;
                                 
-                                const regBtn = document.getElementById('admin-register-btn');
-                                regBtn.style.display = 'block';
-                                regBtn.onclick = () => registerFromIdPage(verifiedName, verifiedSector, cat, progName, adminStage);
+                                btn.onclick = () => {
+                                    document.querySelectorAll('.prog-btn-admin:not([disabled])').forEach(b => {
+                                        b.style.background = '#e2e8f0'; b.style.color = '#4a5568'; b.style.borderColor = '#cbd5e0';
+                                    });
+                                    btn.style.background = '#ebf8ff'; btn.style.color = '#2b6cb0'; btn.style.borderColor = '#63b3ed';
+                                    
+                                    const regBtn = document.getElementById('admin-register-btn');
+                                    regBtn.style.display = 'block';
+                                    regBtn.onclick = () => registerFromIdPage(verifiedName, verifiedSector, cat, progName, adminStage);
 
-                                const codeLetterContainer = document.getElementById('codeletter-input-container');
-                                if (codeLetterContainer) {
-                                    codeLetterContainer.style.display = 'block';
-                                }
-                            };
+                                    const codeLetterContainer = document.getElementById('codeletter-input-container');
+                                    if (codeLetterContainer) {
+                                        codeLetterContainer.style.display = 'block';
+                                    }
+                                };
+                            }
                             btnContainer.appendChild(btn);
                         });
                         
