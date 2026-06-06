@@ -372,6 +372,15 @@
     <!-- Admin Wrapper (Registration & Conductor) -->
     <div id="admin-wrapper" style="display: none; width: 100%; max-width: 480px; margin: auto;">
         
+        <!-- Stage info bar with logout -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #1e293b; color: #fff; padding: 0.5rem 1rem; border-radius: 10px; margin-bottom: 0.75rem;">
+            <span style="font-size: 0.8rem; color: #94a3b8; font-family: 'Outfit', sans-serif;"><i class="fa fa-map-marker-alt" style="margin-right: 0.4rem;"></i>Stage:</span>
+            <span id="stage-label-bar" style="font-weight: 700; font-size: 0.95rem; font-family: 'Outfit', sans-serif; color: #f1f5f9;"></span>
+            <button onclick="logoutStage()" title="Change Stage" style="background: #ef4444; border: none; color: #fff; border-radius: 6px; padding: 0.3rem 0.75rem; font-size: 0.75rem; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="fa fa-sign-out-alt"></i> Change Stage
+            </button>
+        </div>
+
         <!-- Tab Navigation -->
         <div style="display: flex; justify-content: center; width: 100%;">
             <div class="tab-switcher">
@@ -973,6 +982,8 @@
                         document.getElementById('stage-select').value = getStageDisplayName(savedStage);
                         const display = document.getElementById('conductor-stage-display');
                         if (display) display.innerText = savedStage;
+                        const stageBar = document.getElementById('stage-label-bar');
+                        if (stageBar) stageBar.innerText = savedStage;
                     }
 
                     // Apply schedule-based category filtering for already-logged-in users on page reload
@@ -1118,7 +1129,10 @@
             
             localStorage.setItem('admin_logged_in', 'true');
             localStorage.setItem('admin_stage', stage);
-            
+
+            // Update the stage label bar
+            const stageBar = document.getElementById('stage-label-bar');
+            if (stageBar) stageBar.innerText = stage;
             // Pre-fill the stage selectors
             const stageSelect = document.getElementById('stage-select');
             if(stageSelect) stageSelect.value = getStageDisplayName(stage);
@@ -1139,6 +1153,30 @@
                 loadConductorPrograms();
             }
         }
+
+        function logoutStage() {
+            if (!confirm('Switch to a different stage? This will clear your current session.')) return;
+            // Clear all session state
+            localStorage.removeItem('admin_logged_in');
+            localStorage.removeItem('admin_stage');
+            localStorage.removeItem('active_conductor_category');
+            localStorage.removeItem('active_conductor_program');
+            localStorage.removeItem('conductor_draft_category');
+            localStorage.removeItem('conductor_draft_program');
+            localStorage.removeItem('reg_draft_category');
+            localStorage.removeItem('reg_draft_program');
+
+            // Hide admin wrapper, show login overlay
+            document.getElementById('admin-wrapper').style.display = 'none';
+            document.getElementById('password-overlay').style.display = 'block';
+
+            // Reset login form
+            const passInput = document.getElementById('admin-password');
+            if (passInput) passInput.value = '';
+            const err = document.getElementById('password-error');
+            if (err) err.style.display = 'none';
+        }
+
 
         async function loadConductorPrograms() {
             const catSelect = document.getElementById('conductor-cat');
