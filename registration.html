@@ -399,7 +399,7 @@
             </button>
 
             <!-- Manual Category and Program Selection -->
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1.2rem; border-radius: 12px; margin-bottom: 1rem; display: none;">
+            <div id="manual-selection-container" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1.2rem; border-radius: 12px; margin-bottom: 1rem;">
                 <h3 style="margin-top: 0; color: #14532d; font-size: 1rem; margin-bottom: 0.8rem; font-family: 'Outfit', sans-serif;">
                     <i class="fa fa-list"></i> Select Category & Program
                 </h3>
@@ -603,6 +603,7 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let globalStageSchedules = null;
+        let displayedChildren = [];
         async function fetchStageSchedules() {
             try {
                 const { data, error } = await supabaseClient.storage.from('json file').download('stage_schedules.json');
@@ -986,25 +987,21 @@
                 const progSelect = document.getElementById('conductor-prog');
                 if (catSelect) {
                     catSelect.value = activeCat;
-                    catSelect.disabled = true;
                 }
                 if (progSelect) {
                     progSelect.innerHTML = `<option value="${activeProg}">${activeProg}</option>`;
                     progSelect.value = activeProg;
-                    progSelect.disabled = true;
                 }
 
-                // Lock manual registration selectors as well if active conductor session
+                // Restore Registration tab selectors without locking them
                 const regCatSelect = document.getElementById('reg-cat');
                 const regProgSelect = document.getElementById('reg-prog');
                 if (regCatSelect) {
                     regCatSelect.value = activeCat;
-                    regCatSelect.disabled = true;
                 }
                 if (regProgSelect) {
                     regProgSelect.innerHTML = `<option value="${activeProg}">${activeProg}</option>`;
                     regProgSelect.value = activeProg;
-                    regProgSelect.disabled = true;
                 }
 
                 loadRegisteredStudentsList(activeCat, activeProg);
@@ -1394,23 +1391,7 @@
                     localStorage.setItem('active_conductor_category', cat);
                     localStorage.setItem('active_conductor_program', prog);
                     
-                    const catSelect = document.getElementById('conductor-cat');
-                    const progSelect = document.getElementById('conductor-prog');
-                    if (catSelect) catSelect.disabled = true;
-                    if (progSelect) progSelect.disabled = true;
-
-                    // Lock Registration tab selectors as well!
-                    const regCatSelect = document.getElementById('reg-cat');
-                    const regProgSelect = document.getElementById('reg-prog');
-                    if (regCatSelect) {
-                        regCatSelect.value = cat;
-                        regCatSelect.disabled = true;
-                    }
-                    if (regProgSelect) {
-                        regProgSelect.innerHTML = `<option value="${prog}">${prog}</option>`;
-                        regProgSelect.value = prog;
-                        regProgSelect.disabled = true;
-                    }
+                    // Selectors remain unlocked — user can freely change category/program
 
                     if (typeof loadRegisteredStudentsList === 'function') {
                         loadRegisteredStudentsList(cat, prog);
@@ -1976,7 +1957,7 @@
                 }
             };
             
-            const onScanSuccess = (decodedText) => {
+            const onScanSuccess = async (decodedText) => {
                 console.log("QR Code scanned successfully. Raw text:", decodedText);
                 try {
                     let urlString = decodedText.trim();
@@ -1992,13 +1973,26 @@
                     const url = new URL(urlString);
                     const name = url.searchParams.get('name');
                     const sector = url.searchParams.get('sector');
+                    const chestno = url.searchParams.get('chestno');
                     
-                    console.log("Parsed QR data - Name:", name, "Sector:", sector);
+                    console.log("Parsed QR data - Name:", name, "Sector:", sector, "ChestNo:", chestno);
                     
                     if (name) {
                         const stage = localStorage.getItem('admin_stage');
                         if (!stage) {
                             alert("Please select a stage before scanning.");
+                            stopScanner();
+                            return;
+                        }
+
+                        // Check if a category and program are selected
+                        const catSelect = document.getElementById('reg-cat');
+                        const progSelect = document.getElementById('reg-prog');
+                        const cat = catSelect ? catSelect.value : '';
+                        const prog = progSelect ? progSelect.value : '';
+
+                        if (!cat || !prog) {
+                            alert("Please select a Category and Program on the registration page before scanning.");
                             stopScanner();
                             return;
                         }
@@ -2010,13 +2004,67 @@
                         } catch(e){}
 
                         stopScanner();
-                        
-                        // Stay on current host/pathname to avoid redirecting to live site during local testing
-                        const currentUrl = new URL(window.location.href);
-                        currentUrl.search = url.search; // copy student query params (name, sector, progs, genprogs)
-                        currentUrl.searchParams.set('admin', 'true');
-                        currentUrl.searchParams.set('stage', stage);
-                        window.location.href = currentUrl.toString();
+
+                        // Check if chestno matches any of the registration numbers in the displayed list
+                        const normalizedScannedChest = (chestno || '').trim().toLowerCase();
+                        if (!normalizedScannedChest) {
+                            alert("Registration Cancelled: Scanned QR code does not contain a chest number.");
+                            return;
+                        }
+
+                        if (!displayedChildren || displayedChildren.length === 0) {
+                            alert("Registration Cancelled: No children are currently displayed in the allotted list.");
+                            return;
+                        }
+
+                        const matchedChild = displayedChildren.find(child => {
+                            const childChestNo = child['chest no.'] || '';
+                            return childChestNo.trim().toLowerCase() === normalizedScannedChest;
+                        });
+
+                        if (matchedChild) {
+                            // Match found: Check program in scanned QR code parameters also
+                            const scannedProgs = url.searchParams.get('progs') || '';
+                            const scannedGenProgs = url.searchParams.get('genprogs') || '';
+                            const normalize = str => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : '';
+                            
+                            const normSelectedProg = normalize(prog);
+                            const normFullProg = normalize((cat ? cat + ': ' : '') + prog);
+                            
+                            let hasProgramInQr = false;
+                            if (cat === 'GEN') {
+                                const genProgsList = scannedGenProgs.split(/[|]/).map(p => normalize(p));
+                                hasProgramInQr = genProgsList.some(p => p && (p === normSelectedProg || p.includes(normSelectedProg) || normSelectedProg.includes(p)));
+                            } else {
+                                const progsList = scannedProgs.split(/[|]/).map(p => normalize(p));
+                                hasProgramInQr = progsList.some(p => p && (
+                                    p === normSelectedProg || 
+                                    p === normFullProg || 
+                                    p.includes(normSelectedProg) || 
+                                    p.includes(normFullProg) || 
+                                    normSelectedProg.includes(p) || 
+                                    normFullProg.includes(p)
+                                ));
+                            }
+
+                            if (!hasProgramInQr) {
+                                alert(`Registration Cancelled:\n\nProgram "${prog}" is not listed in the scanned student's card (QR data).`);
+                                return;
+                            }
+
+                            // Match and program check passed: Prompt for code letter
+                            const codeLetterVal = await showCodeLetterModal('', matchedChild.name);
+                            if (codeLetterVal === null) {
+                                alert("Registration Cancelled.");
+                                return;
+                            }
+                            
+                            // Register the student in-place
+                            await registerScannedStudent(matchedChild, cat, prog, stage, codeLetterVal, urlString);
+                        } else {
+                            // Match not found: Cancel registration
+                            alert(`Registration Cancelled:\n\nScanned student "${name}" (Chest No: ${chestno || 'N/A'}) does not match any student in the displayed list for program "${prog}".`);
+                        }
                     } else {
                         alert("Invalid QR code: missing 'name' parameter.\nRaw text: " + decodedText);
                     }
@@ -2025,6 +2073,83 @@
                     alert("Error parsing scanned QR code: " + e.message + "\nRaw text: " + decodedText);
                 }
             };
+
+        async function registerScannedStudent(student, cat, prog, stage, codeLetterVal, scannedUrl) {
+            try {
+                // 1. Try to log check-in to stage table (if it exists)
+                if (stage) {
+                    const tableName = stage.toLowerCase().trim();
+                    try {
+                        const { error } = await supabaseClient
+                            .from(tableName)
+                            .insert([{
+                                situation: 'Check-in',
+                                Categories: student.name,
+                                Programs: prog,
+                                cat: cat,
+                                prog: student.sector || student.unit || 'Unknown',
+                                time: new Date().toISOString()
+                            }]);
+
+                        if (error) throw error;
+                    } catch (stageErr) {
+                        console.warn(`Could not save check-in to stage table "${tableName}":`, stageErr);
+                    }
+                }
+
+                // 2. Save detail log to 'regist' table
+                const isGeneral = cat === 'GEN';
+                const { error: registError } = await supabaseClient
+                    .from('regist')
+                    .insert([{
+                        name: student.name,
+                        sector: student.sector || student.unit || 'Unknown',
+                        program: isGeneral ? null : `${cat ? cat + ': ' : ''}${prog}`,
+                        general: isGeneral ? prog : null,
+                        url: scannedUrl,
+                        stage: stage || 'Unknown',
+                        codeletter: codeLetterVal || null
+                    }]);
+
+                if (registError) throw registError;
+                
+                // 3. Dispatch sector notification
+                const regularProgText = isGeneral ? '' : (cat ? cat + ': ' : '') + prog;
+                const generalProgText = isGeneral ? (cat ? cat + ': ' : '') + prog : '';
+                const notiResult = await sendSectorNotification(student.name, student.sector || student.unit || '', regularProgText, generalProgText, stage);
+                
+                let notiStatusHtml = '';
+                if (notiResult && notiResult.success) {
+                    notiStatusHtml = `<p style="color: #2e7d32; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fab fa-whatsapp"></i> Notification sent to ${notiResult.sentCount} group(s)/contact(s).</p>`;
+                } else if (notiResult) {
+                    const isFetchError = notiResult.reason && (notiResult.reason.includes('fetch') || notiResult.reason.includes('Failed to fetch') || notiResult.reason.includes('NetworkError'));
+                    if (isFetchError) {
+                        notiStatusHtml = `<p style="color: #16a34a; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fa fa-clock"></i> WhatsApp alert queued in background.</p>`;
+                    } else {
+                        notiStatusHtml = `<p style="color: #c62828; font-size: 0.85rem; margin-top: 1.2rem; font-weight: bold;"><i class="fa fa-exclamation-triangle"></i> WhatsApp alert skipped: ${notiResult.reason}</p>`;
+                    }
+                }
+
+                const codeLetterMsg = codeLetterVal ? ` with Code Letter <strong>${codeLetterVal}</strong>` : '';
+
+                // Show Success Popup Animation
+                document.getElementById('success-student-name').innerHTML = `
+                    Successfully registered <strong>${student.name}</strong> for <strong>${prog}</strong> at <strong>${stage}</strong>${codeLetterMsg}.
+                    ${notiStatusHtml}
+                `;
+                const popup = document.getElementById('success-popup');
+                popup.style.display = 'flex';
+                setTimeout(() => {
+                    popup.classList.add('active');
+                }, 10);
+
+                // 4. Refresh allotted/registered students list
+                loadRegisteredStudentsList(cat, prog);
+            } catch (err) {
+                console.error(err);
+                alert("Error registering student: " + err.message);
+            }
+        }
 
             const onScanFailure = (error) => {
                 // Ignore scanning errors
@@ -2212,6 +2337,8 @@
                     const match = p => p && (p === normSearch || p.includes(normSearch) || normSearch.includes(p));
                     return match(p1) || match(p2) || match(p3) || match(p4) || gens.some(g => match(g));
                 });
+
+                displayedChildren = filteredAllotted; // Store globally for scanner validation
 
                 const listDiv = document.getElementById('allotted-students-list');
 
