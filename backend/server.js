@@ -1,4 +1,15 @@
 require('dotenv').config();
+
+// ── Global crash guards ─────────────────────────────────────────────────────
+// Prevent a single LocalAuth EBUSY / Puppeteer error from killing the server
+process.on('uncaughtException', (err) => {
+    console.error('[uncaughtException] Non-fatal error caught, server continuing:', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('[unhandledRejection] Non-fatal rejection caught, server continuing:', reason);
+});
+// ────────────────────────────────────────────────────────────────────────────
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors');

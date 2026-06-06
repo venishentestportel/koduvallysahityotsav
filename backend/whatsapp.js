@@ -25,6 +25,18 @@ async function initializeWhatsAppForClient(clientId) {
                     console.error(`Error killing browser process for client ${clientId}:`, procErr);
                 }
             }
+            // Force-delete the lockfile BEFORE calling destroy() to prevent EBUSY crash
+            const path = require('path');
+            const fs = require('fs');
+            const lockfilePath = path.join(__dirname, 'whatsapp-session', `session-${clientId}`, 'lockfile');
+            try {
+                if (fs.existsSync(lockfilePath)) {
+                    fs.unlinkSync(lockfilePath);
+                    console.log(`Deleted lockfile for client ${clientId}`);
+                }
+            } catch (lfErr) {
+                console.warn(`Could not delete lockfile for ${clientId}:`, lfErr.message);
+            }
             await clients[clientId].client.destroy();
             console.log(`Client ${clientId} destroyed successfully.`);
         } catch (err) {

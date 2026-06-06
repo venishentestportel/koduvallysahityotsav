@@ -588,6 +588,8 @@
     </div>
 
     <script>
+        // Detect backend URL: always prefer local backend on port 3001,
+        // fall back to Render cloud only if local is unreachable.
         if (!window.WA_BACKEND_URL) {
             const hn = window.location.hostname;
             const isLocal = hn === 'localhost' || 
@@ -598,14 +600,19 @@
                             /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
                             hn.endsWith('.local') ||
                             window.location.protocol === 'file:';
-            
+
             if (isLocal) {
                 const host = (window.location.protocol === 'file:' || hn === 'localhost' || hn === '127.0.0.1') ? 'localhost' : hn;
                 window.WA_BACKEND_URL = `http://${host}:3001`;
             } else {
-                window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com';
+                // Page is on Netlify/cloud — still try local backend first (same LAN)
+                window.WA_BACKEND_URL = 'https://koduvelly-backend.onrender.com'; // default
+                fetch('http://localhost:3001/status', { method: 'GET', signal: AbortSignal.timeout(1500) })
+                    .then(r => { if (r.ok) { window.WA_BACKEND_URL = 'http://localhost:3001'; console.log('[WA] Using local backend'); } })
+                    .catch(() => { console.log('[WA] Local backend not reachable, using Render'); });
             }
         }
+
 
         const SUPABASE_URL = 'https://lxbvadjjboavxwidxsnl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_Ubv4Ofl0uR9o6ct9PvI1uA_C9hglPNT';
@@ -1405,33 +1412,56 @@
                 });
 
                 // --- WHATSAPP NOTIFICATION LOGIC ---
+                // Always try local backend first (works even when page is on Netlify)
+                const waLocalURL  = 'http://localhost:3001';
+                const waRenderURL = 'https://koduvelly-backend.onrender.com';
                 const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
+
+                async function waSend(endpoint, options) {
+                    // Try local first, fall back to Render
+                    try {
+                        const r = await fetch(`${waLocalURL}${endpoint}`, { ...options, signal: AbortSignal.timeout(4000) });
+                        if (r.ok) return r;
+                    } catch (_) {}
+                    return fetch(`${waRenderURL}${endpoint}`, { ...options, signal: AbortSignal.timeout(8000) });
+                }
+
                 let targetIds = [];
                 try {
-                    const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-targets?clientId=${clientId}`);
-                    if (res.ok) {
+                    const res = await waSend(`/whatsapp-targets?clientId=${clientId}`, { method: 'GET' });
+                    if (res && res.ok) {
                         const data = await res.json();
                         if (data.success) targetIds = data.targets;
                     }
-                } catch(e) {}
-                
+                } catch(e) { console.warn('Could not fetch WA targets:', e); }
+
                 if (targetIds && targetIds.length > 0) {
                     const message = `${stage}\nCategorie : ${cat || 'None'}\nProgram : ${prog || 'None'}\naction : ${situation}`;
-                    
-                    targetIds.forEach(async (chatId) => {
+                    let sent = 0;
+                    await Promise.all(targetIds.map(async (chatId) => {
                         try {
-                            await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
+                            const r = await waSend('/send-message', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ clientId: clientId, chatId: chatId, message: message })
+                                body: JSON.stringify({ clientId, chatId, message })
                             });
+                            if (r && r.ok) sent++;
                         } catch (e) {
-                            console.error('Failed to send WhatsApp message to', chatId, e);
+                            console.error('Failed to send WA message to', chatId, e);
                         }
-                    });
+                    }));
+                    // Show brief toast
+                    const toast = document.createElement('div');
+                    toast.style = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#25D366;color:#fff;padding:0.7rem 1.2rem;border-radius:10px;font-weight:bold;font-size:0.9rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+                    toast.innerHTML = `<i class="fab fa-whatsapp"></i> WA sent to ${sent}/${targetIds.length}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 4000);
+                } else {
+                    console.warn('[WA] No targets configured for clientId:', clientId);
                 }
 
                 alert(`Successfully triggered: ${situation}`);
+
 
                 if (situation === 'Start Registration') {
                     localStorage.setItem('active_conductor_category', cat);
