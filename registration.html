@@ -974,6 +974,9 @@
                         const display = document.getElementById('conductor-stage-display');
                         if (display) display.innerText = savedStage;
                     }
+
+                    // Apply schedule-based category filtering for already-logged-in users on page reload
+                    applyStageScheduleRules();
                 } else {
                     document.getElementById('password-overlay').style.display = 'block';
                 }
@@ -1109,7 +1112,7 @@
             }
         }
 
-        function loginSuccess(stage) {
+        async function loginSuccess(stage) {
             document.getElementById('password-overlay').style.display = 'none';
             document.getElementById('admin-wrapper').style.display = 'block';
             
@@ -1122,6 +1125,11 @@
             
             const display = document.getElementById('conductor-stage-display');
             if(display) display.innerText = stage;
+
+            // Ensure schedules are loaded before filtering — guard against slow network
+            if (!globalStageSchedules || Object.keys(globalStageSchedules).length === 0) {
+                await fetchStageSchedules();
+            }
 
             applyStageScheduleRules();
             
