@@ -10264,11 +10264,9 @@
             const img = ingestedWaImages[index];
             if (!img) return;
 
-            if (confirm("Do you want to load this WhatsApp image onto the canvas workspace background?")) {
-                applyBase64Image(img.url);
-                closeWaLargeImagesModal();
-                autoSelectCategoryAndProgramFromFilename(img.filename);
-            }
+            applyBase64Image(img.url);
+            closeWaLargeImagesModal();
+            autoSelectCategoryAndProgramFromFilename(img.filename);
         }
 
         async function autoSelectCategoryAndProgramFromFilename(filename) {
