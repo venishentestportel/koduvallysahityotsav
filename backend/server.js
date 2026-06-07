@@ -594,8 +594,27 @@ async function startSupabasePolling() {
     }
 
     isPollingActive = true;
-    // Poll every 3 seconds
-    setInterval(pollSupabaseData, 3000);
+    // Start background sequential polling loop
+    runSupabasePoller();
+}
+
+async function runSupabasePoller() {
+    if (!isPollingActive) return;
+    try {
+        await pollSupabaseData();
+    } catch (err) {
+        console.error("[Supabase Poller] Unhandled error in poll loop:", err.message);
+    }
+    // Schedule the next check 3 seconds after the current one completes to prevent overlapping/concurrency
+    setTimeout(runSupabasePoller, 3000);
+}
+
+async function sendMessageWithTimeout(clientId, chatId, message, timeoutMs = 8000) {
+    const sendPromise = sendMessage(clientId, chatId, message);
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout (8s)")), timeoutMs)
+    );
+    return Promise.race([sendPromise, timeoutPromise]);
 }
 
 async function pollSupabaseData() {
@@ -613,13 +632,15 @@ async function pollSupabaseData() {
             const data = await res.json();
             if (data && data.length > 0) {
                 console.log(`[Supabase Poller] Found ${data.length} new registrations.`);
+                // Advance tracking ID immediately to prevent duplicate fetches
+                const highestId = data[data.length - 1].id;
+                lastRegistMaxId = highestId;
+
                 for (const row of data) {
                     try {
                         await handleNewRegistNotification(row);
-                        lastRegistMaxId = row.id;
                     } catch (err) {
-                        console.error(`[Supabase Poller] Failed to process registration notification for row ${row.id}, will retry on next poll.`, err.message);
-                        break;
+                        console.error(`[Supabase Poller] Failed to process registration notification for row ${row.id}:`, err.message);
                     }
                 }
             }
@@ -643,13 +664,15 @@ async function pollSupabaseData() {
                 const data = await res.json();
                 if (data && data.length > 0) {
                     console.log(`[Supabase Poller] Found ${data.length} new updates for ${stage}.`);
+                    // Advance tracking ID immediately to prevent duplicate fetches
+                    const highestId = data[data.length - 1].id;
+                    lastStageMaxIds[stage] = highestId;
+
                     for (const row of data) {
                         try {
                             await handleNewStageNotification(stage, row);
-                            lastStageMaxIds[stage] = row.id;
                         } catch (err) {
-                            console.error(`[Supabase Poller] Failed to process stage notification for row ${row.id}, will retry on next poll.`, err.message);
-                            break;
+                            console.error(`[Supabase Poller] Failed to process stage notification for row ${row.id} on ${stage}:`, err.message);
                         }
                     }
                 }
@@ -678,9 +701,8 @@ async function handleNewRegistNotification(row) {
             }
         });
 
-        let successCount = 0;
-        let failCount = 0;
-        let lastError = null;
+        const activeClient = getActiveClientId('default');
+        const sendPromises = [];
 
         // 1. Dispatch alert to selected WhatsApp groups / contacts
         if (targetIds.size > 0) {
@@ -688,15 +710,14 @@ async function handleNewRegistNotification(row) {
             const message = `*Student Registered*\nName: ${name}\nSector: ${sector}\nPrograms: ${progsStr}\nStage: ${stage}${codeletter ? `\nCode Letter: ${codeletter}` : ''}`;
             console.log(`[Supabase Poller] Dispatching registration alert for ${name} to targets:`, Array.from(targetIds));
             for (const chatId of targetIds) {
-                try {
-                    const activeClient = getActiveClientId('default');
-                    await sendMessage(activeClient, chatId, message);
-                    successCount++;
-                } catch (err) {
-                    console.error(`[Supabase Poller] Failed to send registration alert to ${chatId}:`, err.message);
-                    failCount++;
-                    lastError = err;
-                }
+                sendPromises.push((async () => {
+                    try {
+                        await sendMessageWithTimeout(activeClient, chatId, message);
+                    } catch (err) {
+                        console.error(`[Supabase Poller] Failed to send registration alert to ${chatId}:`, err.message);
+                        throw err;
+                    }
+                })());
             }
         }
 
@@ -722,27 +743,31 @@ async function handleNewRegistNotification(row) {
                 const cleanTargetSector = cleanSectorName(targetSector);
                 if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
                     const sectorMessage = `*Student Registration Alert*\n*Student Name:* ${name}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage}\n${program ? `*Registered Program:* ${program}` : ''}${general ? `*General Program:* ${general}` : ''}`;
-                    try {
-                        const activeClient = getActiveClientId('default');
-                        console.log(`[Supabase Poller] Dispatching sector registration alert for ${name} to sector group ${chatId} (${routing[chatId].name})`);
-                        await sendMessage(activeClient, chatId, sectorMessage);
-                        successCount++;
-                    } catch (err) {
-                        console.error(`[Supabase Poller] Failed to send sector registration alert to ${chatId}:`, err.message);
-                        failCount++;
-                        lastError = err;
-                    }
+                    sendPromises.push((async () => {
+                        try {
+                            console.log(`[Supabase Poller] Dispatching sector registration alert for ${name} to sector group ${chatId} (${routing[chatId].name})`);
+                            await sendMessageWithTimeout(activeClient, chatId, sectorMessage);
+                        } catch (err) {
+                            console.error(`[Supabase Poller] Failed to send sector registration alert to ${chatId}:`, err.message);
+                            throw err;
+                        }
+                    })());
                 }
             }
         }
 
-        const totalAttempted = targetIds.size + (cleanStudentSector ? 1 : 0);
-        if (totalAttempted > 0 && successCount === 0 && failCount > 0) {
-            throw new Error(`All registration alerts failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
+        if (sendPromises.length > 0) {
+            const results = await Promise.allSettled(sendPromises);
+            let successCount = 0;
+            let failCount = 0;
+            results.forEach(res => {
+                if (res.status === 'fulfilled') successCount++;
+                else failCount++;
+            });
+            console.log(`[Supabase Poller] Registration alert dispatch results: ${successCount} succeeded, ${failCount} failed.`);
         }
     } catch (e) {
         console.error("[Supabase Poller] Error handling registration notification:", e.message);
-        throw e;
     }
 }
 
@@ -769,29 +794,27 @@ async function handleNewStageNotification(stageName, row) {
             const message = `${stageName.toUpperCase()}\nCategorie : ${category}\nProgram : ${program}\naction : ${situation}`;
             console.log(`[Supabase Poller] Dispatching stage alert (${situation}) for ${stageName} to targets:`, Array.from(targetIds));
             
-            let successCount = 0;
-            let failCount = 0;
-            let lastError = null;
-
-            for (const chatId of targetIds) {
+            const activeClient = getActiveClientId('default');
+            const sendPromises = Array.from(targetIds).map(async (chatId) => {
                 try {
-                    const activeClient = getActiveClientId('default');
-                    await sendMessage(activeClient, chatId, message);
-                    successCount++;
+                    await sendMessageWithTimeout(activeClient, chatId, message);
                 } catch (err) {
                     console.error(`[Supabase Poller] Failed to send stage alert to ${chatId}:`, err.message);
-                    failCount++;
-                    lastError = err;
+                    throw err;
                 }
-            }
+            });
 
-            if (successCount === 0 && failCount > 0) {
-                throw new Error(`All stage alerts failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
-            }
+            const results = await Promise.allSettled(sendPromises);
+            let successCount = 0;
+            let failCount = 0;
+            results.forEach(res => {
+                if (res.status === 'fulfilled') successCount++;
+                else failCount++;
+            });
+            console.log(`[Supabase Poller] Stage alert dispatch results: ${successCount} succeeded, ${failCount} failed.`);
         }
     } catch (e) {
         console.error("[Supabase Poller] Error handling stage notification:", e.message);
-        throw e;
     }
 }
 
