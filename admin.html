@@ -447,6 +447,9 @@
                 <div class="sidebar-link" onclick="switchTab('new-design', this)">
                     <i class="fa fa-paint-brush"></i> New Design Studio (Beta)
                 </div>
+                <div class="sidebar-link" onclick="switchTab('framing', this)">
+                    <i class="fa fa-crop-alt"></i> Framing Studio
+                </div>
                 <div class="sidebar-link" onclick="switchTab('wa-sync', this)">
                     <i class="fab fa-whatsapp"></i> WhatsApp Sync
                 </div>
@@ -858,6 +861,141 @@
 
                 </div>
 
+            </div>
+
+            <!-- Section: Framing Studio -->
+            <div id="section-framing" class="admin-section-content">
+                <div class="admin-section" style="max-width: 1200px; margin: 0 auto; padding: 1rem 0;">
+                    <div style="background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h2 style="margin: 0; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fa fa-crop-alt"></i> Framing Studio
+                            </h2>
+                            <p style="margin-top: 0.5rem; opacity: 0.9; margin-bottom: 0;">Upload a PNG frame overlay and overlay it on top of any photo automatically.</p>
+                        </div>
+                        <div style="font-size: 2.5rem; opacity: 0.2;"><i class="fa fa-border-style"></i></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 350px 1fr; gap: 2rem; align-items: start;">
+                        <!-- Column 1: Frame Setup & Ingest Control -->
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <!-- Card: PNG Frame Overlay Upload -->
+                            <div class="admin-card" style="padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                                <h3 style="margin-top: 0; margin-bottom: 1rem; color: #1e293b; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                                    <i class="fa fa-image" style="color: #4f46e5;"></i> PNG Frame Overlay
+                                </h3>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <label class="btn" style="background: #eef2ff !important; color: #4f46e5 !important; border: 1px dashed #4f46e5 !important; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.75rem !important; font-weight: 600; text-align: center; box-shadow: none !important;">
+                                        <i class="fa fa-upload"></i> Upload PNG Frame
+                                        <input type="file" id="framing-frame-upload" accept="image/png" hidden onchange="handleFrameUpload(event)">
+                                    </label>
+                                    
+                                    <div style="font-size: 0.8rem; color: #64748b;">* Upload a transparent PNG frame. The frame will automatically stretch to match the aspect ratio of the main photo.</div>
+
+                                    <!-- Frame Preview Container -->
+                                    <div id="framing-frame-preview-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 8px;">
+                                        <div style="font-size: 0.85rem; font-weight: bold; color: #334155;">Active Frame Preview:</div>
+                                        <div style="position: relative; border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; height: 160px; padding: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                                            <!-- Transparent checkerboard background -->
+                                            <div style="position: absolute; inset: 0; opacity: 0.1; background-image: radial-gradient(#000 20%, transparent 20%), radial-gradient(#000 20%, transparent 20%); background-size: 8px 8px; background-position: 0 0, 4px 4px;"></div>
+                                            <img id="framing-frame-preview-img" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1;">
+                                        </div>
+                                        <button onclick="clearSavedFrame()" class="btn" style="background: #fff1f2 !important; color: #e11d48 !important; padding: 6px 12px; font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: none !important; width: 100%;">
+                                            <i class="fa fa-trash-alt"></i> Delete Stored Frame
+                                        </button>
+                                    </div>
+                                    <div id="framing-no-frame-msg" style="color: #e11d48; font-size: 0.85rem; font-weight: 600; padding: 10px; background: #fff5f5; border-radius: 6px; text-align: center;">
+                                        No frame uploaded yet. Please upload a PNG frame overlay.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card: Advertisement Banner Upload -->
+                            <div class="admin-card" style="padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                                <h3 style="margin-top: 0; margin-bottom: 1rem; color: #1e293b; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                                    <i class="fa fa-ad" style="color: #4f46e5;"></i> Advertisement Banner (Bottom)
+                                </h3>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <label class="btn" style="background: #eef2ff !important; color: #4f46e5 !important; border: 1px dashed #4f46e5 !important; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.75rem !important; font-weight: 600; text-align: center; box-shadow: none !important;">
+                                        <i class="fa fa-upload"></i> Upload Ad Banner
+                                        <input type="file" id="framing-ad-upload" accept="image/*" hidden onchange="handleAdUpload(event)">
+                                    </label>
+                                    
+                                    <div style="font-size: 0.8rem; color: #64748b;">* Upload an advertisement banner. It will be appended to the bottom of the canvas, scaling its width to fit the photo.</div>
+
+                                    <!-- Ad Preview Container -->
+                                    <div id="framing-ad-preview-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 8px;">
+                                        <div style="font-size: 0.85rem; font-weight: bold; color: #334155;">Active Ad Preview:</div>
+                                        <div style="position: relative; border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100px; padding: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                                            <img id="framing-ad-preview-img" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1;">
+                                        </div>
+                                        <button onclick="clearSavedAd()" class="btn" style="background: #fff1f2 !important; color: #e11d48 !important; padding: 6px 12px; font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: none !important; width: 100%;">
+                                            <i class="fa fa-trash-alt"></i> Delete Stored Ad
+                                        </button>
+                                    </div>
+                                    <div id="framing-no-ad-msg" style="color: #64748b; font-size: 0.85rem; font-weight: 500; padding: 10px; background: #f8fafc; border-radius: 6px; text-align: center; border: 1px dashed #e2e8f0;">
+                                        No ad uploaded.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card: WhatsApp Sharing Setup -->
+                            <div class="admin-card" style="padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                                <h3 style="margin-top: 0; margin-bottom: 1rem; color: #1e293b; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                                    <i class="fab fa-whatsapp" style="color: #25d366;"></i> WhatsApp Dispatch
+                                </h3>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div id="framing-wa-targets-container" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: #fafafa;">
+                                        <div style="font-size: 0.8rem; color: #9ca3af; text-align: center; padding: 10px;">Select contacts in WhatsApp Integration tab to see them here.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Framing Workspace -->
+                        <div class="admin-card" style="padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-height: 500px; display: flex; flex-direction: column; gap: 1.5rem;">
+                            <h3 style="margin: 0; color: #1e293b; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                                <i class="fa fa-image" style="color: #3b82f6;"></i> Photo Framing Canvas Workspace
+                            </h3>
+                            
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; width: 100%;">
+                                <!-- Upload Base Photo Button -->
+                                <label class="btn" style="background: #2563eb !important; color: white !important; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 0.75rem 1.5rem !important; font-weight: 600; box-shadow: none !important; border-radius: 8px;">
+                                    <i class="fa fa-plus-circle"></i> Choose Base Photo to Frame
+                                    <input type="file" id="framing-photo-upload" accept="image/*" hidden onchange="handleFramingPhotoUpload(event)">
+                                </label>
+
+                                <!-- Canvas Drawing Area -->
+                                <div id="framing-canvas-outer-container" style="display: none; flex-direction: column; align-items: center; gap: 1rem; width: 100%;">
+                                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; display: flex; gap: 12px;">
+                                        <span id="framing-canvas-dims-info">Canvas Dimensions: -</span>
+                                    </div>
+                                    <div style="border: 4px solid #f1f5f9; border-radius: 12px; background: #e2e8f0; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box;">
+                                        <canvas id="framing-canvas" style="max-width: 100%; max-height: 550px; display: block; object-fit: contain; background: white; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"></canvas>
+                                    </div>
+                                    
+                                    <!-- Canvas Actions -->
+                                    <div style="display: flex; gap: 1rem; justify-content: center; width: 100%; flex-wrap: wrap;">
+                                        <button onclick="downloadFramedImage()" class="btn" style="background: #22c55e !important; color: white !important; font-weight: 600; padding: 0.75rem 1.5rem !important; display: flex; align-items: center; gap: 8px; box-shadow: none !important; border-radius: 8px; cursor: pointer;">
+                                            <i class="fa fa-download"></i> Download Framed Image
+                                        </button>
+                                        <button id="framing-send-wa-btn" onclick="sendFramedImageToWhatsApp()" class="btn" style="background: #25d366 !important; color: white !important; font-weight: 600; padding: 0.75rem 1.5rem !important; display: flex; align-items: center; gap: 8px; box-shadow: none !important; border-radius: 8px; cursor: pointer;">
+                                            <i class="fab fa-whatsapp"></i> Send to WhatsApp Selection
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="framing-no-photo-msg" style="color: #64748b; font-size: 0.95rem; text-align: center; padding: 60px 0; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                    <i class="far fa-images" style="font-size: 4rem; color: #cbd5e1;"></i>
+                                    Select a base photo to begin. The canvas will automatically resize to match the photo dimensions.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Section: WhatsApp Sync -->
@@ -1688,7 +1826,8 @@
             if (!currentData.gallery) currentData.gallery = [];
             if (!currentData.contenttext) currentData.contenttext = [];
             renderAdmin();
-            const tab = document.querySelector('.sidebar-link.active').innerText.toLowerCase();
+            const tabEl = document.querySelector('.sidebar-link.active');
+            const tab = tabEl ? tabEl.innerText.toLowerCase() : '';
             if (tab.includes('gallery')) renderGalleryAdmin();
             if (tab.includes('design')) {
                 renderPublishedPosters();
@@ -1699,11 +1838,12 @@
             if (tab.includes('registration')) renderRegistrationAdmin();
             if (tab.includes('conductor')) renderConductorAdmin();
             if (tab.includes('student-list')) loadExistingStudentList();
+            if (tab.includes('framing')) initFramingStudio();
         });
 
         function switchTab(tab, el) {
             const level = localStorage.getItem('admin_auth_level');
-            if (level === 'design' && tab !== 'design' && tab !== 'wa-sync' && tab !== 'new-design') {
+            if (level === 'design' && tab !== 'design' && tab !== 'wa-sync' && tab !== 'new-design' && tab !== 'framing') {
                 return; // Block access to other tabs
             }
 
@@ -1751,6 +1891,9 @@
             if (tab === 'design') {
                 renderPublishedPosters();
                 loadTemplatePicker();
+            }
+            if (tab === 'framing') {
+                initFramingStudio();
             }
             if (tab === 'schedule') renderScheduleAdmin();
             if (tab === 'content') renderContentEditor();
@@ -10124,6 +10267,111 @@
             if (confirm("Do you want to load this WhatsApp image onto the canvas workspace background?")) {
                 applyBase64Image(img.url);
                 closeWaLargeImagesModal();
+                autoSelectCategoryAndProgramFromFilename(img.filename);
+            }
+        }
+
+        async function autoSelectCategoryAndProgramFromFilename(filename) {
+            if (!filename || !currentData || !currentData.categories || currentData.categories.length === 0) return;
+            
+            const cleanName = filename.toLowerCase().replace(/_/g, ' ').replace(/-/g, ' ').replace(/\.[a-z0-9]+$/i, '').trim();
+            
+            // Detect category
+            let matchedCategory = null;
+            
+            // Try word boundaries first
+            for (let c of currentData.categories) {
+                const reg = new RegExp('\\b' + c.toLowerCase() + '\\b', 'i');
+                if (reg.test(cleanName)) {
+                    matchedCategory = c;
+                    break;
+                }
+            }
+            
+            // Try fallback substring match
+            if (!matchedCategory) {
+                for (let c of currentData.categories) {
+                    if (cleanName.includes(c.toLowerCase())) {
+                        matchedCategory = c;
+                        break;
+                    }
+                }
+            }
+            
+            if (!matchedCategory) {
+                console.log("[WA Ingest AutoSelect] No category matched in filename:", filename);
+                return;
+            }
+            
+            console.log("[WA Ingest AutoSelect] Matched Category:", matchedCategory);
+            
+            // Set dropdown value
+            const pubCat = document.getElementById('publish-category');
+            if (pubCat) {
+                pubCat.value = matchedCategory;
+                // Trigger change/loading programs
+                await loadProgramsForDesignStudio(false);
+            }
+            
+            // Now detect program within that category
+            try {
+                const { data, error } = await supabaseClient.from(matchedCategory).select('Programs').neq('Programs', null).neq('Programs', '');
+                if (error) throw error;
+                if (!data || data.length === 0) return;
+                
+                const normFile = cleanName.replace(/[^a-z0-9\s]/g, '').trim();
+                const fileWithoutCat = normFile.replace(new RegExp('\\b' + matchedCategory.toLowerCase() + '\\b', 'g'), '').trim();
+                
+                let bestMatch = null;
+                let bestScore = 0;
+                
+                for (let p of data) {
+                    const progName = p.Programs.trim();
+                    const normProg = progName.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+                    
+                    // 1. Exact match
+                    if (fileWithoutCat === normProg) {
+                        bestMatch = progName;
+                        bestScore = 100;
+                        break;
+                    }
+                    
+                    // 2. Substring match
+                    if (fileWithoutCat && normProg && (fileWithoutCat.includes(normProg) || normProg.includes(fileWithoutCat))) {
+                        const score = (Math.min(fileWithoutCat.length, normProg.length) / Math.max(fileWithoutCat.length, normProg.length)) * 80;
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = progName;
+                        }
+                    }
+                    
+                    // 3. Word overlap match
+                    const fileWords = fileWithoutCat.split(/\s+/);
+                    const progWords = normProg.split(/\s+/);
+                    let matches = 0;
+                    fileWords.forEach(w => {
+                        if (w && progWords.includes(w)) matches++;
+                    });
+                    if (matches > 0) {
+                        const score = (matches / Math.max(fileWords.length, progWords.length)) * 50;
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = progName;
+                        }
+                    }
+                }
+                
+                if (bestMatch && bestScore >= 20) { // Keep a threshold of 20 to prevent wild false matches
+                    console.log("[WA Ingest AutoSelect] Matched Program:", bestMatch, "with score:", bestScore);
+                    const pubProg = document.getElementById('publish-program');
+                    if (pubProg) {
+                        pubProg.value = bestMatch;
+                    }
+                } else {
+                    console.log("[WA Ingest AutoSelect] No confident program match found in category", matchedCategory);
+                }
+            } catch(err) {
+                console.error("[WA Ingest AutoSelect] Error loading programs for auto-selection:", err);
             }
         }
 
@@ -10552,6 +10800,437 @@
             } catch (err) {
                 console.error("PDF generation failed:", err);
                 alert("Failed to generate PDF: " + err.message);
+            }
+        }
+
+        // ==========================================
+        // Framing Studio Operations
+        // ==========================================
+        let framingOverlayImageCached = null;
+        let framingAdImageCached = null;
+
+        function loadCachedFrameOverlay(callback) {
+            const frameBase64 = localStorage.getItem('ds_framing_overlay_frame');
+            if (!frameBase64) {
+                framingOverlayImageCached = null;
+                if (callback) callback();
+                return;
+            }
+            
+            const img = new Image();
+            img.onload = function() {
+                framingOverlayImageCached = img;
+                if (callback) callback();
+            };
+            img.onerror = function() {
+                framingOverlayImageCached = null;
+                if (callback) callback();
+            };
+            img.src = frameBase64;
+        }
+
+        function loadCachedAdImage(callback) {
+            const adBase64 = localStorage.getItem('ds_framing_ad_image');
+            if (!adBase64) {
+                framingAdImageCached = null;
+                if (callback) callback();
+                return;
+            }
+            
+            const img = new Image();
+            img.onload = function() {
+                framingAdImageCached = img;
+                if (callback) callback();
+            };
+            img.onerror = function() {
+                framingAdImageCached = null;
+                if (callback) callback();
+            };
+            img.src = adBase64;
+        }
+
+        function initFramingStudio() {
+            // Load saved frame overlay
+            const savedFrame = localStorage.getItem('ds_framing_overlay_frame');
+            const previewContainer = document.getElementById('framing-frame-preview-container');
+            const previewImg = document.getElementById('framing-frame-preview-img');
+            const noFrameMsg = document.getElementById('framing-no-frame-msg');
+            
+            if (savedFrame) {
+                previewImg.src = savedFrame;
+                previewContainer.style.display = 'flex';
+                noFrameMsg.style.display = 'none';
+            } else {
+                previewImg.src = '';
+                previewContainer.style.display = 'none';
+                noFrameMsg.style.display = 'block';
+            }
+            
+            // Load saved ad banner
+            const savedAd = localStorage.getItem('ds_framing_ad_image');
+            const adPreviewContainer = document.getElementById('framing-ad-preview-container');
+            const adPreviewImg = document.getElementById('framing-ad-preview-img');
+            const noAdMsg = document.getElementById('framing-no-ad-msg');
+            
+            if (savedAd) {
+                adPreviewImg.src = savedAd;
+                adPreviewContainer.style.display = 'flex';
+                noAdMsg.style.display = 'none';
+            } else {
+                adPreviewImg.src = '';
+                adPreviewContainer.style.display = 'none';
+                noAdMsg.style.display = 'block';
+            }
+            
+            // Pre-load frame and ad to cache, then redraw
+            loadCachedFrameOverlay(() => {
+                loadCachedAdImage(() => {
+                    if (window.framingBasePhotoImage) {
+                        drawFramedCanvas();
+                    }
+                });
+            });
+            
+            // Load WhatsApp Targets
+            loadFramingWhatsAppTargets();
+        }
+
+        function handleFrameUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.type !== 'image/png') {
+                alert("Only transparent PNG files are allowed as framing overlays.");
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                localStorage.setItem('ds_framing_overlay_frame', base64);
+                
+                // Show in preview
+                const previewImg = document.getElementById('framing-frame-preview-img');
+                const previewContainer = document.getElementById('framing-frame-preview-container');
+                const noFrameMsg = document.getElementById('framing-no-frame-msg');
+                
+                previewImg.src = base64;
+                previewContainer.style.display = 'flex';
+                noFrameMsg.style.display = 'none';
+                
+                // Load to cache, then redraw
+                loadCachedFrameOverlay(() => {
+                    if (window.framingBasePhotoImage) {
+                        drawFramedCanvas();
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearSavedFrame() {
+            localStorage.removeItem('ds_framing_overlay_frame');
+            framingOverlayImageCached = null;
+            
+            const fileInput = document.getElementById('framing-frame-upload');
+            if (fileInput) fileInput.value = '';
+            
+            const previewImg = document.getElementById('framing-frame-preview-img');
+            const previewContainer = document.getElementById('framing-frame-preview-container');
+            const noFrameMsg = document.getElementById('framing-no-frame-msg');
+            
+            previewImg.src = '';
+            previewContainer.style.display = 'none';
+            noFrameMsg.style.display = 'block';
+            
+            // Redraw canvas if photo exists
+            if (window.framingBasePhotoImage) {
+                drawFramedCanvas();
+            }
+        }
+
+        function handleAdUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                localStorage.setItem('ds_framing_ad_image', base64);
+                
+                // Show in preview
+                const adPreviewImg = document.getElementById('framing-ad-preview-img');
+                const adPreviewContainer = document.getElementById('framing-ad-preview-container');
+                const noAdMsg = document.getElementById('framing-no-ad-msg');
+                
+                adPreviewImg.src = base64;
+                adPreviewContainer.style.display = 'flex';
+                noAdMsg.style.display = 'none';
+                
+                // Load to cache, then redraw
+                loadCachedAdImage(() => {
+                    if (window.framingBasePhotoImage) {
+                        drawFramedCanvas();
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearSavedAd() {
+            localStorage.removeItem('ds_framing_ad_image');
+            framingAdImageCached = null;
+            
+            const fileInput = document.getElementById('framing-ad-upload');
+            if (fileInput) fileInput.value = '';
+            
+            const adPreviewImg = document.getElementById('framing-ad-preview-img');
+            const adPreviewContainer = document.getElementById('framing-ad-preview-container');
+            const noAdMsg = document.getElementById('framing-no-ad-msg');
+            
+            adPreviewImg.src = '';
+            adPreviewContainer.style.display = 'none';
+            noAdMsg.style.display = 'block';
+            
+            // Redraw canvas if photo exists
+            if (window.framingBasePhotoImage) {
+                drawFramedCanvas();
+            }
+        }
+
+        function handleFramingPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                const img = new Image();
+                img.onload = function() {
+                    window.framingBasePhotoImage = img;
+                    
+                    document.getElementById('framing-no-photo-msg').style.display = 'none';
+                    document.getElementById('framing-canvas-outer-container').style.display = 'flex';
+                    
+                    drawFramedCanvas();
+                };
+                img.src = base64;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawFramedCanvas() {
+            const img = window.framingBasePhotoImage;
+            if (!img) return;
+            
+            const canvas = document.getElementById('framing-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Calculate ad dimensions if an ad exists
+            let adHeight = 0;
+            if (framingAdImageCached) {
+                // Scale ad height so that the ad's width matches the base image width
+                adHeight = framingAdImageCached.naturalHeight * (img.naturalWidth / framingAdImageCached.naturalWidth);
+            }
+            
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight + adHeight;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 1. Draw base photo
+            ctx.drawImage(img, 0, 0);
+            
+            // 2. Draw frame overlay ON TOP of the base photo
+            if (framingOverlayImageCached) {
+                ctx.drawImage(framingOverlayImageCached, 0, 0, img.naturalWidth, img.naturalHeight);
+            }
+            
+            // 3. Draw ad banner at the bottom (after base photo)
+            if (framingAdImageCached && adHeight > 0) {
+                ctx.drawImage(framingAdImageCached, 0, img.naturalHeight, img.naturalWidth, adHeight);
+            }
+
+            // Update canvas dimensions display text
+            const dimsInfo = document.getElementById('framing-canvas-dims-info');
+            if (dimsInfo) {
+                dimsInfo.innerText = `Canvas Dimensions: ${canvas.width} x ${canvas.height}px`;
+            }
+        }
+
+        function downloadFramedImage() {
+            const canvas = document.getElementById('framing-canvas');
+            if (!canvas || !window.framingBasePhotoImage) {
+                alert("Please select a base photo first.");
+                return;
+            }
+            
+            // Generate PNG data URL
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'framed_photo.png';
+            link.href = dataUrl;
+            link.click();
+        }
+
+        async function loadFramingWhatsAppTargets() {
+            const container = document.getElementById('framing-wa-targets-container');
+            if (!container) return;
+            
+            container.innerHTML = '<div style="color: #666; font-size: 0.85rem; text-align: center; padding: 1rem;"><i class="fa fa-spinner fa-spin"></i> Loading WhatsApp contacts...</div>';
+            
+            try {
+                const clientId = activeWaClientId || 'default';
+                
+                // Fetch status first to see if linked
+                let isConnected = false;
+                try {
+                    const statusRes = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/status?clientId=${clientId}`);
+                    if (statusRes.ok) {
+                        const statusData = await statusRes.json();
+                        const clientState = statusData.state || 'UNINITIALIZED';
+                        isConnected = (clientState === 'CONNECTED' || clientState === 'AUTHENTICATED');
+                    }
+                } catch(e) {
+                    console.warn("Status check failed", e);
+                }
+                
+                if (!isConnected) {
+                    container.innerHTML = '<div style="color: #ef4444; font-size: 0.85rem; text-align: center; padding: 1rem;"><i class="fa fa-exclamation-triangle"></i> WhatsApp client not connected. Connect in WhatsApp Sync tab.</div>';
+                    return;
+                }
+                
+                const [chatsRes, contactsRes] = await Promise.all([
+                    fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/chats?clientId=${clientId}`).catch(() => null),
+                    fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/contacts?clientId=${clientId}`).catch(() => null)
+                ]);
+                
+                let chatsData = { success: false };
+                let contactsData = { success: false };
+                
+                if (chatsRes && chatsRes.ok) {
+                    try { chatsData = await chatsRes.json(); } catch(e) {}
+                }
+                if (contactsRes && contactsRes.ok) {
+                    try { contactsData = await contactsRes.json(); } catch(e) {}
+                }
+                
+                let allItems = [];
+                if (chatsData && chatsData.success && chatsData.chats) {
+                    allItems = [...chatsData.chats];
+                }
+                if (contactsData && contactsData.success && contactsData.contacts) {
+                    const chatIds = new Set(allItems.map(c => c.id));
+                    contactsData.contacts.forEach(contact => {
+                        if (!chatIds.has(contact.id)) allItems.push(contact);
+                    });
+                }
+                
+                if (allItems.length === 0) {
+                    container.innerHTML = '<div style="color: #666; font-size: 0.85rem; text-align: center; padding: 1rem;">No contacts found. Make sure WhatsApp is connected.</div>';
+                    return;
+                }
+                
+                // Get saved checkbox states
+                let savedSel = [];
+                try {
+                    savedSel = JSON.parse(localStorage.getItem('ds_framing_wa_targets') || '[]');
+                } catch(e) {}
+                
+                container.innerHTML = '';
+                allItems.forEach(item => {
+                    const labelWrap = document.createElement('label');
+                    labelWrap.style = 'display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; hover:background-color: #f3f4f6; cursor: pointer; font-size: 0.85rem; color: #334155; font-weight: 500; border: 1px solid #f1f5f9; background: white; margin-bottom: 4px;';
+                    
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.className = 'framing-wa-checkbox';
+                    cb.value = item.id;
+                    cb.checked = savedSel.includes(item.id);
+                    cb.onchange = function() {
+                        const checked = Array.from(document.querySelectorAll('.framing-wa-checkbox:checked')).map(c => c.value);
+                        localStorage.setItem('ds_framing_wa_targets', JSON.stringify(checked));
+                    };
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.innerText = item.name + (item.isGroup ? ' (Group)' : '');
+                    
+                    labelWrap.appendChild(cb);
+                    labelWrap.appendChild(textSpan);
+                    container.appendChild(labelWrap);
+                });
+                
+            } catch(e) {
+                console.error("Failed to load framing contacts list", e);
+                container.innerHTML = '<div style="color: #ef4444; font-size: 0.85rem; text-align: center; padding: 1rem;">Failed to load contacts.</div>';
+            }
+        }
+
+        async function sendFramedImageToWhatsApp() {
+            const canvas = document.getElementById('framing-canvas');
+            if (!canvas || !window.framingBasePhotoImage) {
+                alert("Please upload a base photo to frame before sending.");
+                return;
+            }
+            
+            const selectedTargets = Array.from(document.querySelectorAll('.framing-wa-checkbox:checked')).map(cb => cb.value);
+            if (selectedTargets.length === 0) {
+                alert("Please select at least one WhatsApp contact/group from the WhatsApp Dispatch card.");
+                return;
+            }
+            
+            const btn = document.getElementById('framing-send-wa-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            
+            try {
+                // Convert canvas to image data URL (which backend /send-media expects)
+                const dataUrl = canvas.toDataURL('image/png');
+                
+                let successCount = 0;
+                let failCount = 0;
+                const clientId = activeWaClientId || 'default';
+                
+                for (let i = 0; i < selectedTargets.length; i++) {
+                    const targetId = selectedTargets[i];
+                    btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Sending (${i}/${selectedTargets.length})...`;
+                    
+                    try {
+                        const response = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-media`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                clientId: clientId,
+                                chatId: targetId,
+                                base64Data: dataUrl,
+                                filename: 'framed-photo.png',
+                                caption: 'Koduvelly Sahityolsav Framed Photo'
+                            })
+                        });
+                        
+                        const resData = await response.json();
+                        if (resData.success) {
+                            successCount++;
+                        } else {
+                            console.error('Failed to send framed image to target', targetId, resData.error);
+                            failCount++;
+                        }
+                    } catch(e) {
+                        console.error('Error sending framed image to target', targetId, e);
+                        failCount++;
+                    }
+                }
+                
+                if (failCount === 0) {
+                    alert(`Framed photo successfully sent to all ${successCount} WhatsApp targets!`);
+                } else {
+                    alert(`WhatsApp sending complete. Successfully sent: ${successCount}. Failed: ${failCount}.`);
+                }
+            } catch(err) {
+                console.error("WhatsApp dispatch failed:", err);
+                alert("Failed to dispatch image: " + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
     </script>
