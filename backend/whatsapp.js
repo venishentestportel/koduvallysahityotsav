@@ -258,8 +258,13 @@ function handleClientError(clientId, err) {
     if (msg.includes('Session closed') || msg.includes('target closed') || msg.includes('Browser sent no response') || msg.includes('Navigation failed') || msg.includes('detached Frame')) {
         console.warn(`Puppeteer crash or detached frame detected for client ${clientId}. Triggering re-initialization...`);
         const clientObj = clients[clientId];
-        if (clientObj && typeof clientObj.triggerReconnect === 'function') {
-            clientObj.triggerReconnect();
+        if (clientObj) {
+            if (typeof clientObj.updateStatus === 'function') {
+                clientObj.updateStatus('DISCONNECTED');
+            }
+            if (typeof clientObj.triggerReconnect === 'function') {
+                clientObj.triggerReconnect();
+            }
         }
     }
 }

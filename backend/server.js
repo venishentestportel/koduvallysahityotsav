@@ -613,9 +613,14 @@ async function pollSupabaseData() {
             const data = await res.json();
             if (data && data.length > 0) {
                 console.log(`[Supabase Poller] Found ${data.length} new registrations.`);
-                lastRegistMaxId = data[data.length - 1].id;
                 for (const row of data) {
-                    await handleNewRegistNotification(row);
+                    try {
+                        await handleNewRegistNotification(row);
+                        lastRegistMaxId = row.id;
+                    } catch (err) {
+                        console.error(`[Supabase Poller] Failed to process registration notification for row ${row.id}, will retry on next poll.`, err.message);
+                        break;
+                    }
                 }
             }
         }
@@ -638,9 +643,14 @@ async function pollSupabaseData() {
                 const data = await res.json();
                 if (data && data.length > 0) {
                     console.log(`[Supabase Poller] Found ${data.length} new updates for ${stage}.`);
-                    lastStageMaxIds[stage] = data[data.length - 1].id;
                     for (const row of data) {
-                        await handleNewStageNotification(stage, row);
+                        try {
+                            await handleNewStageNotification(stage, row);
+                            lastStageMaxIds[stage] = row.id;
+                        } catch (err) {
+                            console.error(`[Supabase Poller] Failed to process stage notification for row ${row.id}, will retry on next poll.`, err.message);
+                            break;
+                        }
                     }
                 }
             }
@@ -659,9 +669,6 @@ async function handleNewRegistNotification(row) {
         const stage = row.stage || 'Unknown';
         const codeletter = row.codeletter || '';
 
-        // Get the active client
-        const activeClient = getActiveClientId('default');
-        
         // Collect checked targets from globalWhatsAppTargets
         const targetIds = new Set();
         Object.keys(globalWhatsAppTargets).forEach(cid => {
@@ -671,6 +678,10 @@ async function handleNewRegistNotification(row) {
             }
         });
 
+        let successCount = 0;
+        let failCount = 0;
+        let lastError = null;
+
         // 1. Dispatch alert to selected WhatsApp groups / contacts
         if (targetIds.size > 0) {
             const progsStr = [program, general].filter(Boolean).join(', ');
@@ -678,9 +689,13 @@ async function handleNewRegistNotification(row) {
             console.log(`[Supabase Poller] Dispatching registration alert for ${name} to targets:`, Array.from(targetIds));
             for (const chatId of targetIds) {
                 try {
+                    const activeClient = getActiveClientId('default');
                     await sendMessage(activeClient, chatId, message);
+                    successCount++;
                 } catch (err) {
                     console.error(`[Supabase Poller] Failed to send registration alert to ${chatId}:`, err.message);
+                    failCount++;
+                    lastError = err;
                 }
             }
         }
@@ -708,16 +723,26 @@ async function handleNewRegistNotification(row) {
                 if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
                     const sectorMessage = `*Student Registration Alert*\n*Student Name:* ${name}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage}\n${program ? `*Registered Program:* ${program}` : ''}${general ? `*General Program:* ${general}` : ''}`;
                     try {
+                        const activeClient = getActiveClientId('default');
                         console.log(`[Supabase Poller] Dispatching sector registration alert for ${name} to sector group ${chatId} (${routing[chatId].name})`);
                         await sendMessage(activeClient, chatId, sectorMessage);
+                        successCount++;
                     } catch (err) {
                         console.error(`[Supabase Poller] Failed to send sector registration alert to ${chatId}:`, err.message);
+                        failCount++;
+                        lastError = err;
                     }
                 }
             }
         }
+
+        const totalAttempted = targetIds.size + (cleanStudentSector ? 1 : 0);
+        if (totalAttempted > 0 && successCount === 0 && failCount > 0) {
+            throw new Error(`All registration alerts failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
+        }
     } catch (e) {
         console.error("[Supabase Poller] Error handling registration notification:", e.message);
+        throw e;
     }
 }
 
@@ -732,7 +757,6 @@ async function handleNewStageNotification(stageName, row) {
         const category = row.Categories || 'None';
         const program = row.Programs || 'None';
 
-        const activeClient = getActiveClientId('default');
         const targetIds = new Set();
         Object.keys(globalWhatsAppTargets).forEach(cid => {
             const targets = globalWhatsAppTargets[cid];
@@ -744,16 +768,30 @@ async function handleNewStageNotification(stageName, row) {
         if (targetIds.size > 0) {
             const message = `${stageName.toUpperCase()}\nCategorie : ${category}\nProgram : ${program}\naction : ${situation}`;
             console.log(`[Supabase Poller] Dispatching stage alert (${situation}) for ${stageName} to targets:`, Array.from(targetIds));
+            
+            let successCount = 0;
+            let failCount = 0;
+            let lastError = null;
+
             for (const chatId of targetIds) {
                 try {
+                    const activeClient = getActiveClientId('default');
                     await sendMessage(activeClient, chatId, message);
+                    successCount++;
                 } catch (err) {
                     console.error(`[Supabase Poller] Failed to send stage alert to ${chatId}:`, err.message);
+                    failCount++;
+                    lastError = err;
                 }
+            }
+
+            if (successCount === 0 && failCount > 0) {
+                throw new Error(`All stage alerts failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
             }
         }
     } catch (e) {
         console.error("[Supabase Poller] Error handling stage notification:", e.message);
+        throw e;
     }
 }
 
