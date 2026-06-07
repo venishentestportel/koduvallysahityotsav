@@ -331,7 +331,35 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Section: WhatsApp Image Ingest -->
+                        <div
+                            style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1.2rem; display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
+                            <h4
+                                style="margin: 0; color: #1e40af; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 1rem;">
+                                <span style="display: flex; align-items: center; gap: 6px;">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp Image Ingest
+                                </span>
+                            </h4>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <label style="font-size: 0.8rem; color: #1e40af; font-weight: 600;">Select Chat to Import Images From:</label>
+                                <select id="ds-wa-ingestion-select" class="btn"
+                                    style="background: #ffffff !important; border: 1px solid #bfdbfe !important; color: #1e40af !important; width: 100%; text-align: left; padding: 0.5rem; font-size: 0.85rem;"
+                                    onchange="saveWaIngestionTarget()">
+                                    <option value="">-- No Ingestion Target Selected --</option>
+                                </select>
+                                
+                                <div style="font-size: 0.8rem; color: #4b5563; margin-top: 5px; font-weight: 600;">Received Images (Live Feed):</div>
+                                <div id="ds-wa-received-images-container"
+                                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #bfdbfe; border-radius: 6px; padding: 0.5rem; min-height: 60px; align-content: start;">
+                                    <div style="color: #9ca3af; font-size: 0.75rem; grid-column: 1/-1; text-align: center; padding: 10px;">
+                                        No images received yet. Send an image to the selected WhatsApp chat to see it here.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
 
                 </div>
                 <div class="admin-card" style="margin-top: 2rem;">
@@ -8929,6 +8957,10 @@
                     updateDsWhatsAppUI(status);
                 });
 
+                dsSocket.on('message', (data) => {
+                    handleIncomingWhatsAppMessage(data);
+                });
+
                 dsSocket.on('disconnect', () => {
                     console.log('Design Studio WhatsApp Socket Disconnected');
                 });
@@ -9145,6 +9177,8 @@
                 // Render in Design Studio
                 renderDsContactsList(allItems, savedTargets);
 
+                // Populate WhatsApp Ingestion Target dropdown
+                populateWaIngestionDropdown(allItems);
             } catch (err) {
                 console.error('WhatsApp Target Load Error:', err);
                 const syncContainer = document.getElementById('wa-sync-contacts-container');
@@ -9254,6 +9288,136 @@
                 div.appendChild(lbl);
                 container.appendChild(div);
             });
+        }
+
+        // --- WhatsApp Image Ingestion Logic ---
+        function populateWaIngestionDropdown(items) {
+            const select = document.getElementById('ds-wa-ingestion-select');
+            if (!select) return;
+
+            // Save currently selected value to restore it
+            const currentSelected = localStorage.getItem('ds_wa_ingestion_target') || '';
+
+            // Clear options except the first placeholder
+            select.innerHTML = '<option value="">-- No Ingestion Target Selected --</option>';
+
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.innerText = item.name + (item.isGroup ? ' (Group)' : '');
+                if (item.id === currentSelected) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        function saveWaIngestionTarget() {
+            const select = document.getElementById('ds-wa-ingestion-select');
+            if (!select) return;
+            localStorage.setItem('ds_wa_ingestion_target', select.value);
+            console.log("Saved WhatsApp Ingestion Target:", select.value);
+        }
+
+        let ingestedWaImages = []; // Array of { dataUrl, filename, timestamp }
+
+        function handleIncomingWhatsAppMessage(data) {
+            console.log("[WA Socket Ingest] Received message:", data);
+            
+            const selectedTarget = localStorage.getItem('ds_wa_ingestion_target');
+            if (!selectedTarget) return;
+
+            // In group messages, data.from matches the group JID (which matches selectedTarget).
+            // In direct messages, data.from is the sender contact JID.
+            if (data.from !== selectedTarget) {
+                return;
+            }
+
+            // Check if the message has image media
+            if (data.media && data.media.mimetype && data.media.mimetype.startsWith('image/')) {
+                console.log("[WA Socket Ingest] Valid image found, ingesting...");
+                addIngestedWaImage(data.media);
+            }
+        }
+
+        function addIngestedWaImage(media) {
+            const dataUrl = `data:${media.mimetype};base64,${media.data}`;
+            const imgObj = {
+                dataUrl: dataUrl,
+                filename: media.filename || 'whatsapp_image.jpg',
+                timestamp: Date.now()
+            };
+
+            // Insert at beginning of feed
+            ingestedWaImages.unshift(imgObj);
+
+            // Limit to last 20 images
+            if (ingestedWaImages.length > 20) {
+                ingestedWaImages.pop();
+            }
+
+            renderIngestedWaImages();
+        }
+
+        function renderIngestedWaImages() {
+            const container = document.getElementById('ds-wa-received-images-container');
+            if (!container) return;
+
+            if (ingestedWaImages.length === 0) {
+                container.innerHTML = `
+                    <div style="color: #9ca3af; font-size: 0.75rem; grid-column: 1/-1; text-align: center; padding: 10px;">
+                        No images received yet. Send an image to the selected WhatsApp chat to see it here.
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = ingestedWaImages.map((img, index) => {
+                return `
+                    <div style="position: relative; aspect-ratio: 1; cursor: pointer; border: 2px solid #e2e8f0; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s;" 
+                         onclick="applyWaIngestedImage(${index})"
+                         onmouseover="this.style.borderColor='#3182ce'; this.style.transform='scale(1.03)';" 
+                         onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='none';">
+                        <img src="${img.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function applyWaIngestedImage(index) {
+            const img = ingestedWaImages[index];
+            if (!img) return;
+
+            if (confirm("Do you want to load this WhatsApp image onto the canvas workspace background?")) {
+                applyBase64Image(img.dataUrl);
+            }
+        }
+
+        function applyBase64Image(dataUrl) {
+            const img = document.getElementById('canvas-bg');
+            if (!img) return;
+            img.src = dataUrl;
+            img.style.display = 'block';
+            window.selectedGlobalTemplate = dataUrl;
+
+            const canvas = document.getElementById('design-canvas');
+            if (!canvas) return;
+            
+            const tempImg = new Image();
+            tempImg.onload = function () {
+                const areaWidth = canvas.parentElement.clientWidth - 40;
+                const areaHeight = canvas.parentElement.clientHeight - 40;
+                const ratio = tempImg.width / tempImg.height;
+                const areaRatio = areaWidth / areaHeight;
+
+                if (ratio > areaRatio) {
+                    canvas.style.width = areaWidth + 'px';
+                    canvas.style.height = (areaWidth / ratio) + 'px';
+                } else {
+                    canvas.style.height = areaHeight + 'px';
+                    canvas.style.width = (areaHeight * ratio) + 'px';
+                }
+            };
+            tempImg.src = dataUrl;
         }
 
         function filterSyncContacts() {

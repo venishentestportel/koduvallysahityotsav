@@ -182,12 +182,30 @@ async function initializeWhatsAppForClient(clientId) {
     });
     
     clientInstance.on('message', async (msg) => {
+        let mediaData = null;
+        if (msg.hasMedia) {
+            try {
+                const media = await msg.downloadMedia();
+                if (media && media.mimetype && media.mimetype.startsWith('image/')) {
+                    mediaData = {
+                        mimetype: media.mimetype,
+                        data: media.data,
+                        filename: media.filename
+                    };
+                }
+            } catch (err) {
+                console.error(`Error downloading media for message ${msg.id._serialized}:`, err.message);
+            }
+        }
+
         const ioConnection = getIo();
         if (ioConnection) {
             let isGroup = false;
+            let chatName = '';
             try {
                 const chat = await msg.getChat();
                 isGroup = chat.isGroup;
+                chatName = chat.name || '';
             } catch (e) {
                 console.error(e);
             }
@@ -199,7 +217,9 @@ async function initializeWhatsAppForClient(clientId) {
                 timestamp: msg.timestamp,
                 author: msg.author,
                 isGroup: isGroup,
-                fromMe: msg.fromMe
+                fromMe: msg.fromMe,
+                chatName: chatName,
+                media: mediaData
             });
         }
     });
