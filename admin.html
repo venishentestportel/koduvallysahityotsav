@@ -688,13 +688,13 @@
                         </button>
                         <button class="btn"
                             style="background: #e0e7ff !important; color: #4338ca !important; box-shadow: none !important;"
-                            onclick="openAiTemplateModal()">
-                            <i class="fa fa-robot"></i> Load AI Template
+                            onclick="openScrapedResultsModal()">
+                            <i class="fa fa-robot"></i> Load Show Scraped Result Details
                         </button>
                     </div>
                     <div style="font-size: 0.85rem; color: #475569; margin-top: 0.5rem;"
-                        id="active-ai-template-indicator">
-                        <!-- AI Template Indicator -->
+                        id="active-scraped-result-indicator">
+                        <!-- Active Scraped Result Indicator -->
                     </div>
                     <div class="studio-row-bottom">
                         <select id="publish-category" class="btn"
@@ -7083,34 +7083,34 @@
         </div>
     </div>
 
-    <!-- AI Template Modal -->
-    <div id="ai-template-modal"
+    <!-- Scraped Results Modal -->
+    <div id="scraped-results-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px);"
-        onclick="closeAiTemplateModal()">
-        <div style="background: white; width: 90%; max-width: 600px; border-radius: 20px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);"
+        onclick="closeScrapedResultsModal()">
+        <div style="background: white; width: 90%; max-width: 600px; border-radius: 20px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 80vh;"
             onclick="event.stopPropagation()">
             <div
                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
                 <h2 style="margin: 0; color: #1e293b; font-size: 1.5rem;"><i class="fa fa-robot"
-                        style="color: #4338ca;"></i> AI Template Library</h2>
-                <button onclick="closeAiTemplateModal()"
+                        style="color: #4338ca;"></i> Sahityotsav Scraped Results</h2>
+                <button onclick="closeScrapedResultsModal()"
                     style="border: none; background: transparent; font-size: 1.5rem; color: #94a3b8; cursor: pointer;">&times;</button>
             </div>
 
-            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Select an AI JSON template mapped from
-                the AI PDF Trainer. When you use this template, the system will extract PDF text based on the bounding
-                boxes automatically.</p>
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Select a scraped result from the dropdown list. The system will automatically construct the poster elements using the details from sahityotsav.com.
+            </p>
 
-            <label class="btn"
-                style="background: #e0e7ff; color: #4338ca; margin-bottom: 1.5rem; text-align: center; padding: 0.75rem 1rem; font-size: 1rem; cursor: pointer; display: block; border: 2px dashed #818cf8;">
-                <i class="fa fa-upload"></i> Upload Local JSON Template
-                <input type="file" id="local-ai-template-upload" hidden accept=".json"
-                    onchange="handleLocalAiTemplateUpload(event)">
-            </label>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <label style="font-weight: bold; color: #475569; font-size: 0.85rem;">Show Scraped Result</label>
+                <select id="show-scraped-result-select" onchange="handleSelectScrapedResult(this.value)"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.9rem; font-family: inherit; background: white; color: #1e293b;">
+                    <option value="">Loading live results...</option>
+                </select>
+            </div>
 
-            <div id="ai-template-list"
-                style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 300px; overflow-y: auto;">
-                <div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading templates...</div>
+            <div id="scraped-result-preview" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; max-height: 200px; overflow-y: auto; font-size: 0.85rem; color: #334155;">
+                <!-- Result winners list details show here -->
             </div>
         </div>
     </div>
@@ -7217,166 +7217,348 @@
         }
 
         window.selectedAiTemplate = null;
+        window.scrapedResults = [];
+        window.selectedScrapedResult = null;
+        window.knownScrapedResultIds = new Set();
+        
+        function showScrapedResultToast(message) {
+            let container = document.getElementById('scraped-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'scraped-toast-container';
+                container.style.position = 'fixed';
+                container.style.bottom = '24px';
+                container.style.right = '24px';
+                container.style.zIndex = '9999';
+                container.style.display = 'flex';
+                container.style.flexDirection = 'column';
+                container.style.gap = '12px';
+                document.body.appendChild(container);
+            }
+            
+            const toast = document.createElement('div');
+            toast.style.background = 'linear-gradient(135deg, #4f46e5, #7c3aed)';
+            toast.style.color = 'white';
+            toast.style.padding = '14px 24px';
+            toast.style.borderRadius = '14px';
+            toast.style.boxShadow = '0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.1)';
+            toast.style.fontFamily = "'Outfit', sans-serif";
+            toast.style.fontSize = '0.9rem';
+            toast.style.fontWeight = '600';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
+            toast.style.gap = '10px';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            toast.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            toast.innerHTML = `<i class="fa fa-bell"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 6000);
+        }
 
-        function autoPopulateTextFromAiTemplate() {
+        function openScrapedResultsModal() {
+            document.getElementById('scraped-results-modal').style.display = 'flex';
+            loadScrapedResults(true);
+        }
+
+        function closeScrapedResultsModal() {
+            document.getElementById('scraped-results-modal').style.display = 'none';
+        }
+
+        async function loadScrapedResults(showLoading = false) {
+            const selectEl = document.getElementById('show-scraped-result-select');
+            if (!selectEl) return;
+
+            if (showLoading && selectEl.options.length <= 1) {
+                selectEl.innerHTML = '<option value="">Loading live results from sahityotsav.com...</option>';
+            }
+
+            try {
+                const response = await fetch('http://localhost:3001/api/scraped-results');
+                const json = await response.json();
+                if (!json || !json.success || !json.data || !json.data.results) {
+                    throw new Error("Invalid response structure");
+                }
+
+                const results = json.data.results;
+                window.scrapedResults = results;
+
+                // Build dropdown options
+                let html = '<option value="">Choose a scraped result...</option>';
+                results.forEach((r, idx) => {
+                    const label = `${r.program?.category || 'Unknown'} - ${r.program?.name || 'Unknown'}`;
+                    html += `<option value="${idx}">${label}</option>`;
+                });
+                
+                selectEl.innerHTML = html;
+
+                // If a result is currently active, preserve selection
+                if (window.selectedScrapedResult) {
+                    const activeIdx = results.findIndex(r => r.id === window.selectedScrapedResult.id);
+                    if (activeIdx !== -1) {
+                        selectEl.value = activeIdx;
+                    }
+                }
+
+                // Check for new uploads in background
+                results.forEach(r => {
+                    if (window.knownScrapedResultIds.size > 0 && !window.knownScrapedResultIds.has(r.id)) {
+                        showScrapedResultToast(`New result uploaded: ${r.program?.category} - ${r.program?.name}!`);
+                    }
+                    window.knownScrapedResultIds.add(r.id);
+                });
+
+                if (window.knownScrapedResultIds.size === 0) {
+                    results.forEach(r => window.knownScrapedResultIds.add(r.id));
+                }
+
+            } catch (err) {
+                console.error("Failed to load scraped results:", err);
+                if (showLoading) {
+                    selectEl.innerHTML = '<option value="">Failed to load live results. Verify backend is running.</option>';
+                }
+            }
+        }
+
+        function handleSelectScrapedResult(idx) {
+            if (idx === "") {
+                document.getElementById('scraped-result-preview').style.display = 'none';
+                return;
+            }
+
+            const scraped = window.scrapedResults[parseInt(idx)];
+            if (!scraped) return;
+
+            // Map winner data
+            const mapped = mapScrapedResultToStudioResult(scraped);
+            window.selectedScrapedResult = scraped;
+
+            // Render details preview card
+            const previewEl = document.getElementById('scraped-result-preview');
+            previewEl.style.display = 'block';
+            let previewHtml = `
+                <div style="font-weight: 800; font-size: 1.1rem; color: #4338ca; margin-bottom: 0.5rem;"><i class="fa fa-award"></i> ${mapped.category} - ${mapped.program}</div>
+                <div style="font-size: 0.75rem; color: #64748b; font-family: monospace; margin-bottom: 1rem;">ID Code: ${mapped['risult no.']}</div>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            `;
+
+            if (mapped['1 price']) {
+                previewHtml += `
+                    <div style="background: white; padding: 0.5rem 0.75rem; border-radius: 6px; border-left: 4px solid #d97706; display: flex; justify-content: space-between;">
+                        <span><strong>1st Place:</strong> ${mapped['1 price']}</span>
+                        <span style="color: #64748b;">${mapped['1 place']}</span>
+                    </div>
+                `;
+            }
+            if (mapped['2 price']) {
+                previewHtml += `
+                    <div style="background: white; padding: 0.5rem 0.75rem; border-radius: 6px; border-left: 4px solid #4b5563; display: flex; justify-content: space-between;">
+                        <span><strong>2nd Place:</strong> ${mapped['2 price']}</span>
+                        <span style="color: #64748b;">${mapped['2 place']}</span>
+                    </div>
+                `;
+            }
+            if (mapped['3 price']) {
+                previewHtml += `
+                    <div style="background: white; padding: 0.5rem 0.75rem; border-radius: 6px; border-left: 4px solid #b45309; display: flex; justify-content: space-between;">
+                        <span><strong>3rd Place:</strong> ${mapped['3 price']}</span>
+                        <span style="color: #64748b;">${mapped['3 place']}</span>
+                    </div>
+                `;
+            }
+            previewHtml += `</div>`;
+            previewEl.innerHTML = previewHtml;
+
+            // Generate/Update poster elements on canvas
+            loadScrapedResultToCanvas(mapped);
+
+            // Update toolbar indicator
+            const indicator = document.getElementById('active-scraped-result-indicator');
+            if (indicator) {
+                indicator.innerHTML = `<strong>Active Scraped Result:</strong> <span style="color: #4338ca; background: #e0e7ff; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${mapped.category} - ${mapped.program}</span> <button onclick="clearScrapedResult()" style="margin-left: 10px; background: none; border: none; color: #e11d48; cursor: pointer; text-decoration: underline;">Clear</button>`;
+            }
+
+            closeScrapedResultsModal();
+        }
+
+        function mapScrapedResultToStudioResult(scraped) {
+            const winners = scraped.winners || [];
+            const first = winners.find(w => w.position === 1) || {};
+            const second = winners.find(w => w.position === 2) || {};
+            const third = winners.find(w => w.position === 3) || {};
+
+            const formatWinnerName = (w) => {
+                if (!w.student?.name) return '';
+                let name = w.student.name;
+                if (w.grade) name += ` (${w.grade})`;
+                return name;
+            };
+
+            const formatWinnerPlace = (w) => {
+                if (!w.student?.place && !w.student?.sector) return '';
+                return w.student.place || w.student.sector;
+            };
+
+            return {
+                'risult no.': `${scraped.program?.categoryCode || scraped.program?.category || 'RES'}_${scraped.program?.name || 'Program'}`,
+                'category': scraped.program?.category || 'Unknown',
+                'program': scraped.program?.name || 'Unknown',
+                '1 price': formatWinnerName(first),
+                '1 place': formatWinnerPlace(first),
+                '1 score': first.points || '0',
+                '2 price': formatWinnerName(second),
+                '2 place': formatWinnerPlace(second),
+                '2 score': second.points || '0',
+                '3 price': formatWinnerName(third),
+                '3 place': formatWinnerPlace(third),
+                '3 score': third.points || '0'
+            };
+        }
+
+        function loadScrapedResultToCanvas(result) {
+            const pos1 = '1'; const name1 = result['1 price'] || ''; const unit1 = result['1 place'] || '';
+            const pos2 = '2'; const name2 = result['2 price'] || ''; const unit2 = result['2 place'] || '';
+            const pos3 = '3'; const name3 = result['3 price'] || ''; const unit3 = result['3 place'] || '';
+            const category = result.category || '';
+            const program = result.program || '';
+            const rNo = result['risult no.'] || '';
+
             const canvas = document.getElementById('design-canvas');
             if (!canvas) return;
-            const existingTexts = canvas.querySelectorAll('.draggable-text');
-            if (existingTexts.length > 0) return; // Do not overwrite if user already has text boxes
 
-            if (window.selectedAiTemplate && window.selectedAiTemplate.data && window.selectedAiTemplate.data.regions) {
-                let startY = 50;
-
-                // Noise label filter helper
-                const noiseLabels = [
-                    'manage event', 'maneg event', 'manage', 'maneg', 'event',
-                    'submitted', 'submit', 'points', 'point', 'view', 'status',
-                    'action', 'actions', 'pending', 'verified', 'score', 'mark', 'marks',
-                    'edit', 'delete', 'details', 'in progress', 'sl no', 'sl no.',
-                    'chest', 'chest #', 'code letter', 'grade', 'prize',
-                    '1st prize', '2nd prize', '3rd prize', '4th prize', '5th prize',
-                    'compleestion result', 'completion result', 'competition result',
-                    'compleestion results', 'completion results', 'competition results',
-                    'compleestion', 'completion', 'competition', 'results', 'result'
+            const texts = Array.from(canvas.querySelectorAll('.draggable-text'));
+            
+            if (texts.length === 0) {
+                // Generate default premium visual template layout
+                console.log("[Studio] Generating default layout template...");
+                const layout = [
+                    { placeholder: 'Categoriy', text: category, x: '20px', y: '25px', size: '20px', weight: 'bold', align: 'center', width: '560px', color: '#4f46e5' },
+                    { placeholder: 'Programs', text: program, x: '20px', y: '55px', size: '28px', weight: '800', align: 'center', width: '560px', color: '#1e293b' },
+                    { placeholder: 'Result :', text: `Result : ${rNo}`, x: '20px', y: '95px', size: '14px', weight: '600', align: 'center', width: '560px', color: '#64748b' },
+                    
+                    // 1st Prize
+                    { placeholder: 'no.', text: '#1', x: '50px', y: '150px', size: '18px', weight: 'bold', color: '#d97706' },
+                    { placeholder: 'name', text: name1, x: '120px', y: '150px', size: '20px', weight: 'bold', color: '#1e293b' },
+                    { placeholder: 'place', text: unit1, x: '370px', y: '150px', size: '16px', color: '#4b5563' },
+                    
+                    // 2nd Prize
+                    { placeholder: 'no.', text: '#2', x: '50px', y: '220px', size: '18px', weight: 'bold', color: '#4b5563' },
+                    { placeholder: 'name', text: name2, x: '120px', y: '220px', size: '18px', weight: 'bold', color: '#1e293b' },
+                    { placeholder: 'place', text: unit2, x: '370px', y: '220px', size: '16px', color: '#4b5563' },
+                    
+                    // 3rd Prize
+                    { placeholder: 'no.', text: '#3', x: '50px', y: '290px', size: '18px', weight: 'bold', color: '#b45309' },
+                    { placeholder: 'name', text: name3, x: '120px', y: '290px', size: '18px', weight: 'bold', color: '#1e293b' },
+                    { placeholder: 'place', text: unit3, x: '370px', y: '290px', size: '16px', color: '#4b5563' }
                 ];
 
-                window.selectedAiTemplate.data.regions.forEach((region, i) => {
-                    if (region.label) {
-                        const lblLower = region.label.toLowerCase().trim();
-                        if (noiseLabels.some(n => lblLower === n)) return; // Skip noise regions
+                layout.forEach(item => {
+                    if ((item.placeholder === 'no.' || item.placeholder === 'name' || item.placeholder === 'place') && !item.text) {
+                        return;
                     }
 
                     const textEl = document.createElement('div');
                     textEl.className = 'draggable-text';
-                    textEl.innerText = region.label || 'Text';
-                    textEl.setAttribute('data-placeholder', region.label || 'Text');
-                    textEl.style.left = '50px';
-                    textEl.style.top = startY + 'px';
-                    textEl.style.color = '#000000';
-                    textEl.style.fontSize = '24px';
-                    textEl.style.fontWeight = 'bold';
-                    textEl.style.fontFamily = 'Arial';
+                    textEl.innerText = item.text || 'Text';
+                    textEl.setAttribute('data-placeholder', item.placeholder);
+                    textEl.style.left = item.x;
+                    textEl.style.top = item.y;
+                    textEl.style.fontSize = item.size || '24px';
+                    textEl.style.color = item.color || '#000000';
+                    textEl.style.fontFamily = "'Outfit', sans-serif";
+                    if (item.weight) textEl.style.fontWeight = item.weight;
+                    if (item.align) textEl.style.textAlign = item.align;
+                    if (item.width) textEl.style.width = item.width;
 
                     canvas.appendChild(textEl);
                     initDraggableText(textEl);
-                    startY += 40;
+                });
+            } else {
+                // Populate existing text elements in-place by sorting them top-to-bottom
+                texts.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+                let nameCount = 0; let placeCount = 0; let noCount = 0;
+
+                texts.forEach(el => {
+                    const txt = el.getAttribute('data-placeholder') || el.innerText.trim();
+                    if (txt === 'Categoriy') { el.setAttribute('data-placeholder', 'Categoriy'); el.innerText = category; }
+                    else if (txt === 'Programs') { el.setAttribute('data-placeholder', 'Programs'); el.innerText = program; }
+                    else if (txt === 'Result :') { el.setAttribute('data-placeholder', 'Result :'); el.innerText = `Result : ${rNo}`; }
+                    else if (txt === 'no.') {
+                        el.setAttribute('data-placeholder', 'no.');
+                        if (noCount === 0) { if (name1) { el.style.display = 'block'; el.innerText = pos1.includes('#') ? pos1 : `#${pos1 || '1'}`; } else { el.style.display = 'none'; } }
+                        else if (noCount === 1) { if (name2) { el.style.display = 'block'; el.innerText = pos2.includes('#') ? pos2 : `#${pos2 || '2'}`; } else { el.style.display = 'none'; } }
+                        else if (noCount === 2) { if (name3) { el.style.display = 'block'; el.innerText = pos3.includes('#') ? pos3 : `#${pos3 || '3'}`; } else { el.style.display = 'none'; } }
+                        else { el.style.display = 'none'; }
+                        noCount++;
+                    }
+                    else if (txt === 'name') {
+                        el.setAttribute('data-placeholder', 'name');
+                        if (nameCount === 0) { if (name1) { el.style.display = 'block'; el.innerText = name1; } else { el.style.display = 'none'; } }
+                        else if (nameCount === 1) { if (name2) { el.style.display = 'block'; el.innerText = name2; } else { el.style.display = 'none'; } }
+                        else if (nameCount === 2) { if (name3) { el.style.display = 'block'; el.innerText = name3; } else { el.style.display = 'none'; } }
+                        else { el.style.display = 'none'; }
+                        nameCount++;
+                    }
+                    else if (txt === 'place') {
+                        el.setAttribute('data-placeholder', 'place');
+                        if (placeCount === 0) { if (unit1) { el.style.display = 'block'; el.innerText = unit1; } else { el.style.display = 'none'; } }
+                        else if (placeCount === 1) { if (unit2) { el.style.display = 'block'; el.innerText = unit2; } else { el.style.display = 'none'; } }
+                        else if (placeCount === 2) { if (unit3) { el.style.display = 'block'; el.innerText = unit3; } else { el.style.display = 'none'; } }
+                        else { el.style.display = 'none'; }
+                        placeCount++;
+                    }
                 });
             }
-        }
-
-        function openAiTemplateModal() {
-            document.getElementById('ai-template-modal').style.display = 'flex';
-            loadAiTemplates();
-        }
-        function closeAiTemplateModal() {
-            document.getElementById('ai-template-modal').style.display = 'none';
-        }
-
-        async function loadAiTemplates() {
-            const listDiv = document.getElementById('ai-template-list');
-            listDiv.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 2rem;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>';
-
-            try {
-                const { data, error } = await supabaseClient.storage.from('json file').list();
-                if (error) throw error;
-
-                const templates = data.filter(f => f.name.endsWith('.json')).sort((a, b) => b.created_at.localeCompare(a.created_at));
-
-                if (templates.length === 0) {
-                    listDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">No AI templates found. Create one in the AI PDF Trainer.</div>';
-                    return;
+            
+            // Sync with publishing controls
+            const pubCat = document.getElementById('publish-category');
+            const pubProg = document.getElementById('publish-program');
+            if (pubCat && category) {
+                for (let option of pubCat.options) {
+                    if (option.value.trim().toLowerCase() === category.trim().toLowerCase()) {
+                        pubCat.value = option.value;
+                        loadProgramsForDesignStudio();
+                        break;
+                    }
                 }
-
-                let html = '';
-                templates.forEach(t => {
-                    const { data: urlData } = supabaseClient.storage.from('json file').getPublicUrl(t.name);
-                    const isSelected = window.selectedAiTemplate && window.selectedAiTemplate.filename === t.name;
-
-                    html += `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid ${isSelected ? '#4338ca' : '#e2e8f0'}; border-radius: 8px; background: ${isSelected ? '#e0e7ff' : '#f8fafc'}; cursor: pointer; margin-bottom: 0.5rem;" onclick="selectAiTemplate('${urlData.publicUrl}', '${t.name}')">
-                            <div>
-                                <h3 style="margin: 0 0 0.25rem 0; font-size: 1rem; color: #1e293b;">${t.name}</h3>
-                                <p style="margin: 0; font-size: 0.8rem; color: #64748b;">Created: ${new Date(t.created_at).toLocaleString()}</p>
-                            </div>
-                            <button class="btn" style="background: ${isSelected ? '#4338ca' : '#cbd5e1'}; color: ${isSelected ? 'white' : '#475569'}; border: none; padding: 0.5rem 1rem;">
-                                ${isSelected ? 'Selected' : 'Select'}
-                            </button>
-                        </div>
-                    `;
-                });
-
-                listDiv.innerHTML = html;
-            } catch (err) {
-                console.error("Error loading AI templates:", err);
-                listDiv.innerHTML = '<div style="color: red; text-align: center; padding: 2rem;">Failed to load templates.</div>';
+            }
+            if (pubProg && program) {
+                pubProg.value = program;
             }
         }
 
-        async function selectAiTemplate(url, filename) {
-            try {
-                const response = await fetch(url);
-                const templateData = await response.json();
-
-                window.selectedAiTemplate = {
-                    filename: filename,
-                    url: url,
-                    data: templateData
-                };
-
-                const aiIndicator = document.getElementById('active-ai-template-indicator');
-                if (aiIndicator) {
-                    aiIndicator.innerHTML = `<strong>Active AI Template:</strong> <span style="color: #4338ca; background: #e0e7ff; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${filename}</span> <button onclick="clearAiTemplate()" style="margin-left: 10px; background: none; border: none; color: #e11d48; cursor: pointer; text-decoration: underline;">Clear</button>`;
-                }
-
-                closeAiTemplateModal();
-                autoPopulateTextFromAiTemplate();
-                alert(`Selected AI Template: ${filename}. When you upload PDFs, text will be automatically extracted based on this layout.`);
-            } catch (err) {
-                console.error("Failed to parse AI template JSON:", err);
-                alert("Failed to load the selected template JSON.");
-            }
+        function clearScrapedResult() {
+            window.selectedScrapedResult = null;
+            document.getElementById('active-scraped-result-indicator').innerHTML = '';
+            document.getElementById('show-scraped-result-select').value = '';
+            document.getElementById('scraped-result-preview').style.display = 'none';
         }
 
         function clearAiTemplate() {
-            window.selectedAiTemplate = null;
-            document.getElementById('active-ai-template-indicator').innerHTML = '';
+            clearScrapedResult();
         }
 
-        async function handleLocalAiTemplateUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // Initialize background scraping polling
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                loadScrapedResults(false).catch(err => console.error(err));
+            }, 2000);
 
-            try {
-                const text = await file.text();
-                const templateData = JSON.parse(text);
-
-                if (!templateData.regions || !Array.isArray(templateData.regions)) {
-                    alert("Invalid AI Template format. Missing 'regions' array.");
-                    return;
-                }
-
-                window.selectedAiTemplate = {
-                    filename: file.name,
-                    url: 'local',
-                    data: templateData
-                };
-
-                const aiIndicator = document.getElementById('active-ai-template-indicator');
-                if (aiIndicator) {
-                    aiIndicator.innerHTML = `<strong>Active AI Template:</strong> <span style="color: #4338ca; background: #e0e7ff; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${file.name}</span> <button onclick="clearAiTemplate()" style="margin-left: 10px; background: none; border: none; color: #e11d48; cursor: pointer; text-decoration: underline;">Clear</button>`;
-                }
-
-                closeAiTemplateModal();
-                autoPopulateTextFromAiTemplate();
-                alert(`Successfully loaded local template: ${file.name}`);
-            } catch (err) {
-                console.error("Failed to parse local JSON file:", err);
-                alert("Failed to parse the uploaded JSON file. Please make sure it's a valid AI PDF Trainer template.");
-            }
-
-            // Clear input value so the same file can be uploaded again if needed
-            event.target.value = '';
-        }
+            setInterval(() => {
+                loadScrapedResults(false).catch(err => console.error(err));
+            }, 10000);
+        });
 
         async function loadADPicker() {
             const grid = document.getElementById('ad-picker-grid');

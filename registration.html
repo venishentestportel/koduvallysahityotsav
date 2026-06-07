@@ -1411,54 +1411,13 @@
                     payload: { stage: stage, situation: situation, category: cat, program: prog }
                 });
 
-                // --- WHATSAPP NOTIFICATION LOGIC ---
-                // Always try local backend first (works even when page is on Netlify)
-                const waLocalURL  = 'http://localhost:3001';
-                const waRenderURL = 'https://koduvelly-backend.onrender.com';
-                const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
-
-                async function waSend(endpoint, options) {
-                    // Try local first, fall back to Render
-                    try {
-                        const r = await fetch(`${waLocalURL}${endpoint}`, { ...options, signal: AbortSignal.timeout(4000) });
-                        if (r.ok) return r;
-                    } catch (_) {}
-                    return fetch(`${waRenderURL}${endpoint}`, { ...options, signal: AbortSignal.timeout(8000) });
-                }
-
-                let targetIds = [];
-                try {
-                    const res = await waSend(`/whatsapp-targets?clientId=${clientId}`, { method: 'GET' });
-                    if (res && res.ok) {
-                        const data = await res.json();
-                        if (data.success) targetIds = data.targets;
-                    }
-                } catch(e) { console.warn('Could not fetch WA targets:', e); }
-
-                if (targetIds && targetIds.length > 0) {
-                    const message = `${stage}\nCategorie : ${cat || 'None'}\nProgram : ${prog || 'None'}\naction : ${situation}`;
-                    let sent = 0;
-                    await Promise.all(targetIds.map(async (chatId) => {
-                        try {
-                            const r = await waSend('/send-message', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ clientId, chatId, message })
-                            });
-                            if (r && r.ok) sent++;
-                        } catch (e) {
-                            console.error('Failed to send WA message to', chatId, e);
-                        }
-                    }));
-                    // Show brief toast
-                    const toast = document.createElement('div');
-                    toast.style = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#25D366;color:#fff;padding:0.7rem 1.2rem;border-radius:10px;font-weight:bold;font-size:0.9rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
-                    toast.innerHTML = `<i class="fab fa-whatsapp"></i> WA sent to ${sent}/${targetIds.length}`;
-                    document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 4000);
-                } else {
-                    console.warn('[WA] No targets configured for clientId:', clientId);
-                }
+                // --- WHATSAPP NOTIFICATION LOGIC ─────────────────────────────────
+                // Stage updates are automatically polled and sent by the backend server.
+                const toast = document.createElement('div');
+                toast.style = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#3b82f6;color:#fff;padding:0.7rem 1.2rem;border-radius:10px;font-weight:bold;font-size:0.9rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+                toast.innerHTML = `<i class="fa fa-clock"></i> Stage action synced. WhatsApp queued in background.`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
 
                 alert(`Successfully triggered: ${situation}`);
 
@@ -2292,43 +2251,8 @@
         }
 
         async function sendSectorNotification(studentName, sector, regularProgsText, generalProgsText, stage) {
-            try {
-                const clientId = localStorage.getItem('whatsapp_client_id') || 'default';
-                let targetIds = [];
-                try {
-                    const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-targets?clientId=${clientId}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.success) targetIds = data.targets;
-                    }
-                } catch(e) {}
-                
-                if (targetIds && targetIds.length > 0) {
-                    const progsStr = [regularProgsText, generalProgsText].filter(Boolean).join(', ');
-                    const message = `*Student Registered*\nName: ${studentName}\nSector: ${sector || 'Unknown'}\nPrograms: ${progsStr}\nStage: ${stage}`;
-                    
-                    let sentCount = 0;
-                    const promises = targetIds.map(async (chatId) => {
-                        try {
-                            const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ clientId, chatId, message })
-                            });
-                            if (res.ok) sentCount++;
-                        } catch (e) {
-                            console.error('Failed to send WhatsApp message to', chatId, e);
-                        }
-                    });
-                    await Promise.all(promises);
-                    return { success: true, sentCount: sentCount };
-                } else {
-                    return { success: false, reason: 'No WhatsApp targets configured.' };
-                }
-            } catch (e) {
-                console.error("Error sending sector notification:", e);
-                return { success: false, reason: e.message };
-            }
+            // Shifting responsibility to background Supabase poller on local server
+            return { success: true, sentCount: 'queued' };
         }
 
         async function loadRegisteredStudentsList(cat, prog) {

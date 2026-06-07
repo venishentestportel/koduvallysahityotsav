@@ -15,6 +15,7 @@ const http = require('http');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const puppeteer = require('puppeteer');
 const { initSockets } = require('./sockets');
 const { initializeWhatsAppForClient, clients, getChats, getContacts, sendMessage, sendMedia, logout } = require('./whatsapp');
 
@@ -27,6 +28,7 @@ const server = http.createServer(app);
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.static(path.join(__dirname, '..')));
 
 // Init Sockets
 initSockets(server);
@@ -56,7 +58,100 @@ function getActiveClientId(requestedClientId) {
     return requestedClientId; // fallback
 }
 
+// ── Sahityotsav Scraping System ──────────────────────────────────────────────
+let scrapedCache = null;
+let lastScrapedTime = 0;
+let isScraping = false;
+
+async function scrapeResults() {
+    if (isScraping) {
+        console.log("[Scraper] Scrape already in progress, skipping duplicate call.");
+        return scrapedCache;
+    }
+    isScraping = true;
+    let browser;
+    try {
+        console.log("[Scraper] Launching Puppeteer browser...");
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        
+        let apiData = null;
+        page.on('response', async response => {
+            const url = response.url();
+            const status = response.status();
+            const method = response.request().method();
+            
+            if (response.request().resourceType() === 'xhr' || response.request().resourceType() === 'fetch' || url.includes('api')) {
+                console.log(`[Scraper Network] ${method} ${url} -> Status: ${status}`);
+            }
+
+            if (url.includes('/api/results')) {
+                try {
+                    const text = await response.text();
+                    console.log(`[Scraper Intercept] Found results API response (length ${text.length})`);
+                    const json = JSON.parse(text);
+                    if (json && json.success) {
+                        apiData = json;
+                    } else {
+                        console.log(`[Scraper Intercept] JSON success is false or invalid:`, text.substring(0, 200));
+                    }
+                } catch(e) {
+                    console.log(`[Scraper Intercept] Failed to parse or read response body:`, e.message);
+                }
+            }
+        });
+
+        console.log("[Scraper] Navigating to sahityotsav.com results page...");
+        await page.goto('https://sahityotsav.com/app/results?page=1&limit=20', {
+            waitUntil: 'networkidle2',
+            timeout: 25000
+        });
+
+        // Wait up to 3 seconds for XHR interception if not caught already
+        let retries = 0;
+        while (!apiData && retries < 6) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            retries++;
+        }
+
+        if (apiData) {
+            scrapedCache = apiData;
+            lastScrapedTime = Date.now();
+            console.log(`[Scraper] Scraped ${apiData.results ? apiData.results.length : 0} results successfully at ${new Date(lastScrapedTime).toLocaleTimeString()}`);
+        } else {
+            console.warn("[Scraper] Page loaded but results API response was not captured.");
+        }
+    } catch (err) {
+        console.error("[Scraper] Error scraping results:", err.message);
+    } finally {
+        if (browser) {
+            try {
+                await browser.close();
+            } catch(e) {}
+        }
+        isScraping = false;
+    }
+    return scrapedCache;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 // API Routes
+app.get('/api/scraped-results', async (req, res) => {
+    try {
+        if (!scrapedCache) {
+            console.log("[API] No cache found. Triggering synchronous scrape...");
+            await scrapeResults();
+        }
+        res.json({ success: !!scrapedCache, data: scrapedCache });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.get('/status', (req, res) => {
     const clientId = getClientId(req);
     try {
@@ -444,6 +539,224 @@ app.post('/send-sector-notification', async (req, res) => {
     return res.status(500).json({ success: false, error: errors.join(', ') || 'Failed to send' });
 });
 
+// ── Supabase Background Polling for Registrations and Stages ─────────────────
+let lastRegistMaxId = 0;
+let lastStageMaxIds = {};
+let isPollingActive = false;
+
+async function startSupabasePolling() {
+    console.log("[Supabase Poller] Initializing max IDs from database...");
+    
+    // 1. Get max ID for regist table
+    try {
+        const res = await fetch('https://lxbvadjjboavxwidxsnl.supabase.co/rest/v1/regist?select=id&order=id.desc&limit=1', {
+            headers: {
+                'apikey': SUPABASE_HEADERS.apikey,
+                'Authorization': SUPABASE_HEADERS.Authorization
+            }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.length > 0) {
+                lastRegistMaxId = data[0].id;
+                console.log(`[Supabase Poller] Initialized regist max ID to: ${lastRegistMaxId}`);
+            }
+        }
+    } catch (err) {
+        console.error("[Supabase Poller] Failed to initialize regist max ID:", err.message);
+    }
+
+    // 2. Get max ID for stages 1-8
+    const stages = ['stage 1', 'stage 2', 'stage 3', 'stage 4', 'stage 5', 'stage 6', 'stage 7', 'stage 8'];
+    for (const stage of stages) {
+        try {
+            const res = await fetch(`https://lxbvadjjboavxwidxsnl.supabase.co/rest/v1/${encodeURIComponent(stage)}?select=id&order=id.desc&limit=1`, {
+                headers: {
+                    'apikey': SUPABASE_HEADERS.apikey,
+                    'Authorization': SUPABASE_HEADERS.Authorization
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    lastStageMaxIds[stage] = data[0].id;
+                    console.log(`[Supabase Poller] Initialized ${stage} max ID to: ${lastStageMaxIds[stage]}`);
+                } else {
+                    lastStageMaxIds[stage] = 0;
+                }
+            } else {
+                lastStageMaxIds[stage] = 0;
+            }
+        } catch (err) {
+            console.error(`[Supabase Poller] Failed to initialize ${stage} max ID:`, err.message);
+            lastStageMaxIds[stage] = 0;
+        }
+    }
+
+    isPollingActive = true;
+    // Poll every 3 seconds
+    setInterval(pollSupabaseData, 3000);
+}
+
+async function pollSupabaseData() {
+    if (!isPollingActive) return;
+
+    // 1. Poll new registrations
+    try {
+        const res = await fetch(`https://lxbvadjjboavxwidxsnl.supabase.co/rest/v1/regist?select=*&id=gt.${lastRegistMaxId}&order=id.asc`, {
+            headers: {
+                'apikey': SUPABASE_HEADERS.apikey,
+                'Authorization': SUPABASE_HEADERS.Authorization
+            }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.length > 0) {
+                console.log(`[Supabase Poller] Found ${data.length} new registrations.`);
+                lastRegistMaxId = data[data.length - 1].id;
+                for (const row of data) {
+                    await handleNewRegistNotification(row);
+                }
+            }
+        }
+    } catch (err) {
+        console.error("[Supabase Poller] Error polling registrations:", err.message);
+    }
+
+    // 2. Poll new stage updates
+    const stages = ['stage 1', 'stage 2', 'stage 3', 'stage 4', 'stage 5', 'stage 6', 'stage 7', 'stage 8'];
+    for (const stage of stages) {
+        const lastId = lastStageMaxIds[stage] || 0;
+        try {
+            const res = await fetch(`https://lxbvadjjboavxwidxsnl.supabase.co/rest/v1/${encodeURIComponent(stage)}?select=*&id=gt.${lastId}&order=id.asc`, {
+                headers: {
+                    'apikey': SUPABASE_HEADERS.apikey,
+                    'Authorization': SUPABASE_HEADERS.Authorization
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    console.log(`[Supabase Poller] Found ${data.length} new updates for ${stage}.`);
+                    lastStageMaxIds[stage] = data[data.length - 1].id;
+                    for (const row of data) {
+                        await handleNewStageNotification(stage, row);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(`[Supabase Poller] Error polling ${stage}:`, err.message);
+        }
+    }
+}
+
+async function handleNewRegistNotification(row) {
+    try {
+        const name = row.name || 'Unknown';
+        const sector = row.sector || 'Unknown';
+        const program = row.program || '';
+        const general = row.general || '';
+        const stage = row.stage || 'Unknown';
+        const codeletter = row.codeletter || '';
+
+        // Get the active client
+        const activeClient = getActiveClientId('default');
+        
+        // Collect checked targets from globalWhatsAppTargets
+        const targetIds = new Set();
+        Object.keys(globalWhatsAppTargets).forEach(cid => {
+            const targets = globalWhatsAppTargets[cid];
+            if (Array.isArray(targets)) {
+                targets.forEach(t => targetIds.add(t));
+            }
+        });
+
+        // 1. Dispatch alert to selected WhatsApp groups / contacts
+        if (targetIds.size > 0) {
+            const progsStr = [program, general].filter(Boolean).join(', ');
+            const message = `*Student Registered*\nName: ${name}\nSector: ${sector}\nPrograms: ${progsStr}\nStage: ${stage}${codeletter ? `\nCode Letter: ${codeletter}` : ''}`;
+            console.log(`[Supabase Poller] Dispatching registration alert for ${name} to targets:`, Array.from(targetIds));
+            for (const chatId of targetIds) {
+                try {
+                    await sendMessage(activeClient, chatId, message);
+                } catch (err) {
+                    console.error(`[Supabase Poller] Failed to send registration alert to ${chatId}:`, err.message);
+                }
+            }
+        }
+
+        // 2. Dispatch alert to matched sector group
+        const cleanSectorName = (str) => {
+            if (!str) return '';
+            return str.replace(/\s*\(group\)\s*/i, '')
+                      .toLowerCase()
+                      .replace(/[\p{P}\p{Z}\p{S}\?]/gu, '')
+                      .trim();
+        };
+
+        const cleanStudentSector = cleanSectorName(sector);
+        if (cleanStudentSector) {
+            const routing = globalWhatsAppRouting;
+            for (const chatId of Object.keys(routing)) {
+                if (chatId.startsWith('offline_')) continue;
+                let targetSector = (routing[chatId].sector || '').trim();
+                if (!targetSector) {
+                    targetSector = (routing[chatId].name || '').trim();
+                }
+                
+                const cleanTargetSector = cleanSectorName(targetSector);
+                if (cleanTargetSector && cleanTargetSector === cleanStudentSector) {
+                    const sectorMessage = `*Student Registration Alert*\n*Student Name:* ${name}\n*Sector Name:* ${sector}\n*Registration Stage:* ${stage}\n${program ? `*Registered Program:* ${program}` : ''}${general ? `*General Program:* ${general}` : ''}`;
+                    try {
+                        console.log(`[Supabase Poller] Dispatching sector registration alert for ${name} to sector group ${chatId} (${routing[chatId].name})`);
+                        await sendMessage(activeClient, chatId, sectorMessage);
+                    } catch (err) {
+                        console.error(`[Supabase Poller] Failed to send sector registration alert to ${chatId}:`, err.message);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error("[Supabase Poller] Error handling registration notification:", e.message);
+    }
+}
+
+async function handleNewStageNotification(stageName, row) {
+    try {
+        const situation = row.situation;
+        if (!situation) return;
+
+        // Skip check-in logs, only notify situation triggers
+        if (situation === 'Check-in') return;
+
+        const category = row.Categories || 'None';
+        const program = row.Programs || 'None';
+
+        const activeClient = getActiveClientId('default');
+        const targetIds = new Set();
+        Object.keys(globalWhatsAppTargets).forEach(cid => {
+            const targets = globalWhatsAppTargets[cid];
+            if (Array.isArray(targets)) {
+                targets.forEach(t => targetIds.add(t));
+            }
+        });
+
+        if (targetIds.size > 0) {
+            const message = `${stageName.toUpperCase()}\nCategorie : ${category}\nProgram : ${program}\naction : ${situation}`;
+            console.log(`[Supabase Poller] Dispatching stage alert (${situation}) for ${stageName} to targets:`, Array.from(targetIds));
+            for (const chatId of targetIds) {
+                try {
+                    await sendMessage(activeClient, chatId, message);
+                } catch (err) {
+                    console.error(`[Supabase Poller] Failed to send stage alert to ${chatId}:`, err.message);
+                }
+            }
+        }
+    } catch (e) {
+        console.error("[Supabase Poller] Error handling stage notification:", e.message);
+    }
+}
+
 
 const PORT = process.env.PORT || 3001;
 
@@ -452,4 +765,20 @@ server.listen(PORT, () => {
     initializeWhatsAppForClient('default').catch(err => {
         console.error("Failed to initialize default client on startup:", err);
     });
+
+    // Start initial scrape and background scraper interval (every 30 seconds)
+    console.log("[Server] Starting background sahityotsav results scraper...");
+    setTimeout(() => {
+        scrapeResults().catch(err => console.error("[Initial Scraper Error]:", err.message));
+    }, 3000);
+
+    setInterval(() => {
+        scrapeResults().catch(err => console.error("[Interval Scraper Error]:", err.message));
+    }, 30000);
+
+    // Start background Supabase polling
+    setTimeout(() => {
+        startSupabasePolling().catch(err => console.error("[Supabase Poller Start Error]:", err.message));
+    }, 5000);
 });
+

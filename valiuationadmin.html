@@ -1212,10 +1212,10 @@
                     // Refresh registrations list silently
                     loadRegistrations(true);
                     
-                    // Trigger WhatsApp alert for each new registration
-                    for (const reg of data) {
-                        await handleNewRealtimeRegistration(reg);
-                    }
+                    // Trigger WhatsApp alert for each new registration (handled by background backend poller now)
+                    // for (const reg of data) {
+                    //     await handleNewRealtimeRegistration(reg);
+                    // }
                 }
             } catch (err) {
                 console.warn("Error during polling registrations:", err);

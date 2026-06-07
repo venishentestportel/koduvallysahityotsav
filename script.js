@@ -430,35 +430,8 @@ async function setStageSituation(stageName, situation, category, program) {
         alert(`Successfully updated ${stageName} to: ${situation}`);
         
         // --- WHATSAPP NOTIFICATION LOGIC ---
-        let targetIds = [];
-        const checkboxes = document.querySelectorAll('.wa-target-checkbox:checked');
-        if (checkboxes && checkboxes.length > 0) {
-            targetIds = Array.from(checkboxes).map(cb => cb.value);
-        } else {
-            try {
-                const res = await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/whatsapp-targets`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.success) targetIds = data.targets;
-                }
-            } catch(e) {}
-        }
-        
-        if (targetIds && targetIds.length > 0) {
-            const message = `${stageName}\nCategorie : ${category || 'None'}\nProgram : ${program || 'None'}\naction : ${situation}`;
-            
-            targetIds.forEach(async (chatId) => {
-                try {
-                    await fetch(`${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/send-message`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chatId: chatId, message: message })
-                    });
-                } catch (e) {
-                    console.error('Failed to send WhatsApp message to', chatId, e);
-                }
-            });
-        }
+        // Handled in the background by the server polling stage tables in Supabase
+        console.log(`[WA] Stage action '${situation}' saved to database. Background poller will dispatch notifications.`);
         
     } catch (err) {
         console.error('Error updating stage situation:', err);
