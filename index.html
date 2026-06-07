@@ -416,81 +416,33 @@
                 const scheduleList = stageSchedules[stageKey] || [];
                 const stageTitle = window.getStageDisplayName ? window.getStageDisplayName(s.stage) : s.stage;
 
-                // Determine what's current (NOW), next, and later from live stage status
-                const historyList = (data.stageHistory && data.stageHistory[s.stage]) || [];
-                const currentStatus = historyList.length > 0 ? historyList[0] : null;
-                const isActive = currentStatus && currentStatus.situation && !currentStatus.situation.toLowerCase().includes('end');
-
-                let nowText = 'Idle / End of Program';
-                let nextItem = null;
-                let laterItems = [];
-
-                if (isActive) {
-                    const currentCat = (currentStatus.Categories || '').toLowerCase().trim();
-                    const currentProg = (currentStatus.Programs || '').toLowerCase().trim();
-                    nowText = `${currentStatus.Programs} (${currentStatus.Categories})`;
-
-                    // Search for this program in the scheduleList
-                    let foundIdx = -1;
-                    for (let idx = 0; idx < scheduleList.length; idx++) {
-                        const item = scheduleList[idx];
-                        if ((item.cat || '').toLowerCase().trim() === currentCat && (item.prog || '').toLowerCase().trim() === currentProg) {
-                            foundIdx = idx;
-                            break;
-                        }
-                    }
-
-                    if (foundIdx !== -1) {
-                        nextItem = scheduleList[foundIdx + 1] || null;
-                        laterItems = scheduleList.slice(foundIdx + 2);
-                    } else {
-                        // Not found in schedule list (off-schedule program started)
-                        nextItem = scheduleList[0] || null;
-                        laterItems = scheduleList.slice(1);
-                    }
-                } else {
-                    // Stage is idle, next up is the first scheduled program
-                    nextItem = scheduleList[0] || null;
-                    laterItems = scheduleList.slice(1);
-                }
-
-                let nextHtml = '';
-                if (nextItem) {
-                    nextHtml = `
-                        <div class="pallet-list-item">
-                            <span class="badge badge-primary">NEXT</span>
-                            <span class="item-text" style="font-weight:600;">${nextItem.prog} (${nextItem.cat})</span>
-                        </div>
-                    `;
-                } else {
-                    nextHtml = `
-                        <div class="pallet-list-item">
-                            <span class="badge badge-secondary">NEXT</span>
-                            <span class="item-text" style="color: var(--pallet-text-light);">None Scheduled</span>
-                        </div>
-                    `;
-                }
-
-                let laterHtml = '';
-                if (laterItems.length > 0) {
-                    laterHtml = laterItems.map(item => `
-                        <div class="pallet-list-item">
-                            <span class="badge badge-secondary">LATER</span>
-                            <span class="item-text">${item.prog} (${item.cat})</span>
+                let programsHtml = '';
+                if (scheduleList.length > 0) {
+                    programsHtml = scheduleList.map((item, idx) => `
+                        <div class="pallet-list-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; border-bottom: 1px solid #edf2f7; gap: 8px;">
+                            <span style="font-weight: 700; color: var(--pallet-primary); font-size: 0.85rem; min-width: 24px;">#${idx + 1}</span>
+                            <span class="item-text" style="flex: 1; text-align: left; font-weight: 500; color: var(--pallet-text); font-size: 0.9rem;">${item.prog}</span>
+                            <span class="badge badge-secondary" style="background: #e2ebf5; color: #5856d6; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 600;">${item.cat}</span>
                         </div>
                     `).join('');
+                } else {
+                    programsHtml = `
+                        <div style="text-align: center; padding: 1.5rem; color: var(--pallet-text-light); font-size: 0.9rem;">
+                            <i class="fa fa-info-circle"></i> No programs scheduled for this stage.
+                        </div>
+                    `;
                 }
 
                 return `
-                <div class="pallet-program-card">
-                    <h3 class="program-title">${stageTitle}</h3>
-                    <div class="program-details">
-                        <div class="pallet-list-item">
-                            <span class="badge badge-live">NOW</span>
-                            <span class="item-text" style="font-weight:700; color: ${isActive ? 'var(--pallet-primary)' : 'var(--pallet-text-light)'};">${nowText}</span>
-                        </div>
-                        ${nextHtml}
-                        ${laterHtml}
+                <div class="pallet-program-card" style="margin-bottom: 1.5rem; background: #ffffff; border-radius: 12px; border: 1px solid #e2ebf5; overflow: hidden; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);">
+                    <div style="background: #f1f5f9; padding: 0.8rem 1.2rem; border-bottom: 1px solid #e2ebf5; display: flex; align-items: center; justify-content: space-between;">
+                        <h3 class="program-title" style="margin:0; font-size: 1.05rem; color: var(--pallet-text); font-weight: 700;">${stageTitle}</h3>
+                        <span style="font-size: 0.75rem; color: var(--pallet-text-light); font-weight: 600; background: #ffffff; padding: 2px 8px; border-radius: 999px; border: 1px solid #e2ebf5;">
+                            ${scheduleList.length} Scheduled
+                        </span>
+                    </div>
+                    <div class="program-details" style="padding: 0.25rem 0;">
+                        ${programsHtml}
                     </div>
                 </div>
                 `;

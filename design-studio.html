@@ -3901,15 +3901,18 @@
             const editor = document.getElementById('registration-stages-editor');
             if (!editor) return;
 
-            editor.innerHTML = (currentData.stages || []).map((item, index) => {
+            const stagesList = currentData.stages || [];
+            editor.innerHTML = stagesList.map((item, index) => {
                 const savedCat = localStorage.getItem(`reg-cat-${item.stage}`) || '';
                 const savedProg = localStorage.getItem(`reg-prog-${item.stage}`) || '';
 
-                const stageCats = (currentData.stageCategories && currentData.stageCategories[item.stage]) ? currentData.stageCategories[item.stage] : [];
-                const stageProgs = (currentData.stagePrograms && currentData.stagePrograms[item.stage]) ? currentData.stagePrograms[item.stage] : [];
+                let stageCats = (currentData.stageCategories && currentData.stageCategories[item.stage]) ? currentData.stageCategories[item.stage] : [];
+                stageCats = stageCats.filter(c => c && c.trim());
+                if (stageCats.length === 0) {
+                    stageCats = ['LP', 'UP', 'HS', 'HSS', 'JR', 'SR', 'GEN', 'General Category-A', 'General Category-b'];
+                }
 
                 const catsHtml = stageCats.map(c => `<option value="${c}" ${c === savedCat ? 'selected' : ''}>${c}</option>`).join('');
-                const progsHtml = stageProgs.map(p => `<option value="${p}" ${p === savedProg ? 'selected' : ''}>${p}</option>`).join('');
 
                 return `
                 <div class="registration-stage-card" style="display: flex; flex-direction: column; gap: 1rem; background: #ffffff; padding: 1.5rem; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
@@ -3923,7 +3926,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
                             <label style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Target Category</label>
-                            <select id="reg-cat-${index}" onchange="localStorage.setItem('reg-cat-${item.stage}', this.value)" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.8rem; color: #334155; background: #ffffff; outline: none; appearance: auto;">
+                            <select id="reg-cat-${index}" onchange="handleRegCatChange(${index}, this.value, '${item.stage}')" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.8rem; color: #334155; background: #ffffff; outline: none; appearance: auto;">
                                 <option value="">Select</option>
                                 ${catsHtml}
                             </select>
@@ -3932,7 +3935,6 @@
                             <label style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Target Program</label>
                             <select id="reg-prog-${index}" onchange="localStorage.setItem('reg-prog-${item.stage}', this.value)" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.8rem; color: #334155; background: #ffffff; outline: none; appearance: auto;">
                                 <option value="">Select</option>
-                                ${progsHtml}
                             </select>
                         </div>
                     </div>
@@ -3950,6 +3952,74 @@
                 </div>
                 `;
             }).join('');
+
+            // Fire async loading of programs
+            stagesList.forEach((item, index) => {
+                const savedCat = localStorage.getItem(`reg-cat-${item.stage}`) || '';
+                const savedProg = localStorage.getItem(`reg-prog-${item.stage}`) || '';
+                if (savedCat) {
+                    loadRegProgramsForStage(index, savedCat, savedProg, item.stage);
+                }
+            });
+        }
+
+        async function handleRegCatChange(index, cat, stageName) {
+            localStorage.setItem(`reg-cat-${stageName}`, cat);
+            localStorage.setItem(`reg-prog-${stageName}`, '');
+
+            const progSelect = document.getElementById(`reg-prog-${index}`);
+            if (!progSelect) return;
+
+            if (!cat) {
+                progSelect.innerHTML = '<option value="">Select</option>';
+                return;
+            }
+
+            progSelect.innerHTML = '<option value="">Loading...</option>';
+            try {
+                let stageProgs = (currentData.stagePrograms && currentData.stagePrograms[stageName]) ? currentData.stagePrograms[stageName] : [];
+                stageProgs = stageProgs.filter(p => p && p.trim());
+
+                const { data, error } = await supabaseClient.from(cat).select('Programs').not('Programs', 'is', null);
+                if (!error && data) {
+                    let progs = [...new Set(data.map(d => d.Programs))].sort();
+                    if (stageProgs.length > 0) {
+                        progs = progs.filter(p => stageProgs.includes(p));
+                    }
+                    progSelect.innerHTML = '<option value="">Select</option>' + progs.map(p => `<option value="${p}">${p}</option>`).join('');
+                } else {
+                    progSelect.innerHTML = '<option value="">No Programs</option>';
+                }
+            } catch (e) {
+                progSelect.innerHTML = '<option value="">Error</option>';
+            }
+        }
+
+        async function loadRegProgramsForStage(index, cat, selectedProg, stageName) {
+            const progSelect = document.getElementById(`reg-prog-${index}`);
+            if (!progSelect) return;
+
+            progSelect.innerHTML = '<option value="">Loading...</option>';
+            try {
+                let stageProgs = (currentData.stagePrograms && currentData.stagePrograms[stageName]) ? currentData.stagePrograms[stageName] : [];
+                stageProgs = stageProgs.filter(p => p && p.trim());
+
+                const { data, error } = await supabaseClient.from(cat).select('Programs').not('Programs', 'is', null);
+                if (!error && data) {
+                    let progs = [...new Set(data.map(d => d.Programs))].sort();
+                    if (stageProgs.length > 0) {
+                        progs = progs.filter(p => stageProgs.includes(p));
+                    }
+                    progSelect.innerHTML = '<option value="">Select</option>' + progs.map(p => {
+                        const isSelected = p === selectedProg;
+                        return `<option value="${p}" ${isSelected ? 'selected' : ''}>${p}</option>`;
+                    }).join('');
+                } else {
+                    progSelect.innerHTML = '<option value="">No Programs</option>';
+                }
+            } catch (e) {
+                progSelect.innerHTML = '<option value="">Error</option>';
+            }
         }
 
         function triggerStageSituation(index, situation) {
