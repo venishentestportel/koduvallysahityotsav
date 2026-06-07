@@ -9317,10 +9317,9 @@
         async function initStageScheduling() {
             try {
                 // Fetch existing schedules from Supabase Storage
-                const { data, error } = await supabaseClient.storage.from('json file').download('stage_schedules.json');
-                if (!error && data) {
-                    const text = await data.text();
-                    stageSchedules = JSON.parse(text);
+                const res = await fetch('https://lxbvadjjboavxwidxsnl.supabase.co/storage/v1/object/public/json%20file/stage_schedules.json');
+                if (res.ok) {
+                    stageSchedules = await res.json();
                 }
             } catch (err) {
                 console.warn("Could not load stage_schedules.json, starting fresh.");

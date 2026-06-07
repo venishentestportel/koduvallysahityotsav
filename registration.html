@@ -622,14 +622,14 @@
         let displayedChildren = [];
         async function fetchStageSchedules() {
             try {
-                const { data, error } = await supabaseClient.storage.from('json file').download('stage_schedules.json');
-                if (!error && data) {
-                    const text = await data.text();
-                    globalStageSchedules = JSON.parse(text);
+                const res = await fetch('https://lxbvadjjboavxwidxsnl.supabase.co/storage/v1/object/public/json%20file/stage_schedules.json');
+                if (res.ok) {
+                    globalStageSchedules = await res.json();
                 } else {
                     globalStageSchedules = {};
                 }
             } catch (err) {
+                console.warn("Error fetching stage schedules:", err);
                 globalStageSchedules = {};
             }
         }

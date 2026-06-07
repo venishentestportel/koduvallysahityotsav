@@ -158,7 +158,7 @@ async function fetchSupabaseData() {
             supabaseClient.storage.from('Gallery Manager').list(),
             supabaseClient.from('contenttext').select('*').order('id'),
             supabaseClient.from('shediul').select('*').order('id'),
-            supabaseClient.storage.from('json file').download('stage_schedules.json').catch(err => ({ error: err }))
+            fetch('https://lxbvadjjboavxwidxsnl.supabase.co/storage/v1/object/public/json%20file/stage_schedules.json').then(res => res.ok ? res.json() : null).catch(err => null)
         ]);
 
         if (markErr) throw markErr;
@@ -212,15 +212,7 @@ async function fetchSupabaseData() {
         }));
 
         // 3b. Stage Schedules (Stage Scheduling)
-        appData.stageSchedules = {};
-        if (stageSchedRes && !stageSchedRes.error && stageSchedRes.data) {
-            try {
-                const text = await stageSchedRes.data.text();
-                appData.stageSchedules = JSON.parse(text);
-            } catch (e) {
-                console.warn("Failed to parse stage_schedules.json:", e);
-            }
-        }
+        appData.stageSchedules = stageSchedRes || {};
 
         // 4. Posters (Design Studio)
         appData.posters = {};
