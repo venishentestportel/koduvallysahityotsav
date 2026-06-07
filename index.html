@@ -61,8 +61,14 @@
             <a href="#" class="icon-btn"><i class="fa fa-user"></i></a>
             <a href="#" class="icon-btn"><i class="fa fa-cog"></i></a>
         </div>
-        <div class="hamburger-menu" onclick="toggleMobileMenu()" style="cursor:pointer; display:none;">
-            <i class="fa fa-bars" style="font-size: 1.5rem; color: var(--pallet-text);"></i>
+        <!-- Mobile Header Actions (Visible on Mobile) -->
+        <div class="mobile-header-actions" style="display: none; align-items: center; gap: 0.75rem; margin-left: auto;">
+            <a href="results.html" class="pallet-btn primary" style="padding: 0.5rem 0.9rem; font-size: 0.7rem; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 6px; box-shadow: none; margin: 0;">
+                <i class="fa fa-trophy"></i> Results
+            </a>
+            <button onclick="toggleMobileMenu()" class="icon-btn" style="cursor: pointer; padding: 0; border-radius: 8px; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center;">
+                <i class="fa fa-bars" style="font-size: 0.9rem;"></i>
+            </button>
         </div>
     </header>
 
@@ -72,8 +78,8 @@
                 display: none !important;
             }
 
-            .hamburger-menu {
-                display: block !important;
+            .mobile-header-actions {
+                display: flex !important;
             }
         }
     </style>
