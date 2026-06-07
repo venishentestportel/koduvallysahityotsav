@@ -4029,9 +4029,18 @@
             // Fill design studio dropdowns
             const pubCat = document.getElementById('publish-category');
             if (pubCat) {
+                const prevCat = pubCat.value;
                 pubCat.innerHTML = currentData.categories.map(c => `<option value="${c}">${c}</option>`).join('');
-                if (pubCat.value && typeof loadProgramsForDesignStudio === 'function') {
-                    loadProgramsForDesignStudio();
+                
+                if (prevCat && Array.from(pubCat.options).some(o => o.value === prevCat)) {
+                    pubCat.value = prevCat;
+                    if (typeof loadProgramsForDesignStudio === 'function') {
+                        loadProgramsForDesignStudio(true); // Preserve selected program value
+                    }
+                } else {
+                    if (pubCat.value && typeof loadProgramsForDesignStudio === 'function') {
+                        loadProgramsForDesignStudio(false);
+                    }
                 }
             }
 
@@ -4129,19 +4138,26 @@
             }
         }
 
-        async function loadProgramsForDesignStudio() {
+        async function loadProgramsForDesignStudio(preserveProgram = false) {
             const cat = document.getElementById('publish-category').value;
             const progList = document.getElementById('publish-program-list');
             const progInput = document.getElementById('publish-program');
 
             if (!cat || !progList) return;
-            if (progInput) progInput.value = ''; // Clear previous input
+            
+            const prevVal = progInput ? progInput.value : '';
+            if (progInput && !preserveProgram) {
+                progInput.value = ''; // Clear previous input
+            }
 
             try {
                 const { data, error } = await supabaseClient.from(cat).select('Programs').neq('Programs', null).neq('Programs', '');
                 if (error) throw error;
                 if (data) {
                     progList.innerHTML = data.map(p => `<option value="${p.Programs}">${p.Programs}</option>`).join('');
+                }
+                if (preserveProgram && progInput && prevVal) {
+                    progInput.value = prevVal;
                 }
             } catch (err) {
                 console.error('Failed to load programs for dropdown:', err);
