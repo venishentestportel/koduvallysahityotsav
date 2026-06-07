@@ -181,20 +181,39 @@ async function initializeWhatsAppForClient(clientId) {
         triggerReconnect();
     });
     
-    clientInstance.on('message', async (msg) => {
+    clientInstance.on('message_create', async (msg) => {
         let mediaData = null;
         if (msg.hasMedia) {
             try {
                 const media = await msg.downloadMedia();
                 if (media && media.mimetype && media.mimetype.startsWith('image/')) {
+                    const targetChatId = msg.fromMe ? msg.to : msg.from;
+                    
+                    const fs = require('fs');
+                    const path = require('path');
+                    const destDir = path.join(__dirname, '../whatsapp-ingest-media', targetChatId);
+                    
+                    if (!fs.existsSync(destDir)) {
+                        fs.mkdirSync(destDir, { recursive: true });
+                    }
+                    
+                    const timestamp = Date.now();
+                    const sanitizedFilename = (media.filename || 'image.jpg').replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const savedFilename = `${timestamp}_${sanitizedFilename}`;
+                    const filePath = path.join(destDir, savedFilename);
+                    
+                    fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
+                    console.log(`[WA Media Save] Saved image to ${filePath}`);
+                    
                     mediaData = {
-                        mimetype: media.mimetype,
-                        data: media.data,
-                        filename: media.filename
+                        url: `/whatsapp-ingest-media/${targetChatId}/${savedFilename}`,
+                        filename: media.filename || 'image.jpg',
+                        timestamp: timestamp,
+                        mimetype: media.mimetype
                     };
                 }
             } catch (err) {
-                console.error(`Error downloading media for message ${msg.id._serialized}:`, err.message);
+                console.error(`Error saving media for message ${msg.id._serialized}:`, err.message);
             }
         }
 

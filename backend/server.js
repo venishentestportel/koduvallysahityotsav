@@ -152,6 +152,40 @@ app.get('/api/scraped-results', async (req, res) => {
     }
 });
 
+app.get('/api/ingested-images', (req, res) => {
+    const { chatId } = req.query;
+    if (!chatId) {
+        return res.status(400).json({ success: false, error: 'chatId is required' });
+    }
+    
+    const dirPath = path.join(__dirname, '../whatsapp-ingest-media', chatId);
+    if (!fs.existsSync(dirPath)) {
+        return res.json({ success: true, images: [] });
+    }
+    
+    try {
+        const files = fs.readdirSync(dirPath);
+        const images = files
+            .filter(file => /\.(jpg|jpeg|png|webp|gif)$/i.test(file))
+            .map(file => {
+                const parts = file.split('_');
+                const timestamp = parseInt(parts[0]) || fs.statSync(path.join(dirPath, file)).mtimeMs;
+                const filename = parts.slice(1).join('_') || file;
+                return {
+                    url: `/whatsapp-ingest-media/${chatId}/${file}`,
+                    filename: filename,
+                    timestamp: timestamp
+                };
+            })
+            .sort((a, b) => b.timestamp - a.timestamp); // newest first
+            
+        res.json({ success: true, images });
+    } catch (err) {
+        console.error("Failed to read ingested images directory:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.get('/status', (req, res) => {
     const clientId = getClientId(req);
     try {

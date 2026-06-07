@@ -341,10 +341,18 @@
                         <div
                             style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1.2rem; display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
                             <h4
-                                style="margin: 0; color: #1e40af; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 1rem;">
-                                <span style="display: flex; align-items: center; gap: 6px;">
+                                style="margin: 0; color: #1e40af; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 1rem; width: 100%;">
+                                <span style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;" 
+                                      onclick="openWaLargeImagesModal()" 
+                                      onmouseover="this.style.textDecoration='underline'" 
+                                      onmouseout="this.style.textDecoration='none'"
+                                      title="Click to view all received images in a big screen">
                                     <i class="fab fa-whatsapp"></i> WhatsApp Image Ingest
                                 </span>
+                                <button type="button" onclick="openWaLargeImagesModal()" class="btn"
+                                    style="padding: 4px 8px !important; font-size: 0.75rem !important; background: #3b82f6 !important; color: white !important; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: none !important;">
+                                    <i class="fa fa-expand"></i> View Large
+                                </button>
                             </h4>
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 <label style="font-size: 0.8rem; color: #1e40af; font-weight: 600;">Select Chat to Import Images From:</label>
@@ -9417,9 +9425,73 @@
             if (!select) return;
             localStorage.setItem('ds_wa_ingestion_target', select.value);
             console.log("Saved WhatsApp Ingestion Target:", select.value);
+            loadIngestedWaImagesFromBackend();
         }
 
-        let ingestedWaImages = []; // Array of { dataUrl, filename, timestamp }
+        let ingestedWaImages = []; // Array of { url, filename, timestamp }
+
+        // Render initially on startup
+        setTimeout(() => {
+            loadIngestedWaImagesFromBackend();
+        }, 300);
+
+        async function loadIngestedWaImagesFromBackend() {
+            const selectedTarget = localStorage.getItem('ds_wa_ingestion_target');
+            if (!selectedTarget) {
+                ingestedWaImages = [];
+                renderIngestedWaImages();
+                return;
+            }
+
+            try {
+                const url = `${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/api/ingested-images?chatId=${encodeURIComponent(selectedTarget)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.success && data.images) {
+                    ingestedWaImages = data.images.map(img => {
+                        return {
+                            url: img.url.startsWith('http') ? img.url : `${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}${img.url}`,
+                            filename: img.filename,
+                            timestamp: img.timestamp
+                        };
+                    });
+                } else {
+                    ingestedWaImages = [];
+                }
+            } catch (err) {
+                console.error("[WA Ingest] Failed to load images from backend:", err);
+                // Fallback to local storage if any exists
+                try {
+                    const savedImages = localStorage.getItem('ds_ingested_wa_images');
+                    if (savedImages) {
+                        ingestedWaImages = JSON.parse(savedImages);
+                    }
+                } catch (e) {}
+            }
+
+            renderIngestedWaImages();
+            
+            // If the large modal is visible, re-render it
+            const modal = document.getElementById('ds-wa-large-images-modal');
+            if (modal && modal.style.display === 'flex') {
+                renderWaLargeImagesModal();
+            }
+        }
+
+        function saveIngestedWaImages() {
+            try {
+                localStorage.setItem('ds_ingested_wa_images', JSON.stringify(ingestedWaImages));
+            } catch (err) {
+                console.warn("[WA Ingest] LocalStorage save failed, likely quota exceeded. Retrying with fewer images:", err);
+                while (ingestedWaImages.length > 2) {
+                    ingestedWaImages.pop();
+                    try {
+                        localStorage.setItem('ds_ingested_wa_images', JSON.stringify(ingestedWaImages));
+                        break;
+                    } catch (retryErr) {}
+                }
+            }
+        }
 
         function handleIncomingWhatsAppMessage(data) {
             console.log("[WA Socket Ingest] Received message:", data);
@@ -9427,36 +9499,50 @@
             const selectedTarget = localStorage.getItem('ds_wa_ingestion_target');
             if (!selectedTarget) return;
 
-            // In group messages, data.from matches the group JID (which matches selectedTarget).
-            // In direct messages, data.from is the sender contact JID.
-            if (data.from !== selectedTarget) {
+            // Check if the chat is the selected ingestion target (handles both incoming and outgoing)
+            if (data.from !== selectedTarget && data.to !== selectedTarget) {
                 return;
             }
 
             // Check if the message has image media
-            if (data.media && data.media.mimetype && data.media.mimetype.startsWith('image/')) {
+            if (data.media) {
                 console.log("[WA Socket Ingest] Valid image found, ingesting...");
                 addIngestedWaImage(data.media);
             }
         }
 
         function addIngestedWaImage(media) {
-            const dataUrl = `data:${media.mimetype};base64,${media.data}`;
+            let srcUrl = '';
+            if (media.url) {
+                srcUrl = media.url.startsWith('http') ? media.url : `${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}${media.url}`;
+            } else if (media.data) {
+                srcUrl = `data:${media.mimetype};base64,${media.data}`;
+            }
+
+            if (!srcUrl) return;
+
             const imgObj = {
-                dataUrl: dataUrl,
+                url: srcUrl,
                 filename: media.filename || 'whatsapp_image.jpg',
-                timestamp: Date.now()
+                timestamp: media.timestamp || Date.now()
             };
 
             // Insert at beginning of feed
             ingestedWaImages.unshift(imgObj);
 
-            // Limit to last 20 images
-            if (ingestedWaImages.length > 20) {
+            // Limit to last 100 images to protect memory, but allow showing all recent ones
+            if (ingestedWaImages.length > 100) {
                 ingestedWaImages.pop();
             }
 
+            saveIngestedWaImages();
             renderIngestedWaImages();
+
+            // If the large modal is visible, re-render it to keep it live
+            const modal = document.getElementById('ds-wa-large-images-modal');
+            if (modal && modal.style.display === 'flex') {
+                renderWaLargeImagesModal();
+            }
         }
 
         function renderIngestedWaImages() {
@@ -9477,10 +9563,60 @@
                          onclick="applyWaIngestedImage(${index})"
                          onmouseover="this.style.borderColor='#3182ce'; this.style.transform='scale(1.03)';" 
                          onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='none';">
-                        <img src="${img.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="${img.url}" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                 `;
             }).join('');
+        }
+
+        function openWaLargeImagesModal() {
+            const modal = document.getElementById('ds-wa-large-images-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                renderWaLargeImagesModal();
+            }
+        }
+
+        function closeWaLargeImagesModal() {
+            const modal = document.getElementById('ds-wa-large-images-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function renderWaLargeImagesModal() {
+            const body = document.getElementById('ds-wa-large-images-body');
+            if (!body) return;
+
+            if (ingestedWaImages.length === 0) {
+                body.innerHTML = `
+                    <div style="color: #64748b; font-size: 1rem; text-align: center; padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%;">
+                        <i class="far fa-image" style="font-size: 3rem; color: #cbd5e1;"></i>
+                        No images received yet. Send an image to the selected WhatsApp chat to see it here.
+                    </div>`;
+                return;
+            }
+
+            body.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.25rem;">
+                    ${ingestedWaImages.map((img, index) => {
+                        const timeString = new Date(img.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        return `
+                            <div style="position: relative; aspect-ratio: 1; cursor: pointer; border: 3px solid white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); transition: all 0.2s ease-in-out; background: white;" 
+                                 onclick="applyWaIngestedImage(${index})"
+                                 onmouseover="this.style.borderColor='#3b82f6'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(59,130,246,0.3)';" 
+                                 onmouseout="this.style.borderColor='white'; this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';"
+                                 title="Load this image to workspace">
+                                <img src="${img.url}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); padding: 8px; color: white; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: flex-end; opacity: 0.9;">
+                                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; font-weight: 500;">${img.filename}</span>
+                                    <span style="font-size: 0.7rem; opacity: 0.8;">${timeString}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
         }
 
         function applyWaIngestedImage(index) {
@@ -9488,7 +9624,8 @@
             if (!img) return;
 
             if (confirm("Do you want to load this WhatsApp image onto the canvas workspace background?")) {
-                applyBase64Image(img.dataUrl);
+                applyBase64Image(img.url);
+                closeWaLargeImagesModal();
             }
         }
 
@@ -9920,6 +10057,36 @@
             }
         }
     </script>
+
+    <!-- WhatsApp Image Ingest Full Screen Modal -->
+    <div id="ds-wa-large-images-modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 2rem; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+        <div style="background: white; border-radius: 16px; width: 100%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; animation: dsModalFadeIn 0.3s ease-out;">
+            <!-- Modal Header -->
+            <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #edf2f7; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+                <h3 style="margin: 0; color: #1e40af; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.5rem;"></i> WhatsApp Ingested Images Gallery
+                </h3>
+                <button onclick="closeWaLargeImagesModal()" style="background: none; border: none; font-size: 1.75rem; color: #64748b; cursor: pointer; transition: color 0.2s; padding: 4px; line-height: 1;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#64748b'">&times;</button>
+            </div>
+            <!-- Modal Body -->
+            <div id="ds-wa-large-images-body" style="padding: 1.5rem; overflow-y: auto; flex: 1; min-height: 200px; background: #f1f5f9;">
+                <!-- Dynamically loaded grid of images -->
+            </div>
+            <!-- Modal Footer -->
+            <div style="padding: 0.75rem 1.5rem; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; background: #f8fafc; font-size: 0.85rem; color: #64748b;">
+                Click any image to load it onto the canvas workspace.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal fade-in animation style -->
+    <style>
+        @keyframes dsModalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {

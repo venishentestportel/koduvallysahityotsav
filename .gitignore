@@ -9,3 +9,6 @@ backend/.wwebjs_cache/
 # Scratch and temp files
 scratch/
 
+# Ingested WhatsApp media files
+whatsapp-ingest-media/
+
