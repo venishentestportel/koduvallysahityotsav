@@ -14,11 +14,11 @@
 
 <body class="pallet-theme">
     <!-- Instant Notification Banner -->
-    <div id="notif-permission-banner" class="pallet-banner" style="display: none;">
+    <div id="notif-permission-banner" class="pallet-banner" style="display: none; position: fixed;">
+        <button id="btn-dismiss-notif" class="pallet-btn-close" style="position: absolute; top: 10px; right: 10px; font-size: 1.2rem;">&times;</button>
         <span class="banner-text">Get live updates on your masterpieces.</span>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <div style="display: flex; justify-content: center; width: 100%;">
             <button id="btn-allow-notif" class="pallet-btn-small">Accept</button>
-            <button id="btn-dismiss-notif" class="pallet-btn-close">&times;</button>
         </div>
     </div>
 
@@ -61,11 +61,14 @@
             <a href="#" class="icon-btn"><i class="fa fa-user"></i></a>
             <a href="#" class="icon-btn"><i class="fa fa-cog"></i></a>
         </div>
-        <!-- Mobile Header Actions (Visible on Mobile) -->
-        <div class="mobile-header-actions" style="display: none; align-items: center; gap: 0.75rem; margin-left: auto;">
+        <!-- Mobile Center Action (Visible on Mobile) -->
+        <div class="mobile-center-action" style="display: none; position: absolute; left: 50%; transform: translateX(-50%);">
             <a href="results.html" class="pallet-btn primary" style="padding: 0.5rem 0.9rem; font-size: 0.7rem; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 6px; box-shadow: none; margin: 0;">
                 <i class="fa fa-trophy"></i> Results
             </a>
+        </div>
+        <!-- Mobile Header Actions (Visible on Mobile) -->
+        <div class="mobile-header-actions" style="display: none; align-items: center; margin-left: auto;">
             <button onclick="toggleMobileMenu()" class="icon-btn" style="cursor: pointer; padding: 0; border-radius: 8px; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center;">
                 <i class="fa fa-bars" style="font-size: 0.9rem;"></i>
             </button>
@@ -78,7 +81,7 @@
                 display: none !important;
             }
 
-            .mobile-header-actions {
+            .mobile-header-actions, .mobile-center-action {
                 display: flex !important;
             }
         }

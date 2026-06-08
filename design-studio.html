@@ -349,10 +349,16 @@
                                       title="Click to view all received images in a big screen">
                                     <i class="fab fa-whatsapp"></i> WhatsApp Image Ingest
                                 </span>
-                                <button type="button" onclick="openWaLargeImagesModal()" class="btn"
-                                    style="padding: 4px 8px !important; font-size: 0.75rem !important; background: #3b82f6 !important; color: white !important; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: none !important;">
-                                    <i class="fa fa-expand"></i> View Large
-                                </button>
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="button" onclick="clearAllIngestedWaImages()" class="btn"
+                                        style="padding: 4px 8px !important; font-size: 0.75rem !important; background: #ef4444 !important; color: white !important; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: none !important;">
+                                        <i class="fa fa-trash-alt"></i> Delete All
+                                    </button>
+                                    <button type="button" onclick="openWaLargeImagesModal()" class="btn"
+                                        style="padding: 4px 8px !important; font-size: 0.75rem !important; background: #3b82f6 !important; color: white !important; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: none !important;">
+                                        <i class="fa fa-expand"></i> View Large
+                                    </button>
+                                </div>
                             </h4>
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 <label style="font-size: 0.8rem; color: #1e40af; font-weight: 600;">Select Chat to Import Images From:</label>
@@ -4339,15 +4345,16 @@
                 const catEscaped = cat.replace(/'/g, "\\'");
                 const progEscaped = prog.replace(/'/g, "\\'");
                 const displayLabel = prog ? `${cat} - ${prog}` : cat;
+                const posterUrl = (currentData.posters[key] || '').replace(/:/g, '%3A').replace('https%3A//', 'https://');
 
                 return `
-                    <div class="admin-gallery-item" style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #edf2f7; background: #f8fafc;">
-                        <img src="${currentData.posters[key]}" style="width: 100%; height: auto; display: block;">
+                    <div class="admin-gallery-item" style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #edf2f7; background: #f8fafc; aspect-ratio: 1/1;">
+                        <img src="${posterUrl}" style="width: 100%; height: 100%; object-fit: contain; background: #f1f5f9; display: block; cursor: pointer; transition: opacity 0.2s;" onclick="window.open(this.src, '_blank')" title="Click to view full size" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                         <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 0.6rem; font-size: 0.85rem; text-align: center; font-weight: 600;">
                             ${displayLabel}
                         </div>
                         <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 0.5rem;">
-                            <button class="btn" style="background: rgba(255,255,255,0.9); color: #1a921a; padding: 0.4rem; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="shareDesignPoster('${currentData.posters[key]}', '${catEscaped} - ${progEscaped}')" title="Share">
+                            <button class="btn" style="background: rgba(255,255,255,0.9); color: #1a921a; padding: 0.4rem; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="shareDesignPoster('${posterUrl}', '${catEscaped} - ${progEscaped}')" title="Share">
                                 <i class="fa fa-share-alt"></i>
                             </button>
                             <button class="btn" style="background: rgba(255,255,255,0.9); color: #805ad5; padding: 0.4rem; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="editPublishedPosterContent('${catEscaped}', '${progEscaped}')" title="Edit Poster Content on Canvas">
@@ -5629,7 +5636,7 @@
                 const { data: publicUrlData } = supabaseClient.storage.from('Design Studio').getPublicUrl(fileName);
 
                 if (window.appData && window.appData.posters) {
-                    window.appData.posters[key] = publicUrlData.publicUrl + '?t=' + new Date().getTime(); // timestamp to avoid cache
+                    window.appData.posters[key] = publicUrlData.publicUrl.replace(/:/g, '%3A').replace('https%3A//', 'https://') + '?t=' + new Date().getTime(); // timestamp to avoid cache
                     sessionStorage.setItem('koduvelly_app_data', JSON.stringify(window.appData));
                     if (typeof currentData !== 'undefined') currentData = getData();
                 }
@@ -6908,7 +6915,7 @@
             </div>
             <p style="color: #636e72; margin-bottom: 1.5rem; font-size: 0.9rem;">View, manage, edit, and share posters that have been published to the results page.</p>
             
-            <div id="published-posters-list" class="admin-gallery-grid" style="overflow-y: auto; flex: 1; padding-bottom: 1rem;">
+            <div id="published-posters-list" class="admin-gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important; gap: 1.5rem !important; overflow-y: auto; flex: 1; padding-bottom: 1rem;">
                 <!-- Dynamic posters will load here -->
             </div>
         </div>
@@ -8808,7 +8815,7 @@
                     if (!error) {
                         const { data: publicUrlData } = supabaseClient.storage.from('Design Studio').getPublicUrl(fileName);
                         if (window.appData && window.appData.posters) {
-                            window.appData.posters[key] = publicUrlData.publicUrl + '?t=' + new Date().getTime();
+                            window.appData.posters[key] = publicUrlData.publicUrl.replace(/:/g, '%3A').replace('https%3A//', 'https://') + '?t=' + new Date().getTime();
                         }
                     } else {
                         console.error("Bulk upload error for", fileName, error.message);
@@ -9630,6 +9637,37 @@
             const modal = document.getElementById('ds-wa-large-images-modal');
             if (modal && modal.style.display === 'flex') {
                 renderWaLargeImagesModal();
+            }
+        }
+
+        async function clearAllIngestedWaImages() {
+            const selectedTarget = localStorage.getItem('ds_wa_ingestion_target');
+            if (!selectedTarget) {
+                alert("Please select a WhatsApp ingestion target chat first.");
+                return;
+            }
+            if (!confirm("Are you sure you want to delete all ingested WhatsApp images for this chat? This will remove files from the server and cannot be undone.")) {
+                return;
+            }
+            
+            try {
+                const url = `${window.WA_BACKEND_URL || 'https://koduvelly-backend.onrender.com'}/api/ingested-images?chatId=${encodeURIComponent(selectedTarget)}`;
+                const res = await fetch(url, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    ingestedWaImages = [];
+                    localStorage.removeItem('ds_ingested_wa_images');
+                    renderIngestedWaImages();
+                    closeWaLargeImagesModal();
+                    alert("Ingested images successfully deleted.");
+                } else {
+                    alert("Failed to delete images: " + (data.error || data.message || "Unknown error"));
+                }
+            } catch (err) {
+                console.error("Error clearing ingested images:", err);
+                alert("Error connecting to server.");
             }
         }
 
@@ -10756,7 +10794,13 @@
                 <h3 style="margin: 0; color: #1e40af; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                     <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.5rem;"></i> WhatsApp Ingested Images Gallery
                 </h3>
-                <button onclick="closeWaLargeImagesModal()" style="background: none; border: none; font-size: 1.75rem; color: #64748b; cursor: pointer; transition: color 0.2s; padding: 4px; line-height: 1;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#64748b'">&times;</button>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button type="button" onclick="clearAllIngestedWaImages()" class="btn"
+                        style="padding: 6px 12px !important; font-size: 0.8rem !important; background: #ef4444 !important; color: white !important; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: none !important;">
+                        <i class="fa fa-trash-alt"></i> Delete All
+                    </button>
+                    <button onclick="closeWaLargeImagesModal()" style="background: none; border: none; font-size: 1.75rem; color: #64748b; cursor: pointer; transition: color 0.2s; padding: 4px; line-height: 1;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#64748b'">&times;</button>
+                </div>
             </div>
             <!-- Modal Body -->
             <div id="ds-wa-large-images-body" style="padding: 1.5rem; overflow-y: auto; flex: 1; min-height: 200px; background: #f1f5f9;">

@@ -242,7 +242,8 @@
             let key1 = `${selectedCategory.trim()}:::${selectedProgram.trim()}`.replace(/['"]/g, '');
             let key2 = `${selectedProgram.trim()}:::${selectedCategory.trim()}`.replace(/['"]/g, '');
             
-            const posterUrl = data.posters ? (data.posters[key1] || data.posters[key2]) : null;
+            const rawPosterUrl = data.posters ? (data.posters[key1] || data.posters[key2]) : null;
+            const posterUrl = rawPosterUrl ? rawPosterUrl.replace(/:/g, '%3A').replace('https%3A//', 'https://') : null;
             const target = document.getElementById('results-target');
 
 

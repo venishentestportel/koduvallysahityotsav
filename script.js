@@ -221,7 +221,7 @@ async function fetchSupabaseData() {
                 if (!file.name || file.name.startsWith('.')) continue;
                 const { data } = supabaseClient.storage.from('Design Studio').getPublicUrl(file.name);
                 const key = file.name.replace(/\.[^/.]+$/, "");
-                appData.posters[key] = data.publicUrl;
+                appData.posters[key] = data.publicUrl.replace(/:/g, '%3A').replace('https%3A//', 'https://');
             }
         }
 

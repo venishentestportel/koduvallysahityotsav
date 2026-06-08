@@ -992,7 +992,7 @@ body.pallet-theme {
     .pallet-header { padding: 0 1.5rem; }
     .hero-title img { max-width: 320px !important; }
     .hero-cards-container { height: 240px; }
-    .hero-card { width: 160px; height: 220px; }
+    .hero-card { width: 160px; height: 220px; left: calc(50% - 80px); }
     .hc-1 { transform: translateX(-50px) rotate(-8deg) scale(0.88); }
     .hc-2 { transform: translateX(-25px) rotate(-4deg) scale(0.94); }
     .hc-4 { transform: translateX(25px) rotate(4deg) scale(0.94); }
@@ -1039,7 +1039,7 @@ body.pallet-theme {
     .hero-title img { max-width: 260px !important; }
     
     .hero-cards-container { height: 200px; margin-bottom: 3rem; }
-    .hero-card { width: 130px; height: 180px; border-radius: 12px; }
+    .hero-card { width: 130px; height: 180px; border-radius: 12px; left: calc(50% - 65px); }
     
     .hc-1 { transform: translateX(-35px) rotate(-8deg) scale(0.88); }
     .hc-2 { transform: translateX(-18px) rotate(-4deg) scale(0.94); }
